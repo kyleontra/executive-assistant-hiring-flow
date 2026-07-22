@@ -1,0 +1,33 @@
+const { defineConfig } = require('vite');
+const { copyFileSync } = require('node:fs');
+const { resolve } = require('node:path');
+
+const pages = {
+  index: 'index.html',
+  home: 'home.html',
+  jobs: 'jobs.html',
+  jobDetail: 'job-detail.html',
+  responsibilities: 'responsibilities.html',
+  compensation: 'compensation.html',
+  review: 'review.html',
+  published: 'published.html',
+  applicants: 'applicants.html',
+  verification: 'verification.html',
+  idVerification: 'id-verification.html',
+};
+
+module.exports = defineConfig({
+  build: {
+    rollupOptions: {
+      input: Object.fromEntries(Object.entries(pages).map(([name, file]) => [name, resolve(__dirname, file)])),
+    },
+  },
+  plugins: [{
+    name: 'copy-classic-browser-scripts',
+    writeBundle() {
+      ['script.js', 'verification.js', 'id-verification.js'].forEach(file => {
+        copyFileSync(resolve(__dirname, file), resolve(__dirname, 'dist', file));
+      });
+    },
+  }],
+});
