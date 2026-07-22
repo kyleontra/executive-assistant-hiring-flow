@@ -32,6 +32,8 @@ function isInSouthAfrica(position) {
   return latitude >= -35.2 && latitude <= -22.0 && longitude >= 16.0 && longitude <= 33.2;
 }
 
+if (new URLSearchParams(window.location.search).get('test') === 'video') showStep(2);
+
 $('#checkLocation').addEventListener('click', () => {
   const button = $('#checkLocation');
   const result = $('#locationResult');
