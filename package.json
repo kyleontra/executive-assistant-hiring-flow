@@ -9,5 +9,9 @@
   },
   "devDependencies": {
     "vite": "latest"
+  },
+  "dependencies": {
+    "@vercel/blob": "^2.6.1",
+    "busboy": "^1.6.0"
   }
 }

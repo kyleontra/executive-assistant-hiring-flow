@@ -24,13 +24,13 @@
         <p>This quick check helps protect a South Africa-only job board from misuse.</p>
         <div class="steps" aria-label="Verification progress">
           <div class="verify-step active" data-step="1"><span>1</span><div><b>Confirm location</b><small>Check your approximate location</small></div></div>
-          <div class="verify-step" data-step="2"><span>2</span><div><b>Scan your ID</b><small>Photograph the front of your ID</small></div></div>
-          <div class="verify-step" data-step="3"><span>3</span><div><b>Finish</b><small>Ready to apply for roles</small></div></div>
+          <div class="verify-step" data-step="2"><span>2</span><div><b>Record your ID</b><small>Send a short video for review</small></div></div>
+          <div class="verify-step" data-step="3"><span>3</span><div><b>Under review</b><small>We will check your submission</small></div></div>
         </div>
       </aside>
 
       <section class="verify-content">
-        <div class="privacy-note"><span>⌁</span><p><b>Test environment.</b> Location and camera data stay on this device and are not uploaded or stored.</p></div>
+        <div class="privacy-note"><span>⌁</span><p><b>Private review.</b> Location stays on this device. If you submit an ID video, it is sent to the private review store for a reviewer to check.</p></div>
 
         <section class="verify-panel" data-panel="1">
           <p class="eyebrow blue">STEP 1 OF 3</p>
@@ -48,30 +48,28 @@
 
         <section class="verify-panel" data-panel="2" hidden>
           <p class="eyebrow blue">STEP 2 OF 3</p>
-          <h2>Photograph your South African ID.</h2>
-          <p class="lead">Place the front of your ID inside the frame, take a photo, and we’ll check the text in that image.</p>
+          <h2>Record a short ID video.</h2>
+          <p class="lead">Show the front of your South African ID in the frame for five seconds. The video will be sent for a manual review.</p>
           <div class="camera-stage">
             <video id="cameraPreview" autoplay playsinline muted></video>
-            <canvas id="idCanvas" hidden></canvas>
-            <div id="cameraPlaceholder" class="camera-placeholder"><span>◉</span><b>Camera is off</b><p>Start the camera, then place your ID in the frame.</p></div>
+            <video id="recordedPreview" controls playsinline hidden></video>
+            <div id="cameraPlaceholder" class="camera-placeholder"><span>◉</span><b>Camera is off</b><p>Start the camera, then hold your ID inside the frame.</p></div>
             <div class="camera-guide"><i></i><i></i><i></i><i></i></div>
           </div>
           <div id="cameraResult" class="result-box" aria-live="polite"></div>
-          <div class="camera-actions"><button id="startCamera" class="primary-action">Turn on camera</button><button id="captureId" class="capture-action" disabled>Take ID photo</button><button id="cameraNext" class="next-action" disabled>Continue <span>→</span></button></div>
-          <p class="help-text">The photo is processed in this browser and is not uploaded or stored.</p>
+          <div class="camera-actions"><button id="startCamera" class="primary-action">Turn on camera</button><button id="recordId" class="capture-action" disabled>Record 5-second video</button><button id="submitReview" class="next-action" disabled>Send for review <span>→</span></button></div>
+          <p class="help-text">Only submit when you are comfortable sharing this ID video. It is stored privately for the review team.</p>
         </section>
 
         <section class="verify-panel" data-panel="3" hidden>
           <div class="complete-mark">✓</div>
-          <p class="eyebrow blue">CHECK COMPLETE</p>
-          <h2>You can apply for South Africa roles.</h2>
-          <p class="lead">Your approximate location passed and the South African ID text check completed on this device.</p>
-          <div class="summary-card"><div><span>Location</span><b id="summaryLocation">Verified in South Africa</b></div><div><span>ID photo</span><b>Captured and checked</b></div><div><span>South African ID text</span><b>Detected</b></div></div>
-          <a class="next-action link-button" href="./jobs.html">Browse Executive Assistant jobs <span>→</span></a>
+          <p class="eyebrow blue">SUBMISSION RECEIVED</p>
+          <h2>Your video is under review.</h2>
+          <p class="lead">Your location check passed and your ID video was submitted to the private review queue. We’ll notify you when the review is complete.</p>
+          <div class="summary-card"><div><span>Location</span><b id="summaryLocation">Verified in South Africa</b></div><div><span>ID video</span><b>Submitted for review</b></div><div><span>Reference</span><b id="reviewReference">Pending</b></div></div>
         </section>
       </section>
     </main>
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <script src="./verification.js"></script>
   </body>
 </html>
