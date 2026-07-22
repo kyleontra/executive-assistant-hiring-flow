@@ -6,8 +6,9 @@ let recordedVideo;
 let recorder;
 let recordTimer;
 let scriptTimer;
-let captureFrame;
 let captureStream;
+let cameraFrame;
+let visibleHeight;
 const REVIEW_ENDPOINT = 'https://lwzietvhuxgelwehpjag.supabase.co/functions/v1/submit-id-video';
 
 function showStep(step) {
@@ -62,23 +63,36 @@ function visibleCameraHeight(video) {
   return video.videoHeight;
 }
 
-function recordCleanFrame(video) {
-  const canvas = document.createElement('canvas');
-  const width = 720;
-  const height = 405;
-  const sourceHeight = visibleCameraHeight(video);
-  canvas.width = width;
-  canvas.height = height;
+function drawCleanCameraFrame(video) {
+  const canvas = $('#cameraCanvas');
+  const width = canvas.width;
+  const height = canvas.height;
+  const sourceHeight = visibleHeight || video.videoHeight;
   const context = canvas.getContext('2d');
-  const drawFrame = () => {
-    const scale = Math.max(width / video.videoWidth, height / sourceHeight);
-    const drawWidth = video.videoWidth * scale;
-    const drawHeight = sourceHeight * scale;
-    context.drawImage(video, 0, 0, video.videoWidth, sourceHeight, (width - drawWidth) / 2, (height - drawHeight) / 2, drawWidth, drawHeight);
-    captureFrame = requestAnimationFrame(drawFrame);
+  const scale = Math.max(width / video.videoWidth, height / sourceHeight);
+  const drawWidth = video.videoWidth * scale;
+  const drawHeight = sourceHeight * scale;
+  context.drawImage(video, 0, 0, video.videoWidth, sourceHeight, (width - drawWidth) / 2, (height - drawHeight) / 2, drawWidth, drawHeight);
+}
+
+function startCleanPreview(video) {
+  visibleHeight = video.videoHeight;
+  let checksRemaining = 16;
+  const render = () => {
+    if (checksRemaining > 0) {
+      const detectedHeight = visibleCameraHeight(video);
+      if (detectedHeight < video.videoHeight * 0.9) visibleHeight = detectedHeight;
+      checksRemaining -= 1;
+    }
+    drawCleanCameraFrame(video);
+    cameraFrame = requestAnimationFrame(render);
   };
-  drawFrame();
-  return canvas.captureStream(24);
+  render();
+}
+
+function stopCleanPreview() {
+  cancelAnimationFrame(cameraFrame);
+  cameraFrame = undefined;
 }
 
 function isInSouthAfrica(position) {
@@ -132,10 +146,15 @@ $('#startCamera').addEventListener('click', async () => {
     });
     const video = $('#cameraPreview');
     video.srcObject = cameraStream;
+    await new Promise((resolve) => {
+      if (video.readyState >= 2) resolve();
+      else video.addEventListener('loadeddata', resolve, { once: true });
+    });
     const preview = $('#recordedPreview');
     preview.hidden = true;
     preview.removeAttribute('src');
     $('#recordingScript').hidden = true;
+    startCleanPreview(video);
     $('.camera-stage').classList.remove('recorded');
     $('.camera-stage').classList.add('live');
     button.textContent = 'Camera on';
@@ -176,13 +195,13 @@ $('#recordId').addEventListener('click', () => {
     scriptBox.hidden = false;
   };
   const mimeType = preferredRecorderType();
-  captureStream = recordCleanFrame(video);
+  captureStream = $('#cameraCanvas').captureStream(24);
   recorder = new MediaRecorder(captureStream, { ...(mimeType ? { mimeType } : {}), videoBitsPerSecond: 750000 });
   recorder.addEventListener('dataavailable', (event) => { if (event.data.size) chunks.push(event.data); });
   recorder.addEventListener('stop', () => {
     clearInterval(recordTimer);
     clearInterval(scriptTimer);
-    cancelAnimationFrame(captureFrame);
+    stopCleanPreview();
     captureStream?.getTracks().forEach((track) => track.stop());
     recordedVideo = new Blob(chunks, { type: recorder.mimeType || 'video/webm' });
     const preview = $('#recordedPreview');

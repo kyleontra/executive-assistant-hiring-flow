@@ -51,6 +51,7 @@
           <h2>Record a short ID video.</h2>
           <p class="lead">Show the front of your South African ID in the frame for five seconds. The video will be sent for a manual review.</p>
           <div class="camera-stage">
+            <canvas id="cameraCanvas" width="720" height="405" aria-label="Camera preview"></canvas>
             <video id="cameraPreview" autoplay playsinline muted></video>
             <video id="recordedPreview" controls playsinline hidden></video>
             <div id="cameraPlaceholder" class="camera-placeholder"><span>◉</span><b>Camera is off</b><p>Start the camera, then hold your ID inside the frame.</p></div>
