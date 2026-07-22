@@ -5,6 +5,7 @@ let cameraStream;
 let recordedVideo;
 let recorder;
 let recordTimer;
+const REVIEW_ENDPOINT = 'https://lwzietvhuxgelwehpjag.supabase.co/functions/v1/submit-id-video';
 
 function showStep(step) {
   panels.forEach((panel) => { panel.hidden = Number(panel.dataset.panel) !== step; });
@@ -143,7 +144,7 @@ $('#submitReview').addEventListener('click', async () => {
   button.textContent = 'Sending…';
   showResult(result, 'Uploading your encrypted review video…', 'success');
   try {
-    const response = await fetch('/api/manual-review', { method: 'POST', body: formData });
+    const response = await fetch(REVIEW_ENDPOINT, { method: 'POST', body: formData });
     const payload = await response.json();
     if (!response.ok) throw new Error(payload.error || 'The video could not be sent.');
     $('#reviewReference').textContent = payload.reference;
