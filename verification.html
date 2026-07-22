@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="./verification.css" />
+    <link rel="stylesheet" href="./verification-id.css" />
   </head>
   <body>
     <header class="verify-header">
@@ -23,7 +24,7 @@
         <p>This quick check helps protect a South Africa-only job board from misuse.</p>
         <div class="steps" aria-label="Verification progress">
           <div class="verify-step active" data-step="1"><span>1</span><div><b>Confirm location</b><small>Check your approximate location</small></div></div>
-          <div class="verify-step" data-step="2"><span>2</span><div><b>Camera check</b><small>Show yourself and your ID</small></div></div>
+          <div class="verify-step" data-step="2"><span>2</span><div><b>Scan your ID</b><small>Photograph the front of your ID</small></div></div>
           <div class="verify-step" data-step="3"><span>3</span><div><b>Finish</b><small>Ready to apply for roles</small></div></div>
         </div>
       </aside>
@@ -47,28 +48,30 @@
 
         <section class="verify-panel" data-panel="2" hidden>
           <p class="eyebrow blue">STEP 2 OF 3</p>
-          <h2>Turn on your camera.</h2>
-          <p class="lead">Frame your face and hold your South African ID next to it. This demo never saves a photo or reads your ID.</p>
+          <h2>Photograph your South African ID.</h2>
+          <p class="lead">Place the front of your ID inside the frame, take a photo, and we’ll check the text in that image.</p>
           <div class="camera-stage">
             <video id="cameraPreview" autoplay playsinline muted></video>
-            <div id="cameraPlaceholder" class="camera-placeholder"><span>◉</span><b>Camera is off</b><p>Start the camera when you are ready.</p></div>
+            <canvas id="idCanvas" hidden></canvas>
+            <div id="cameraPlaceholder" class="camera-placeholder"><span>◉</span><b>Camera is off</b><p>Start the camera, then place your ID in the frame.</p></div>
             <div class="camera-guide"><i></i><i></i><i></i><i></i></div>
           </div>
           <div id="cameraResult" class="result-box" aria-live="polite"></div>
-          <div class="camera-actions"><button id="startCamera" class="primary-action">Turn on camera</button><button id="cameraNext" class="next-action" disabled>Continue <span>→</span></button></div>
-          <p class="help-text">For a real launch, use an accredited identity-verification provider and get informed consent before collecting documents.</p>
+          <div class="camera-actions"><button id="startCamera" class="primary-action">Turn on camera</button><button id="captureId" class="capture-action" disabled>Take ID photo</button><button id="cameraNext" class="next-action" disabled>Continue <span>→</span></button></div>
+          <p class="help-text">The photo is processed in this browser and is not uploaded or stored.</p>
         </section>
 
         <section class="verify-panel" data-panel="3" hidden>
           <div class="complete-mark">✓</div>
           <p class="eyebrow blue">CHECK COMPLETE</p>
           <h2>You can apply for South Africa roles.</h2>
-          <p class="lead">Your approximate location passed the test and your camera check was completed on this device.</p>
-          <div class="summary-card"><div><span>Location</span><b id="summaryLocation">Verified in South Africa</b></div><div><span>Camera</span><b>Completed on this device</b></div><div><span>ID review</span><b>Manual review required</b></div></div>
+          <p class="lead">Your approximate location passed and the South African ID text check completed on this device.</p>
+          <div class="summary-card"><div><span>Location</span><b id="summaryLocation">Verified in South Africa</b></div><div><span>ID photo</span><b>Captured and checked</b></div><div><span>South African ID text</span><b>Detected</b></div></div>
           <a class="next-action link-button" href="./jobs.html">Browse Executive Assistant jobs <span>→</span></a>
         </section>
       </section>
     </main>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <script src="./verification.js"></script>
   </body>
 </html>
