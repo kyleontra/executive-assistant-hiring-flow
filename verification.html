@@ -55,10 +55,11 @@
             <video id="recordedPreview" controls playsinline hidden></video>
             <div id="cameraPlaceholder" class="camera-placeholder"><span>◉</span><b>Camera is off</b><p>Start the camera, then hold your ID inside the frame.</p></div>
             <div class="camera-guide"><i></i><i></i><i></i><i></i></div>
+            <div id="recordingScript" class="recording-script" aria-live="polite" hidden><span id="scriptStep"></span><b id="scriptText"></b></div>
           </div>
           <div id="cameraResult" class="result-box" aria-live="polite"></div>
-          <div class="camera-actions"><button id="startCamera" class="primary-action">Turn on camera</button><button id="recordId" class="capture-action" disabled>Record 5-second video</button><a id="downloadVideo" class="download-action" hidden download="south-africa-id-video.webm">Download video</a><button id="submitReview" class="next-action" disabled>Send for review <span>→</span></button></div>
-          <p class="help-text">Only submit when you are comfortable sharing this ID video. It is stored privately for the review team.</p>
+          <div class="camera-actions"><button id="startCamera" class="primary-action">Turn on camera</button><button id="recordId" class="capture-action" disabled>Start guided recording</button><button id="submitReview" class="next-action" disabled>Send for review <span>→</span></button></div>
+          <p class="help-text">Only submit when you are comfortable sharing this ID video. It is stored privately for the review team and cannot be downloaded by applicants.</p>
         </section>
 
         <section class="verify-panel" data-panel="3" hidden>

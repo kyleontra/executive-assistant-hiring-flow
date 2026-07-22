@@ -5,9 +5,9 @@ let cameraStream;
 let recordedVideo;
 let recorder;
 let recordTimer;
+let scriptTimer;
 let captureFrame;
 let captureStream;
-let recordedVideoUrl;
 const REVIEW_ENDPOINT = 'https://lwzietvhuxgelwehpjag.supabase.co/functions/v1/submit-id-video';
 
 function showStep(step) {
@@ -34,18 +34,47 @@ function preferredRecorderType() {
   return ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm', 'video/mp4'].find((type) => MediaRecorder.isTypeSupported(type));
 }
 
+function visibleCameraHeight(video) {
+  const sampleWidth = 48;
+  const sampleHeight = 72;
+  const sample = document.createElement('canvas');
+  sample.width = sampleWidth;
+  sample.height = sampleHeight;
+  const context = sample.getContext('2d', { willReadFrequently: true });
+  context.drawImage(video, 0, 0, sampleWidth, sampleHeight);
+  const pixels = context.getImageData(0, 0, sampleWidth, sampleHeight).data;
+  let consecutiveBlankRows = 0;
+  for (let y = Math.floor(sampleHeight * 0.5); y < sampleHeight; y += 1) {
+    let total = 0;
+    let min = 255;
+    let max = 0;
+    for (let x = 0; x < sampleWidth; x += 1) {
+      const offset = (y * sampleWidth + x) * 4;
+      const brightness = (pixels[offset] + pixels[offset + 1] + pixels[offset + 2]) / 3;
+      total += brightness;
+      min = Math.min(min, brightness);
+      max = Math.max(max, brightness);
+    }
+    const isBlank = total / sampleWidth < 85 && max - min < 20;
+    consecutiveBlankRows = isBlank ? consecutiveBlankRows + 1 : 0;
+    if (consecutiveBlankRows >= 6) return Math.round(((y - consecutiveBlankRows + 1) / sampleHeight) * video.videoHeight);
+  }
+  return video.videoHeight;
+}
+
 function recordCleanFrame(video) {
   const canvas = document.createElement('canvas');
   const width = 720;
   const height = 405;
+  const sourceHeight = visibleCameraHeight(video);
   canvas.width = width;
   canvas.height = height;
   const context = canvas.getContext('2d');
   const drawFrame = () => {
-    const scale = Math.max(width / video.videoWidth, height / video.videoHeight);
+    const scale = Math.max(width / video.videoWidth, height / sourceHeight);
     const drawWidth = video.videoWidth * scale;
-    const drawHeight = video.videoHeight * scale;
-    context.drawImage(video, (width - drawWidth) / 2, (height - drawHeight) / 2, drawWidth, drawHeight);
+    const drawHeight = sourceHeight * scale;
+    context.drawImage(video, 0, 0, video.videoWidth, sourceHeight, (width - drawWidth) / 2, (height - drawHeight) / 2, drawWidth, drawHeight);
     captureFrame = requestAnimationFrame(drawFrame);
   };
   drawFrame();
@@ -106,8 +135,7 @@ $('#startCamera').addEventListener('click', async () => {
     const preview = $('#recordedPreview');
     preview.hidden = true;
     preview.removeAttribute('src');
-    if (recordedVideoUrl) URL.revokeObjectURL(recordedVideoUrl);
-    $('#downloadVideo').hidden = true;
+    $('#recordingScript').hidden = true;
     $('.camera-stage').classList.remove('recorded');
     $('.camera-stage').classList.add('live');
     button.textContent = 'Camera on';
@@ -135,23 +163,32 @@ $('#recordId').addEventListener('click', () => {
   }
 
   const chunks = [];
+  const script = [
+    ['STEP 1 OF 4', 'Hold your face and the front of your ID inside the frame.'],
+    ['STEP 2 OF 4', 'Keep the ID still and make sure the text is easy to read.'],
+    ['STEP 3 OF 4', 'Tilt the ID gently left, then right, to reduce glare.'],
+    ['STEP 4 OF 4', 'Hold the ID steady while we finish the recording.'],
+  ];
+  const scriptBox = $('#recordingScript');
+  const setScript = (index) => {
+    $('#scriptStep').textContent = script[index][0];
+    $('#scriptText').textContent = script[index][1];
+    scriptBox.hidden = false;
+  };
   const mimeType = preferredRecorderType();
   captureStream = recordCleanFrame(video);
   recorder = new MediaRecorder(captureStream, { ...(mimeType ? { mimeType } : {}), videoBitsPerSecond: 750000 });
   recorder.addEventListener('dataavailable', (event) => { if (event.data.size) chunks.push(event.data); });
   recorder.addEventListener('stop', () => {
     clearInterval(recordTimer);
+    clearInterval(scriptTimer);
     cancelAnimationFrame(captureFrame);
     captureStream?.getTracks().forEach((track) => track.stop());
     recordedVideo = new Blob(chunks, { type: recorder.mimeType || 'video/webm' });
     const preview = $('#recordedPreview');
-    recordedVideoUrl = URL.createObjectURL(recordedVideo);
-    preview.src = recordedVideoUrl;
+    preview.src = URL.createObjectURL(recordedVideo);
     preview.hidden = false;
-    const download = $('#downloadVideo');
-    download.href = recordedVideoUrl;
-    download.download = `south-africa-id-video.${recordedVideo.type.includes('mp4') ? 'mp4' : 'webm'}`;
-    download.hidden = false;
+    scriptBox.hidden = true;
     $('#cameraPreview').srcObject = null;
     $('.camera-stage').classList.remove('live');
     $('.camera-stage').classList.add('recorded');
@@ -168,7 +205,13 @@ $('#recordId').addEventListener('click', () => {
   startButton.disabled = true;
   $('#submitReview').disabled = true;
   recorder.start();
+  setScript(0);
   showResult(result, `Recording your ID video… ${seconds}s`, 'success');
+  let scriptIndex = 0;
+  scriptTimer = setInterval(() => {
+    scriptIndex += 1;
+    if (scriptIndex < script.length) setScript(scriptIndex);
+  }, 1250);
   recordTimer = setInterval(() => {
     seconds -= 1;
     if (seconds > 0) showResult(result, `Recording your ID video… ${seconds}s`, 'success');
