@@ -5,6 +5,9 @@ let cameraStream;
 let recordedVideo;
 let recorder;
 let recordTimer;
+let captureFrame;
+let captureStream;
+let recordedVideoUrl;
 const REVIEW_ENDPOINT = 'https://lwzietvhuxgelwehpjag.supabase.co/functions/v1/submit-id-video';
 
 function showStep(step) {
@@ -25,6 +28,28 @@ function showResult(target, message, type) {
 function stopCamera() {
   if (cameraStream) cameraStream.getTracks().forEach((track) => track.stop());
   cameraStream = undefined;
+}
+
+function preferredRecorderType() {
+  return ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm', 'video/mp4'].find((type) => MediaRecorder.isTypeSupported(type));
+}
+
+function recordCleanFrame(video) {
+  const canvas = document.createElement('canvas');
+  const width = 720;
+  const height = 405;
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext('2d');
+  const drawFrame = () => {
+    const scale = Math.max(width / video.videoWidth, height / video.videoHeight);
+    const drawWidth = video.videoWidth * scale;
+    const drawHeight = video.videoHeight * scale;
+    context.drawImage(video, (width - drawWidth) / 2, (height - drawHeight) / 2, drawWidth, drawHeight);
+    captureFrame = requestAnimationFrame(drawFrame);
+  };
+  drawFrame();
+  return canvas.captureStream(24);
 }
 
 function isInSouthAfrica(position) {
@@ -78,7 +103,11 @@ $('#startCamera').addEventListener('click', async () => {
     });
     const video = $('#cameraPreview');
     video.srcObject = cameraStream;
-    $('#recordedPreview').hidden = true;
+    const preview = $('#recordedPreview');
+    preview.hidden = true;
+    preview.removeAttribute('src');
+    if (recordedVideoUrl) URL.revokeObjectURL(recordedVideoUrl);
+    $('#downloadVideo').hidden = true;
     $('.camera-stage').classList.remove('recorded');
     $('.camera-stage').classList.add('live');
     button.textContent = 'Camera on';
@@ -99,17 +128,30 @@ $('#recordId').addEventListener('click', () => {
     showResult(result, 'Turn the camera on before recording.', 'error');
     return;
   }
+  const video = $('#cameraPreview');
+  if (!video.videoWidth || !video.videoHeight) {
+    showResult(result, 'The camera is still loading. Wait a moment, then record the video.', 'error');
+    return;
+  }
 
   const chunks = [];
-  const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp8') ? 'video/webm;codecs=vp8' : 'video/webm';
-  recorder = new MediaRecorder(cameraStream, { mimeType, videoBitsPerSecond: 750000 });
+  const mimeType = preferredRecorderType();
+  captureStream = recordCleanFrame(video);
+  recorder = new MediaRecorder(captureStream, { ...(mimeType ? { mimeType } : {}), videoBitsPerSecond: 750000 });
   recorder.addEventListener('dataavailable', (event) => { if (event.data.size) chunks.push(event.data); });
   recorder.addEventListener('stop', () => {
     clearInterval(recordTimer);
+    cancelAnimationFrame(captureFrame);
+    captureStream?.getTracks().forEach((track) => track.stop());
     recordedVideo = new Blob(chunks, { type: recorder.mimeType || 'video/webm' });
     const preview = $('#recordedPreview');
-    preview.src = URL.createObjectURL(recordedVideo);
+    recordedVideoUrl = URL.createObjectURL(recordedVideo);
+    preview.src = recordedVideoUrl;
     preview.hidden = false;
+    const download = $('#downloadVideo');
+    download.href = recordedVideoUrl;
+    download.download = `south-africa-id-video.${recordedVideo.type.includes('mp4') ? 'mp4' : 'webm'}`;
+    download.hidden = false;
     $('#cameraPreview').srcObject = null;
     $('.camera-stage').classList.remove('live');
     $('.camera-stage').classList.add('recorded');
