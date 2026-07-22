@@ -79,6 +79,7 @@ $('#startCamera').addEventListener('click', async () => {
     const video = $('#cameraPreview');
     video.srcObject = cameraStream;
     $('#recordedPreview').hidden = true;
+    $('.camera-stage').classList.remove('recorded');
     $('.camera-stage').classList.add('live');
     button.textContent = 'Camera on';
     $('#recordId').disabled = false;
@@ -111,6 +112,7 @@ $('#recordId').addEventListener('click', () => {
     preview.hidden = false;
     $('#cameraPreview').srcObject = null;
     $('.camera-stage').classList.remove('live');
+    $('.camera-stage').classList.add('recorded');
     stopCamera();
     recordButton.textContent = 'Record again';
     recordButton.disabled = false;

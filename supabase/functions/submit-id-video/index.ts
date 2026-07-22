@@ -28,12 +28,13 @@ Deno.serve(async (request) => {
   try {
     const formData = await request.formData();
     const video = formData.get('video');
-    if (!(video instanceof File) || !ALLOWED_TYPES.has(video.type) || video.size === 0 || video.size > MAX_VIDEO_BYTES) {
+    const videoType = video instanceof File ? video.type.split(';')[0].toLowerCase() : '';
+    if (!(video instanceof File) || !ALLOWED_TYPES.has(videoType) || video.size === 0 || video.size > MAX_VIDEO_BYTES) {
       return reply(request, { error: 'Send one WebM or MP4 video no larger than 4 MB.' }, 400);
     }
 
     const reference = `SA-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
-    const extension = video.type === 'video/mp4' ? 'mp4' : 'webm';
+    const extension = videoType === 'video/mp4' ? 'mp4' : 'webm';
     const secretKey = Deno.env.get('SUPABASE_SECRET_KEYS')
       ? JSON.parse(Deno.env.get('SUPABASE_SECRET_KEYS')!)["default"]
       : Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -42,7 +43,7 @@ Deno.serve(async (request) => {
       .from(BUCKET)
       .upload(`pending/${reference}/id-video.${extension}`, video, {
         cacheControl: '0',
-        contentType: video.type,
+        contentType: videoType,
         upsert: false,
       });
 
