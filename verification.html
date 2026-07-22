@@ -49,7 +49,7 @@
         <section class="verify-panel" data-panel="2" hidden>
           <p class="eyebrow blue">STEP 2 OF 3</p>
           <h2>Record a short ID video.</h2>
-          <p class="lead">Show the front of your South African ID in the frame for five seconds. The video will be sent for a manual review.</p>
+          <p class="lead">Complete a 10-second spoken ID check. State your name and where you are from, then show the front of your South African ID.</p>
           <div class="camera-stage">
             <canvas id="cameraCanvas" width="720" height="405" aria-label="Camera preview"></canvas>
             <video id="cameraPreview" autoplay playsinline muted></video>
@@ -59,7 +59,7 @@
             <div id="recordingScript" class="recording-script" aria-live="polite" hidden><span id="scriptStep"></span><b id="scriptText"></b></div>
           </div>
           <div id="cameraResult" class="result-box" aria-live="polite"></div>
-          <div class="camera-actions"><button id="startCamera" class="primary-action">Turn on camera</button><button id="recordId" class="capture-action" disabled>Start guided recording</button><button id="submitReview" class="next-action" disabled>Send for review <span>→</span></button></div>
+          <div class="camera-actions"><button id="startCamera" class="primary-action">Turn on camera &amp; microphone</button><button id="recordId" class="capture-action" disabled>Start 10-second recording</button><button id="submitReview" class="next-action" disabled>Send for review <span>→</span></button></div>
           <p class="help-text">Only submit when you are comfortable sharing this ID video. It is stored privately for the review team and cannot be downloaded by applicants.</p>
         </section>
 

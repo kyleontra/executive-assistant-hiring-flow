@@ -32,7 +32,7 @@ function stopCamera() {
 }
 
 function preferredRecorderType() {
-  return ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm', 'video/mp4'].find((type) => MediaRecorder.isTypeSupported(type));
+  return ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm', 'video/mp4'].find((type) => MediaRecorder.isTypeSupported(type));
 }
 
 function visibleCameraHeight(video) {
@@ -142,7 +142,7 @@ $('#startCamera').addEventListener('click', async () => {
   try {
     cameraStream = await navigator.mediaDevices.getUserMedia({
       video: { facingMode: { ideal: 'environment' }, width: { ideal: 720, max: 960 }, height: { ideal: 480, max: 720 }, frameRate: { ideal: 24, max: 30 } },
-      audio: false,
+      audio: { echoCancellation: true, noiseSuppression: true },
     });
     const video = $('#cameraPreview');
     video.srcObject = cameraStream;
@@ -159,7 +159,7 @@ $('#startCamera').addEventListener('click', async () => {
     $('.camera-stage').classList.add('live');
     button.textContent = 'Camera on';
     $('#recordId').disabled = false;
-    showResult(result, 'Hold the full front of your ID in the frame, then record a five-second video.', 'success');
+    showResult(result, 'When recording starts, say your name and where you are from, then follow the ID prompts.', 'success');
   } catch (error) {
     button.textContent = 'Turn on camera';
     button.disabled = false;
@@ -183,10 +183,11 @@ $('#recordId').addEventListener('click', () => {
 
   const chunks = [];
   const script = [
-    ['STEP 1 OF 4', 'Hold your face and the front of your ID inside the frame.'],
-    ['STEP 2 OF 4', 'Keep the ID still and make sure the text is easy to read.'],
-    ['STEP 3 OF 4', 'Tilt the ID gently left, then right, to reduce glare.'],
-    ['STEP 4 OF 4', 'Hold the ID steady while we finish the recording.'],
+    ['STEP 1 OF 5', 'Say clearly: “My name is [your full name].”'],
+    ['STEP 2 OF 5', 'Say clearly: “I am from [your city and province].”'],
+    ['STEP 3 OF 5', 'Hold the front of your South African ID inside the frame.'],
+    ['STEP 4 OF 5', 'Tilt the ID gently left, then right, to reduce glare.'],
+    ['STEP 5 OF 5', 'Hold the ID steady while we finish the recording.'],
   ];
   const scriptBox = $('#recordingScript');
   const setScript = (index) => {
@@ -196,7 +197,8 @@ $('#recordId').addEventListener('click', () => {
   };
   const mimeType = preferredRecorderType();
   captureStream = $('#cameraCanvas').captureStream(24);
-  recorder = new MediaRecorder(captureStream, { ...(mimeType ? { mimeType } : {}), videoBitsPerSecond: 750000 });
+  cameraStream.getAudioTracks().forEach((track) => captureStream.addTrack(track));
+  recorder = new MediaRecorder(captureStream, { ...(mimeType ? { mimeType } : {}), videoBitsPerSecond: 750000, audioBitsPerSecond: 96000 });
   recorder.addEventListener('dataavailable', (event) => { if (event.data.size) chunks.push(event.data); });
   recorder.addEventListener('stop', () => {
     clearInterval(recordTimer);
@@ -219,7 +221,7 @@ $('#recordId').addEventListener('click', () => {
     showResult(result, 'Video ready. Watch the preview, then send it for manual review.', 'success');
   });
 
-  let seconds = 5;
+  let seconds = 10;
   recordButton.disabled = true;
   startButton.disabled = true;
   $('#submitReview').disabled = true;
@@ -230,12 +232,12 @@ $('#recordId').addEventListener('click', () => {
   scriptTimer = setInterval(() => {
     scriptIndex += 1;
     if (scriptIndex < script.length) setScript(scriptIndex);
-  }, 1250);
+  }, 2000);
   recordTimer = setInterval(() => {
     seconds -= 1;
     if (seconds > 0) showResult(result, `Recording your ID video… ${seconds}s`, 'success');
   }, 1000);
-  window.setTimeout(() => { if (recorder?.state === 'recording') recorder.stop(); }, 5000);
+  window.setTimeout(() => { if (recorder?.state === 'recording') recorder.stop(); }, 10000);
 });
 
 $('#submitReview').addEventListener('click', async () => {
