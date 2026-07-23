@@ -258,6 +258,7 @@ $('#submitReview').addEventListener('click', async () => {
     const payload = await response.json();
     if (!response.ok) throw new Error(payload.error || 'The video could not be sent.');
     $('#reviewReference').textContent = payload.reference;
+    $('#completeProfile').href = `./candidate-signup.html?review=${encodeURIComponent(payload.reference)}`;
     showResult(result, 'Your video was sent to the manual review queue.', 'success');
     showStep(3);
   } catch (error) {
