@@ -28,6 +28,7 @@ form.addEventListener('submit', async (event) => {
     lastName: document.querySelector('#lastName').value.trim(),
     email: document.querySelector('#email').value.trim(),
     phone: document.querySelector('#phone').value.trim(),
+    password: document.querySelector('#password').value,
   };
   submitButton.disabled = true;
   submitButton.innerHTML = 'Saving…';
@@ -35,7 +36,7 @@ form.addEventListener('submit', async (event) => {
     const response = await fetch(REGISTER_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || 'Your account details could not be saved.');
-    showResult('Your candidate profile is saved and linked to your video review. We’ll be in touch after review.', 'success');
+    showResult('Your account is created and linked to your video review. We’ll be in touch after review.', 'success');
     form.querySelectorAll('input').forEach((input) => { input.disabled = true; });
     submitButton.innerHTML = 'Profile created ✓';
   } catch (error) {

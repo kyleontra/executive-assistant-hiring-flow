@@ -35,8 +35,12 @@ Deno.serve(async (request) => {
     const lastName = clean(body.lastName, 80);
     const email = clean(body.email, 254).toLowerCase();
     const phone = clean(body.phone, 32);
+    const password = typeof body.password === 'string' ? body.password : '';
     if (!REFERENCE_PATTERN.test(reviewReference) || !firstName || !lastName || !/^\S+@\S+\.\S+$/.test(email) || phone.length < 7) {
       return reply(request, { error: 'Enter a valid first name, last name, email address, and phone number.' }, 400);
+    }
+    if (password.length < 10 || password.length > 128) {
+      return reply(request, { error: 'Choose a password between 10 and 128 characters.' }, 400);
     }
 
     const secretKey = Deno.env.get('SUPABASE_SECRET_KEYS')
@@ -48,10 +52,27 @@ Deno.serve(async (request) => {
     if (listError || !files?.some((file) => file.name.startsWith('id-video.'))) {
       return reply(request, { error: 'The linked ID video could not be found. Record the video again and retry.' }, 404);
     }
+    if (files.some((file) => file.name === 'candidate.json')) {
+      return reply(request, { error: 'A candidate profile is already attached to this review.' }, 409);
+    }
 
-    const record = JSON.stringify({ reviewReference, firstName, lastName, email, phone, submittedAt: new Date().toISOString() });
+    const { data: createdUser, error: createUserError } = await admin.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: false,
+      user_metadata: { first_name: firstName, last_name: lastName },
+    });
+    if (createUserError || !createdUser.user) {
+      if (createUserError?.message.toLowerCase().includes('already')) {
+        return reply(request, { error: 'An account with this email already exists.' }, 409);
+      }
+      throw createUserError || new Error('Could not create account.');
+    }
+
+    const record = JSON.stringify({ reviewReference, userId: createdUser.user.id, firstName, lastName, email, phone, submittedAt: new Date().toISOString() });
     const { error: uploadError } = await admin.storage.from(BUCKET).upload(`${folder}/candidate.json`, new Blob([record], { type: 'application/json' }), { contentType: 'application/json', cacheControl: '0', upsert: false });
     if (uploadError) {
+      await admin.auth.admin.deleteUser(createdUser.user.id);
       if (uploadError.message.toLowerCase().includes('already exists')) return reply(request, { error: 'A candidate profile is already attached to this review.' }, 409);
       throw uploadError;
     }
