@@ -43,9 +43,7 @@ Deno.serve(async (request) => {
       return reply(request, { error: 'Choose a password between 10 and 128 characters.' }, 400);
     }
 
-    const secretKey = Deno.env.get('SUPABASE_SECRET_KEYS')
-      ? JSON.parse(Deno.env.get('SUPABASE_SECRET_KEYS')!)["default"]
-      : Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const secretKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const admin = createClient(Deno.env.get('SUPABASE_URL')!, secretKey);
     const auth = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!);
     const folder = `pending/${reviewReference}`;
@@ -73,7 +71,6 @@ Deno.serve(async (request) => {
     const record = JSON.stringify({ reviewReference, userId: createdUser.id, firstName, lastName, email, phone, submittedAt: new Date().toISOString() });
     const { error: uploadError } = await admin.storage.from(BUCKET).upload(`${folder}/candidate.json`, new Blob([record], { type: 'application/json' }), { contentType: 'application/json', cacheControl: '0', upsert: false });
     if (uploadError) {
-      await admin.auth.admin.deleteUser(createdUser.id);
       if (uploadError.message.toLowerCase().includes('already exists')) return reply(request, { error: 'A candidate profile is already attached to this review.' }, 409);
       throw uploadError;
     }

@@ -35,9 +35,7 @@ Deno.serve(async (request) => {
 
     const reference = `SA-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
     const extension = videoType === 'video/mp4' ? 'mp4' : 'webm';
-    const secretKey = Deno.env.get('SUPABASE_SECRET_KEYS')
-      ? JSON.parse(Deno.env.get('SUPABASE_SECRET_KEYS')!)["default"]
-      : Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const secretKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const admin = createClient(Deno.env.get('SUPABASE_URL')!, secretKey);
     const { error } = await admin.storage
       .from(BUCKET)
