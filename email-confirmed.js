@@ -40,9 +40,9 @@ resendButton.addEventListener('click', async () => {
   resendButton.disabled = true;
   resendButton.textContent = 'Sending…';
   try {
-    const { error } = await window.savaAuth.auth.signInWithOtp({
+    const { error } = await window.savaAuth.auth.resend({
+      type: 'signup',
       email: emailInput.value.trim().toLowerCase(),
-      options: { shouldCreateUser: false },
     });
     if (error) throw error;
     showResult('A fresh six-digit code is on its way. Check your inbox, Spam, and Promotions.', 'success');
