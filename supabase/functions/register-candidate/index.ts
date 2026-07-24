@@ -47,6 +47,7 @@ Deno.serve(async (request) => {
       ? JSON.parse(Deno.env.get('SUPABASE_SECRET_KEYS')!)["default"]
       : Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const admin = createClient(Deno.env.get('SUPABASE_URL')!, secretKey);
+    const auth = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!);
     const folder = `pending/${reviewReference}`;
     const { data: files, error: listError } = await admin.storage.from(BUCKET).list(folder, { limit: 10 });
     if (listError || !files?.some((file) => file.name.startsWith('id-video.'))) {
@@ -56,23 +57,23 @@ Deno.serve(async (request) => {
       return reply(request, { error: 'A candidate profile is already attached to this review.' }, 409);
     }
 
-    const { data: createdUser, error: createUserError } = await admin.auth.admin.createUser({
+    const { data: signUp, error: createUserError } = await auth.auth.signUp({
       email,
       password,
-      email_confirm: false,
-      user_metadata: { first_name: firstName, last_name: lastName },
+      options: { data: { first_name: firstName, last_name: lastName } },
     });
-    if (createUserError || !createdUser.user) {
+    const createdUser = signUp.user;
+    if (createUserError || !createdUser) {
       if (createUserError?.message.toLowerCase().includes('already')) {
         return reply(request, { error: 'An account with this email already exists.' }, 409);
       }
       throw createUserError || new Error('Could not create account.');
     }
 
-    const record = JSON.stringify({ reviewReference, userId: createdUser.user.id, firstName, lastName, email, phone, submittedAt: new Date().toISOString() });
+    const record = JSON.stringify({ reviewReference, userId: createdUser.id, firstName, lastName, email, phone, submittedAt: new Date().toISOString() });
     const { error: uploadError } = await admin.storage.from(BUCKET).upload(`${folder}/candidate.json`, new Blob([record], { type: 'application/json' }), { contentType: 'application/json', cacheControl: '0', upsert: false });
     if (uploadError) {
-      await admin.auth.admin.deleteUser(createdUser.user.id);
+      await admin.auth.admin.deleteUser(createdUser.id);
       if (uploadError.message.toLowerCase().includes('already exists')) return reply(request, { error: 'A candidate profile is already attached to this review.' }, 409);
       throw uploadError;
     }

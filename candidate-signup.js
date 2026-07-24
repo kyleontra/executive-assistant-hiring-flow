@@ -3,7 +3,7 @@ const reviewNote = document.querySelector('#reviewNote');
 const form = document.querySelector('#candidateForm');
 const submitButton = document.querySelector('#submitProfile');
 const formResult = document.querySelector('#formResult');
-const REGISTER_ENDPOINT = 'https://lwzietvhuxgelwehpjag.supabase.co/functions/v1/register-candidate';
+const REGISTER_ENDPOINT = 'https://jyxamdvvnoylaxolhlht.supabase.co/functions/v1/register-candidate';
 
 function showResult(message, type) {
   formResult.textContent = message;
@@ -36,7 +36,7 @@ form.addEventListener('submit', async (event) => {
     const response = await fetch(REGISTER_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || 'Your account details could not be saved.');
-    showResult('Your account is created and linked to your video review. We’ll be in touch after review.', 'success');
+    showResult('Check your inbox to confirm your email address. Your account and video review are now linked.', 'success');
     form.querySelectorAll('input').forEach((input) => { input.disabled = true; });
     submitButton.innerHTML = 'Profile created ✓';
   } catch (error) {

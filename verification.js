@@ -9,7 +9,7 @@ let scriptTimer;
 let captureStream;
 let cameraFrame;
 let visibleHeight;
-const REVIEW_ENDPOINT = 'https://lwzietvhuxgelwehpjag.supabase.co/functions/v1/submit-id-video';
+const REVIEW_ENDPOINT = 'https://jyxamdvvnoylaxolhlht.supabase.co/functions/v1/submit-id-video';
 
 function showStep(step) {
   panels.forEach((panel) => { panel.hidden = Number(panel.dataset.panel) !== step; });
