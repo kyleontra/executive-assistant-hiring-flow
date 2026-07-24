@@ -27,7 +27,6 @@ form.addEventListener('submit', async (event) => {
     firstName: document.querySelector('#firstName').value.trim(),
     lastName: document.querySelector('#lastName').value.trim(),
     email: document.querySelector('#email').value.trim(),
-    phone: document.querySelector('#phone').value.trim(),
     password: document.querySelector('#password').value,
   };
   submitButton.disabled = true;
@@ -36,7 +35,7 @@ form.addEventListener('submit', async (event) => {
     const response = await fetch(REGISTER_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || 'Your account details could not be saved.');
-    showResult('Check your inbox to confirm your email address. Your account and video review are now linked.', 'success');
+    showResult('Account created. Look for an email from Supabase (noreply@mail.app.supabase.io) with the subject “Confirm your email address.” Open it and select “Confirm your email address.” Check Spam or Promotions if it is not in your inbox.', 'success');
     form.querySelectorAll('input').forEach((input) => { input.disabled = true; });
     submitButton.innerHTML = 'Profile created ✓';
   } catch (error) {

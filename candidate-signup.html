@@ -16,14 +16,14 @@
       <aside class="signup-aside">
         <p class="eyebrow">FINAL STEP</p>
         <h1>Create your candidate profile.</h1>
-        <p>Your contact details are stored privately with your video review, so the team can reach you once your account is approved.</p>
-        <div class="signup-points"><span>1</span><b>Video review submitted</b><span>2</span><b>Contact details</b><span>3</span><b>Ready for review</b></div>
+        <p>Your name and email are stored privately with your video review, so the team can reach you once your account is approved.</p>
+        <div class="signup-points"><span>1</span><b>Video review submitted</b><span>2</span><b>Account details</b><span>3</span><b>Ready for review</b></div>
       </aside>
       <section class="signup-main">
         <div class="signup-card">
           <p class="eyebrow blue">ACCOUNT SETUP</p>
-          <h2>Tell us how to reach you.</h2>
-          <p class="lead">Use the same name and contact details you want attached to job applications.</p>
+          <h2>Create your account.</h2>
+          <p class="lead">Use the same name and email address you want attached to job applications.</p>
           <p id="reviewNote" class="review-note" aria-live="polite"></p>
           <form id="candidateForm" novalidate>
             <div class="two-fields">
@@ -31,7 +31,6 @@
               <label>Last name<input id="lastName" name="lastName" autocomplete="family-name" required maxlength="80" /></label>
             </div>
             <label>Email address<input id="email" name="email" type="email" autocomplete="email" required maxlength="254" placeholder="you@example.com" /></label>
-            <label>Phone number<input id="phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" required maxlength="32" placeholder="+27 82 123 4567" /></label>
             <label>Password<input id="password" name="password" type="password" autocomplete="new-password" required minlength="10" maxlength="128" placeholder="At least 10 characters" /></label>
             <p class="field-help">Your password creates your account securely. It is never added to your video review file.</p>
             <div id="formResult" class="form-result" aria-live="polite"></div>
