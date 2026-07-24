@@ -1,23 +1,55 @@
+const form = document.querySelector('#verificationForm');
+const emailInput = document.querySelector('#verificationEmail');
+const codeInput = document.querySelector('#verificationCode');
 const result = document.querySelector('#confirmationResult');
-const title = document.querySelector('#confirmationTitle');
-const lead = document.querySelector('#confirmationLead');
-const continueButton = document.querySelector('#continueToPhotos');
+const verifyButton = document.querySelector('#verifyCode');
+const resendButton = document.querySelector('#resendCode');
 
-async function checkConfirmation() {
-  const user = await window.getVerifiedCandidate();
-  if (user) {
-    title.textContent = 'Your email is confirmed.';
-    lead.textContent = `You are signed in as ${user.email}. Next, add clear photos of both sides of your South African ID.`;
-    result.textContent = 'Email verified. Your identity review can now begin.';
-    result.className = 'form-result show success';
-    continueButton.hidden = false;
-    return;
-  }
-  title.textContent = 'Confirm your email to continue.';
-  lead.textContent = 'Open the Supabase email, select “Confirm your email address,” then return here. If you already clicked it, refresh this page.';
-  result.textContent = 'We could not find a confirmed session yet.';
-  result.className = 'form-result show error';
+emailInput.value = new URLSearchParams(window.location.search).get('email') || '';
+
+function showResult(message, type) {
+  result.textContent = message;
+  result.className = `form-result show ${type}`;
 }
 
-window.savaAuth.auth.onAuthStateChange(() => { window.setTimeout(checkConfirmation, 0); });
-checkConfirmation();
+codeInput.addEventListener('input', () => {
+  codeInput.value = codeInput.value.replace(/\D/g, '').slice(0, 6);
+});
+
+form.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  if (!form.reportValidity() || verifyButton.disabled) return;
+  const email = emailInput.value.trim().toLowerCase();
+  const token = codeInput.value.trim();
+  verifyButton.disabled = true;
+  verifyButton.textContent = 'Verifying…';
+  try {
+    const { error } = await window.savaAuth.auth.verifyOtp({ email, token, type: 'email' });
+    if (error) throw error;
+    showResult('Email verified. Continuing to your ID photos…', 'success');
+    window.setTimeout(() => { window.location.assign('./id-verification.html'); }, 650);
+  } catch (error) {
+    showResult(error.message || 'That code could not be verified. Request a new code and try again.', 'error');
+    verifyButton.disabled = false;
+    verifyButton.innerHTML = 'Verify email <span>→</span>';
+  }
+});
+
+resendButton.addEventListener('click', async () => {
+  if (!emailInput.reportValidity() || resendButton.disabled) return;
+  resendButton.disabled = true;
+  resendButton.textContent = 'Sending…';
+  try {
+    const { error } = await window.savaAuth.auth.signInWithOtp({
+      email: emailInput.value.trim().toLowerCase(),
+      options: { shouldCreateUser: false },
+    });
+    if (error) throw error;
+    showResult('A fresh six-digit code is on its way. Check your inbox, Spam, and Promotions.', 'success');
+  } catch (error) {
+    showResult(error.message || 'We could not send a new code. Please try again shortly.', 'error');
+  } finally {
+    resendButton.disabled = false;
+    resendButton.textContent = 'Resend code';
+  }
+});

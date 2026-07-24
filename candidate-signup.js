@@ -24,9 +24,10 @@ form.addEventListener('submit', async (event) => {
     const response = await fetch(REGISTER_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || 'Your account could not be created.');
-    showResult('Account created. Look for an email from Supabase (noreply@mail.app.supabase.io) with the subject “Confirm your email address.” Open it and select “Confirm your email address.” Check Spam or Promotions if it is not in your inbox.', 'success');
+    showResult('Account created. Check your inbox for a six-digit verification code from Hire From SA. Check Spam or Promotions if it is not in your inbox.', 'success');
     form.querySelectorAll('input').forEach((input) => { input.disabled = true; });
     submitButton.textContent = 'Account created ✓';
+    confirmedEmail.href = `./email-confirmed.html?email=${encodeURIComponent(payload.email)}`;
     confirmedEmail.hidden = false;
   } catch (error) {
     submitButton.disabled = false;

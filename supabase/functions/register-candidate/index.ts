@@ -1,7 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
 const ALLOWED_ORIGIN = 'https://executive-assistant-hiring-flow.vercel.app';
-const EMAIL_CONFIRMATION_URL = `${ALLOWED_ORIGIN}/email-confirmed.html`;
 
 function headers(request: Request) {
   const origin = request.headers.get('origin');
@@ -46,7 +45,6 @@ Deno.serve(async (request) => {
       password,
       options: {
         data: { first_name: firstName, last_name: lastName },
-        emailRedirectTo: EMAIL_CONFIRMATION_URL,
       },
     });
     if (error) {
