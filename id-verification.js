@@ -1,72 +1,77 @@
-const $ = (selector) => document.querySelector(selector);
-const imageInput = $('#idImage');
-let imageFile;
+const PHOTO_ENDPOINT = 'https://jyxamdvvnoylaxolhlht.supabase.co/functions/v1/submit-id-photos';
+const MAX_PHOTO_BYTES = 4 * 1024 * 1024;
+const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+const form = document.querySelector('#photoForm');
+const submitButton = document.querySelector('#submitPhotos');
+const result = document.querySelector('#photoResult');
+const authStatus = document.querySelector('#authStatus');
+let verified = false;
 
-function setView(name) {
-  $('#idleState').hidden = name !== 'idle';
-  $('#processingState').hidden = name !== 'processing';
-  $('#resultState').hidden = name !== 'result';
-  $('#errorState').hidden = name !== 'error';
+function showResult(message, type) {
+  result.textContent = message;
+  result.hidden = false;
+  result.className = `status-box ${type}`;
 }
-function luhnIsValid(value) {
-  let sum = 0;
-  let doubleDigit = false;
-  for (let index = value.length - 1; index >= 0; index--) {
-    let digit = Number(value[index]);
-    if (doubleDigit) { digit *= 2; if (digit > 9) digit -= 9; }
-    sum += digit;
-    doubleDigit = !doubleDigit;
-  }
-  return sum % 10 === 0;
-}
-function maskId(value) { return `•••• •••• •${value.slice(-4)}`; }
-function findIdNumber(text) {
-  const matches = text.match(/(?:\d[\s-]?){13}/g) || [];
-  return matches.map(match => match.replace(/\D/g, '')).find(match => match.length === 13) || null;
-}
-function updateReadButton() { $('#readId').disabled = !(imageFile && $('#consent').checked); }
-function showError(message) { $('#errorText').textContent = message; setView('error'); }
 
-imageInput.addEventListener('change', event => {
-  imageFile = event.target.files?.[0];
-  if (!imageFile) return;
-  const preview = $('#imagePreview');
-  preview.src = URL.createObjectURL(imageFile);
+function validPhoto(input) {
+  const file = input.files?.[0];
+  return file && ALLOWED_TYPES.has(file.type) && file.size > 0 && file.size <= MAX_PHOTO_BYTES;
+}
+
+function updateSubmit() {
+  submitButton.disabled = !(verified && validPhoto(document.querySelector('#frontPhoto')) && validPhoto(document.querySelector('#backPhoto')) && document.querySelector('#photoConsent').checked);
+}
+
+function setPreview(input, preview) {
+  const file = input.files?.[0];
+  if (!file) return;
+  if (!validPhoto(input)) { showResult('Use a JPG, PNG, or WebP photo no larger than 4 MB.', 'error'); input.value = ''; preview.hidden = true; updateSubmit(); return; }
+  preview.src = URL.createObjectURL(file);
   preview.hidden = false;
-  $('.drop-zone').hidden = true;
-  updateReadButton();
-});
-$('#consent').addEventListener('change', updateReadButton);
+  updateSubmit();
+}
 
-$('#idForm').addEventListener('submit', async event => {
+async function requireVerifiedAccount() {
+  const user = await window.getVerifiedCandidate();
+  if (!user) {
+    verified = false;
+    authStatus.textContent = 'Confirm your email first. Open the Supabase confirmation email, then return to this page.';
+    authStatus.className = 'status-box error';
+    updateSubmit();
+    return;
+  }
+  verified = true;
+  authStatus.textContent = `Email confirmed for ${user.email}. You can now add your ID photos.`;
+  authStatus.className = 'status-box success';
+  updateSubmit();
+}
+
+document.querySelector('#frontPhoto').addEventListener('change', (event) => setPreview(event.currentTarget, document.querySelector('#frontPreview')));
+document.querySelector('#backPhoto').addEventListener('change', (event) => setPreview(event.currentTarget, document.querySelector('#backPreview')));
+document.querySelector('#photoConsent').addEventListener('change', updateSubmit);
+
+form.addEventListener('submit', async (event) => {
   event.preventDefault();
-  if (!imageFile || !$('#consent').checked) return;
-  if (!window.Tesseract) { showError('The on-device OCR library did not load. Check your internet connection and try again.'); return; }
-  setView('processing');
-  $('#progressText').textContent = 'Preparing image';
+  if (!form.reportValidity() || submitButton.disabled) return;
+  const token = await window.getAccessToken();
+  if (!token) { showResult('Your sign-in expired. Confirm your email again, then retry.', 'error'); return; }
+  const formData = new FormData();
+  formData.append('front', document.querySelector('#frontPhoto').files[0]);
+  formData.append('back', document.querySelector('#backPhoto').files[0]);
+  submitButton.disabled = true;
+  submitButton.textContent = 'Saving photos…';
   try {
-    const result = await Tesseract.recognize(imageFile, 'eng', { logger: status => {
-      if (status.status === 'recognizing text') $('#progressText').textContent = `Reading text ${Math.round(status.progress * 100)}%`;
-      else if (status.status) $('#progressText').textContent = status.status;
-    }});
-    const rawText = result.data.text || '';
-    const normalised = rawText.replace(/\s+/g, ' ').toUpperCase();
-    const countryFound = /REPUBLIC\s+OF\s+SOUTH\s+AFRICA|SOUTH\s+AFRICA|IDENTITY\s+(CARD|DOCUMENT)/.test(normalised);
-    const idNumber = findIdNumber(rawText);
-    const validChecksum = idNumber ? luhnIsValid(idNumber) : false;
-    $('#countrySignal').textContent = countryFound ? 'Detected' : 'Not detected';
-    $('#countrySignal').className = countryFound ? 'yes' : 'no';
-    $('#numberSignal').textContent = idNumber ? 'Detected' : 'Not detected';
-    $('#numberSignal').className = idNumber ? 'yes' : 'no';
-    $('#checksumSignal').textContent = idNumber ? (validChecksum ? 'Matches 13-digit checksum' : 'Does not match checksum') : 'No number to check';
-    $('#checksumSignal').className = validChecksum ? 'yes' : 'no';
-    $('#maskedId').textContent = idNumber ? maskId(idNumber) : '—';
-    const passed = countryFound && Boolean(idNumber) && validChecksum;
-    $('#resultTitle').textContent = passed ? 'South Africa ID test passed' : 'ID test needs a clearer image';
-    $('#resultDescription').textContent = passed ? 'South Africa document text and a valid 13-digit ID-number checksum were detected. The identifier remains masked on this screen.' : 'The test did not find all required text signals. Try a brighter, sharper image of the front of the ID.';
-    $('#resultBadge').textContent = passed ? 'Test passed' : 'Try again';
-    setView('result');
+    const response = await fetch(PHOTO_ENDPOINT, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: formData });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.error || 'The ID photos could not be saved.');
+    showResult('ID photos saved privately. Continuing to the video check…', 'success');
+    window.location.assign(`./verification.html?review=${encodeURIComponent(payload.reference)}`);
   } catch (error) {
-    showError('We could not read this image. Try a brighter photo with all printed text in focus and no glare.');
+    submitButton.disabled = false;
+    submitButton.innerHTML = 'Save ID photos and continue <span>→</span>';
+    showResult(error.message || 'The ID photos could not be saved. Please try again.', 'error');
   }
 });
+
+window.savaAuth.auth.onAuthStateChange(() => { window.setTimeout(requireVerifiedAccount, 0); });
+requireVerifiedAccount();

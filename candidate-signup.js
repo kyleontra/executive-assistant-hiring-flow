@@ -1,8 +1,7 @@
-const reviewReference = new URLSearchParams(window.location.search).get('review');
-const reviewNote = document.querySelector('#reviewNote');
 const form = document.querySelector('#candidateForm');
 const submitButton = document.querySelector('#submitProfile');
 const formResult = document.querySelector('#formResult');
+const confirmedEmail = document.querySelector('#confirmedEmail');
 const REGISTER_ENDPOINT = 'https://jyxamdvvnoylaxolhlht.supabase.co/functions/v1/register-candidate';
 
 function showResult(message, type) {
@@ -10,37 +9,28 @@ function showResult(message, type) {
   formResult.className = `form-result show ${type}`;
 }
 
-if (!/^SA-[A-Z0-9]{8}$/.test(reviewReference || '')) {
-  reviewNote.textContent = 'This account setup link is missing its video review reference. Complete the ID video step first.';
-  reviewNote.className = 'review-note show error';
-  submitButton.disabled = true;
-} else {
-  reviewNote.textContent = `Video review ${reviewReference} is ready. Your details will be attached to it privately.`;
-  reviewNote.className = 'review-note show';
-}
-
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
   if (!form.reportValidity() || submitButton.disabled) return;
   const payload = {
-    reviewReference,
     firstName: document.querySelector('#firstName').value.trim(),
     lastName: document.querySelector('#lastName').value.trim(),
     email: document.querySelector('#email').value.trim(),
     password: document.querySelector('#password').value,
   };
   submitButton.disabled = true;
-  submitButton.innerHTML = 'Saving…';
+  submitButton.textContent = 'Creating account…';
   try {
     const response = await fetch(REGISTER_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
     const result = await response.json();
-    if (!response.ok) throw new Error(result.error || 'Your account details could not be saved.');
+    if (!response.ok) throw new Error(result.error || 'Your account could not be created.');
     showResult('Account created. Look for an email from Supabase (noreply@mail.app.supabase.io) with the subject “Confirm your email address.” Open it and select “Confirm your email address.” Check Spam or Promotions if it is not in your inbox.', 'success');
     form.querySelectorAll('input').forEach((input) => { input.disabled = true; });
-    submitButton.innerHTML = 'Profile created ✓';
+    submitButton.textContent = 'Account created ✓';
+    confirmedEmail.hidden = false;
   } catch (error) {
     submitButton.disabled = false;
-    submitButton.innerHTML = 'Create candidate profile <span>→</span>';
-    showResult(error.message || 'Your account details could not be saved. Please try again.', 'error');
+    submitButton.innerHTML = 'Create account <span>→</span>';
+    showResult(error.message || 'Your account could not be created. Please try again.', 'error');
   }
 });

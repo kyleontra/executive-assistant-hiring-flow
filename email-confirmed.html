@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#1d6be8" />
+    <title>Email confirmed</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./candidate-signup.css" />
+    <link rel="stylesheet" href="./candidate-flow.css" />
+  </head>
+  <body>
+    <header class="signup-header"><a class="signup-brand" href="./jobs.html">EXECUTIVE <span>ASSISTANTS</span></a><a href="./jobs.html">Exit</a></header>
+    <main class="signup-shell">
+      <aside class="signup-aside">
+        <p class="eyebrow">EMAIL CONFIRMATION</p>
+        <h1>One secure step done.</h1>
+        <p>Your account needs a confirmed email before it can submit identity documents for the private review queue.</p>
+        <div class="signup-points"><span>1</span><b>Create account</b><span>2</span><b>Confirm email</b><span>3</span><b>Upload ID photos</b><span>4</span><b>Record ID video</b></div>
+      </aside>
+      <section class="signup-main"><div class="signup-card"><p class="eyebrow blue">STEP 2 OF 4</p><h2 id="confirmationTitle">Confirming your email…</h2><p id="confirmationLead" class="lead">We are securely checking the confirmation link.</p><div id="confirmationResult" class="form-result show" aria-live="polite">Please wait a moment.</div><a id="continueToPhotos" class="confirmation-link" href="./id-verification.html" hidden>Continue to ID photos <span>→</span></a></div></section>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./auth-client.js"></script>
+    <script src="./email-confirmed.js"></script>
+  </body>
+</html>

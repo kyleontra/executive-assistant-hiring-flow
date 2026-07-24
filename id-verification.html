@@ -3,43 +3,35 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#256fe8" />
-    <title>South African ID text check</title>
+    <meta name="theme-color" content="#1d6be8" />
+    <title>Upload South African ID photos</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./id-verification.css" />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./id-upload.css" />
   </head>
   <body>
-    <header class="ocr-header"><a href="./home.html" class="ocr-brand">EXECUTIVE <span>ASSISTANTS</span></a><span>South Africa ID text check</span><a href="./home.html">Exit</a></header>
-    <main class="ocr-main">
-      <section class="ocr-intro"><p class="eyebrow">ON-DEVICE OCR PROTOTYPE</p><h1>Check ID document text.</h1><p>This test reads the image in your browser and looks for South African ID document signals. It does not upload or store the image.</p></section>
-      <section class="ocr-grid">
-        <form id="idForm" class="upload-card">
-          <div class="card-label">1. ADD DOCUMENT IMAGE</div>
-          <label class="drop-zone" for="idImage"><input id="idImage" type="file" accept="image/*" capture="environment" /><span class="upload-icon">↑</span><b>Choose a clear photo of the front of the ID</b><small>JPG, PNG, or a camera photo. Keep all edges and printed text visible.</small></label>
-          <img id="imagePreview" alt="Selected ID preview" hidden />
-          <label class="consent"><input id="consent" type="checkbox" /><span></span><p>I have permission to process this ID image for this local text-check test. The image will not be uploaded or stored.</p></label>
-          <button id="readId" class="read-button" type="submit" disabled>Read document text <span>→</span></button>
-          <p class="local-note">The OCR library runs in this browser. Only document signals are shown; raw text and photos are not retained.</p>
-        </form>
-        <aside class="result-card">
-          <div class="card-label">2. DOCUMENT SIGNALS</div>
-          <div id="idleState" class="idle-state"><span>⌁</span><b>Waiting for an image</b><p>Upload a clear image and choose “Read document text.”</p></div>
-          <div id="processingState" class="processing-state" hidden><div class="spinner"></div><b>Reading document text…</b><p id="progressText">Preparing image</p></div>
-          <div id="resultState" class="result-state" hidden>
-            <div id="resultBadge" class="result-badge">Test result</div>
-            <h2 id="resultTitle">Document signals found</h2>
-            <p id="resultDescription"></p>
-            <div class="signal-list"><div><span>South Africa document text</span><b id="countrySignal">—</b></div><div><span>13-digit ID number</span><b id="numberSignal">—</b></div><div><span>Checksum format</span><b id="checksumSignal">—</b></div><div><span>Detected ID reference</span><b id="maskedId">—</b></div></div>
-            <div class="manual-callout"><span>✓</span><p><b>Test complete.</b> This result is based on text detected in the selected image. The image and raw OCR text are not stored.</p></div>
-          </div>
-          <div id="errorState" class="error-state" hidden><span>!</span><b>We could not read the document.</b><p id="errorText">Try a brighter, sharper image with no glare.</p></div>
-        </aside>
+    <header class="upload-header"><a class="upload-brand" href="./jobs.html">EXECUTIVE <span>ASSISTANTS</span></a><span>Private ID review</span><a href="./jobs.html">Exit</a></header>
+    <main class="upload-shell">
+      <aside class="upload-aside"><p class="eyebrow">SOUTH AFRICA ROLES</p><h1>Add clear ID photos.</h1><p>Your confirmed account is required before these photos can be submitted. They are stored privately for the review team.</p><div class="flow-steps"><span>✓</span><b>Account created</b><span>✓</span><b>Email confirmed</b><span class="active">3</span><b>Upload ID photos</b><span>4</span><b>Record ID video</b></div></aside>
+      <section class="upload-main">
+        <div class="upload-card">
+          <p class="eyebrow blue">STEP 3 OF 4</p><h2>Photograph both sides of your ID.</h2><p class="lead">Use clear, well-lit photos. Keep all four edges and printed text visible. JPG, PNG, or WebP only; maximum 4 MB per photo.</p>
+          <p id="authStatus" class="status-box" aria-live="polite">Checking your verified account…</p>
+          <form id="photoForm" novalidate>
+            <div class="photo-grid">
+              <label class="photo-drop" for="frontPhoto"><input id="frontPhoto" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" required /><img id="frontPreview" alt="Front of ID preview" hidden /><span class="photo-icon">↑</span><b>Front of ID</b><small>Choose or take a photo</small></label>
+              <label class="photo-drop" for="backPhoto"><input id="backPhoto" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" required /><img id="backPreview" alt="Back of ID preview" hidden /><span class="photo-icon">↑</span><b>Back of ID</b><small>Choose or take a photo</small></label>
+            </div>
+            <label class="consent"><input id="photoConsent" type="checkbox" required /><span></span><p>I have permission to submit these ID images for a private manual eligibility review.</p></label>
+            <p id="photoResult" class="status-box" aria-live="polite" hidden></p>
+            <button id="submitPhotos" type="submit" disabled>Save ID photos and continue <span>→</span></button>
+          </form>
+        </div>
       </section>
-      <section class="limits"><h2>What this test checks</h2><div><p><b>✓</b> Text such as “Republic of South Africa,” “South Africa,” or “Identity Card”</p><p><b>✓</b> A 13-digit ID-number pattern and its structural checksum</p><p><b>×</b> It checks text signals only; it does not store the image or raw OCR text</p></div></section>
     </main>
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./auth-client.js"></script>
     <script src="./id-verification.js"></script>
   </body>
 </html>

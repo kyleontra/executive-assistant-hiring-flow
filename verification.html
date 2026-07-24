@@ -4,75 +4,37 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#1d6be8" />
-    <title>South Africa eligibility check</title>
+    <title>Record South African ID video</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./verification.css" />
-    <link rel="stylesheet" href="./verification-id.css" />
+    <link rel="stylesheet" href="./video-review.css" />
   </head>
   <body>
-    <header class="verify-header">
-      <a href="./jobs.html" class="verify-brand">EXECUTIVE <span>ASSISTANTS</span></a>
-      <span>Candidate eligibility check</span>
-      <a href="./jobs.html">Exit</a>
-    </header>
-    <main class="verify-shell">
-      <aside class="verify-aside">
-        <p class="eyebrow">SOUTH AFRICA ROLES</p>
-        <h1>Confirm you are eligible to apply.</h1>
-        <p>This quick check helps protect a South Africa-only job board from misuse.</p>
-        <div class="steps" aria-label="Verification progress">
-          <div class="verify-step active" data-step="1"><span>1</span><div><b>Confirm location</b><small>Check your approximate location</small></div></div>
-          <div class="verify-step" data-step="2"><span>2</span><div><b>Record your ID</b><small>Send a short video for review</small></div></div>
-          <div class="verify-step" data-step="3"><span>3</span><div><b>Under review</b><small>We will check your submission</small></div></div>
-        </div>
-      </aside>
-
-      <section class="verify-content">
-        <div class="privacy-note"><span>⌁</span><p><b>Private review.</b> Location stays on this device. If you submit an ID video, it is sent to the private review store for a reviewer to check.</p></div>
-
-        <section class="verify-panel" data-panel="1">
-          <p class="eyebrow blue">STEP 1 OF 3</p>
-          <h2>Are you currently in South Africa?</h2>
-          <p class="lead">Allow approximate location access so we can check whether you appear to be within South Africa.</p>
-          <div class="location-card">
-            <div class="location-icon">⌖</div>
-            <div><b>Use my current location</b><p>Your browser will ask for permission. We only use the coordinates for this check.</p></div>
-            <button id="checkLocation" class="primary-action">Check location</button>
-          </div>
-          <div id="locationResult" class="result-box" aria-live="polite"></div>
-          <p class="help-text">Location can be imprecise. If this result is wrong, contact support rather than trying to bypass the check.</p>
-          <button id="locationNext" class="next-action" disabled>Continue <span>→</span></button>
-        </section>
-
-        <section class="verify-panel" data-panel="2" hidden>
-          <p class="eyebrow blue">STEP 2 OF 3</p>
-          <h2>Record a short ID video.</h2>
-          <p class="lead">Complete a 10-second spoken ID check. State your name and where you are from, then show the front of your South African ID.</p>
+    <header class="video-header"><a href="./jobs.html" class="video-brand">EXECUTIVE <span>ASSISTANTS</span></a><span>Private ID review</span><a href="./jobs.html">Exit</a></header>
+    <main class="video-shell">
+      <aside class="video-aside"><p class="eyebrow">SOUTH AFRICA ROLES</p><h1>Finish your ID review.</h1><p>Your ID photos are already in the private review queue. Record one short video to complete the submission.</p><div class="flow-steps"><span>✓</span><b>Account created</b><span>✓</span><b>Email confirmed</b><span>✓</span><b>ID photos submitted</b><span class="active">4</span><b>Record ID video</b><span>5</span><b>Under review</b></div></aside>
+      <section class="video-main">
+        <section id="recordPanel" class="video-card">
+          <p class="eyebrow blue">STEP 4 OF 4</p><h2>Record a 10-second ID video.</h2><p class="lead">State your full name and where you are from, then hold the front of your South African ID in the frame.</p>
+          <p id="authStatus" class="status-box" aria-live="polite">Checking your verified account…</p>
           <div class="camera-stage">
             <canvas id="cameraCanvas" width="720" height="405" aria-label="Camera preview"></canvas>
             <video id="cameraPreview" autoplay playsinline muted></video>
-            <video id="recordedPreview" controls playsinline hidden></video>
-            <div id="cameraPlaceholder" class="camera-placeholder"><span>◉</span><b>Camera is off</b><p>Start the camera, then hold your ID inside the frame.</p></div>
+            <video id="recordedPreview" controls controlslist="nodownload noplaybackrate" playsinline hidden></video>
+            <div id="cameraPlaceholder" class="camera-placeholder"><span>◉</span><b>Camera is off</b><p>Start your camera, then follow the guided prompts.</p></div>
             <div class="camera-guide"><i></i><i></i><i></i><i></i></div>
             <div id="recordingScript" class="recording-script" aria-live="polite" hidden><span id="scriptStep"></span><b id="scriptText"></b></div>
           </div>
-          <div id="cameraResult" class="result-box" aria-live="polite"></div>
-          <div class="camera-actions"><button id="startCamera" class="primary-action">Turn on camera &amp; microphone</button><button id="recordId" class="capture-action" disabled>Start 10-second recording</button><button id="submitReview" class="next-action" disabled>Send for review <span>→</span></button></div>
-          <p class="help-text">Only submit when you are comfortable sharing this ID video. It is stored privately for the review team and cannot be downloaded by applicants.</p>
+          <div id="cameraResult" class="status-box" aria-live="polite" hidden></div>
+          <div class="camera-actions"><button id="startCamera" class="primary-action" disabled>Turn on camera &amp; microphone</button><button id="recordId" class="secondary-action" disabled>Start 10-second recording</button><button id="submitReview" class="primary-action" disabled>Send for review <span>→</span></button></div>
+          <p class="help-text">This preview is only for checking your recording. Your submitted video is stored privately for the review team; applicants are not given a download link.</p>
         </section>
-
-        <section class="verify-panel" data-panel="3" hidden>
-          <div class="complete-mark">✓</div>
-          <p class="eyebrow blue">SUBMISSION RECEIVED</p>
-          <h2>Finish setting up your profile.</h2>
-          <p class="lead">Your ID video is in the private review queue. Add your contact details so we can connect your account to this review.</p>
-          <div class="summary-card"><div><span>Location</span><b id="summaryLocation">Verified in South Africa</b></div><div><span>ID video</span><b>Submitted for review</b></div><div><span>Reference</span><b id="reviewReference">Pending</b></div></div>
-          <a id="completeProfile" class="next-action link-button" href="./candidate-signup.html">Continue to account setup <span>→</span></a>
-        </section>
+        <section id="completePanel" class="video-card complete" hidden><div class="complete-mark">✓</div><p class="eyebrow blue">SUBMISSION RECEIVED</p><h2>Your ID review is in queue.</h2><p class="lead">Your ID photos and video were linked to your verified account and submitted for private manual review.</p><div class="summary-card"><div><span>Email</span><b id="summaryEmail">Confirmed</b></div><div><span>ID photos</span><b>Submitted</b></div><div><span>ID video</span><b>Submitted</b></div><div><span>Reference</span><b id="reviewReference">Pending</b></div></div><a class="primary-action link-button" href="./jobs.html">Browse jobs <span>→</span></a></section>
       </section>
     </main>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./auth-client.js"></script>
     <script src="./verification.js"></script>
   </body>
 </html>
