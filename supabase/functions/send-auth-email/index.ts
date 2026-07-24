@@ -4,10 +4,12 @@ const hookSecret = (Deno.env.get('SEND_EMAIL_HOOK_SECRET') || '').replace('v1,wh
 const tenantId = Deno.env.get('MS_TENANT_ID') || '';
 const clientId = Deno.env.get('MS_CLIENT_ID') || '';
 const clientSecret = Deno.env.get('MS_CLIENT_SECRET') || '';
+const initialRefreshToken = Deno.env.get('MS_REFRESH_TOKEN') || '';
 const senderAddress = Deno.env.get('MS_SENDER_ADDRESS') || 'info@hirefromsa.com';
 
 let cachedToken = '';
 let cachedTokenExpiresAt = 0;
+let currentRefreshToken = initialRefreshToken;
 
 type HookPayload = {
   user: {
@@ -92,8 +94,9 @@ async function getGraphToken() {
     body: new URLSearchParams({
       client_id: clientId,
       client_secret: clientSecret,
-      scope: 'https://graph.microsoft.com/.default',
-      grant_type: 'client_credentials',
+      refresh_token: currentRefreshToken,
+      scope: 'openid profile offline_access https://graph.microsoft.com/Mail.Send',
+      grant_type: 'refresh_token',
     }),
   });
   const result = await response.json();
@@ -101,6 +104,7 @@ async function getGraphToken() {
     throw new Error(`Microsoft token request failed (${response.status}).`);
   }
   cachedToken = result.access_token;
+  currentRefreshToken = result.refresh_token || currentRefreshToken;
   cachedTokenExpiresAt = Date.now() + Math.max(60, Number(result.expires_in || 3600) - 120) * 1000;
   return cachedToken;
 }
@@ -108,7 +112,7 @@ async function getGraphToken() {
 async function sendEmail(recipient: string, code: string, action: string) {
   const token = await getGraphToken();
   const copy = emailCopy(action);
-  const response = await fetch(`https://graph.microsoft.com/v1.0/users/${encodeURIComponent(senderAddress)}/sendMail`, {
+  const response = await fetch('https://graph.microsoft.com/v1.0/me/sendMail', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -123,7 +127,7 @@ async function sendEmail(recipient: string, code: string, action: string) {
         },
         toRecipients: [{ emailAddress: { address: recipient } }],
       },
-      saveToSentItems: false,
+      saveToSentItems: true,
     }),
   });
   if (!response.ok) {
@@ -134,7 +138,7 @@ async function sendEmail(recipient: string, code: string, action: string) {
 
 Deno.serve(async (request) => {
   if (request.method !== 'POST') return new Response('not allowed', { status: 400 });
-  if (!hookSecret || !tenantId || !clientId || !clientSecret) {
+  if (!hookSecret || !tenantId || !clientId || !clientSecret || !initialRefreshToken || !senderAddress) {
     return Response.json({ error: { http_code: 500, message: 'Email service is not configured.' } }, { status: 500 });
   }
 
