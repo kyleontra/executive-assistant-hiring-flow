@@ -40,7 +40,7 @@ Deno.serve(async (request) => {
     }
 
     const auth = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!);
-    const { error } = await auth.auth.signUp({
+    const { data, error } = await auth.auth.signUp({
       email,
       password,
       options: {
@@ -50,6 +50,9 @@ Deno.serve(async (request) => {
     if (error) {
       if (error.message.toLowerCase().includes('already')) return reply(request, { error: 'An account with this email already exists. Sign in or use a different email address.' }, 409);
       throw error;
+    }
+    if (!data.user || data.user.identities?.length === 0) {
+      return reply(request, { error: 'An account with this email already exists. Use a different email address for a new test.' }, 409);
     }
     return reply(request, { status: 'created' }, 201);
   } catch (error) {
