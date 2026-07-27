@@ -26,8 +26,8 @@ form.addEventListener('submit', async (event) => {
   try {
     const { error } = await window.savaAuth.auth.verifyOtp({ email, token, type: 'email' });
     if (error) throw error;
-    showResult('Email verified. Continuing to your ID photos…', 'success');
-    window.setTimeout(() => { window.location.assign('./id-verification.html'); }, 650);
+    showResult('Email verified. Continuing to your welcome video…', 'success');
+    window.setTimeout(() => { window.location.assign('./candidate-experience.html'); }, 650);
   } catch (error) {
     showResult(error.message || 'That code could not be verified. Request a new code and try again.', 'error');
     verifyButton.disabled = false;

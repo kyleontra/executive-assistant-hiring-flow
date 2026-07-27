@@ -40,6 +40,16 @@ async function requireVerifiedAccount() {
     updateSubmit();
     return;
   }
+  let experiences = [];
+  try {
+    experiences = JSON.parse(sessionStorage.getItem(`sava:experience:${user.id}`) || '[]');
+  } catch {
+    experiences = [];
+  }
+  if (!Array.isArray(experiences) || experiences.length === 0) {
+    window.location.replace('./candidate-experience.html');
+    return;
+  }
   verified = true;
   authStatus.textContent = `Email confirmed for ${user.email}. You can now add your ID photos.`;
   authStatus.className = 'status-box success';

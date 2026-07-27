@@ -1,0 +1,9 @@
+.video-card.video-disabled .video-frame,
+.video-card.video-disabled .watch-track {
+  display: none;
+}
+
+.video-card.video-disabled {
+  border-style: dashed;
+  box-shadow: none;
+}

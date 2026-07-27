@@ -16,6 +16,7 @@ const pages = {
   idVerification: 'id-verification.html',
   candidateSignup: 'candidate-signup.html',
   emailConfirmed: 'email-confirmed.html',
+  candidateExperience: 'candidate-experience.html',
 };
 
 module.exports = defineConfig({
@@ -27,7 +28,7 @@ module.exports = defineConfig({
   plugins: [{
     name: 'copy-classic-browser-scripts',
     writeBundle() {
-      ['script.js', 'auth-client.js', 'verification.js', 'id-verification.js', 'candidate-signup.js', 'email-confirmed.js'].forEach(file => {
+      ['script.js', 'auth-client.js', 'verification.js', 'id-verification.js', 'candidate-signup.js', 'email-confirmed.js', 'candidate-experience.js'].forEach(file => {
         copyFileSync(resolve(__dirname, file), resolve(__dirname, 'dist', file));
       });
     },
