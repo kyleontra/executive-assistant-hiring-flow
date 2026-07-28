@@ -213,6 +213,7 @@ function bindApplicants() {
     $('#profileName').textContent = candidate.dataset.name;
     $('#profileRole').textContent = roleName;
     $('#profileExperience').textContent = candidate.dataset.experience;
+    $('#profileMatch').textContent = `${candidate.dataset.match}% match`;
     [1, 2, 3].forEach((number) => {
       $(`#profileQuestion${number}`).textContent = questions[number - 1];
       $(`#profileAnswer${number}`).textContent = candidate.dataset[`answer${number}`];
