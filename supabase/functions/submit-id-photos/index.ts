@@ -22,6 +22,7 @@ Deno.serve(async (request) => {
     const formData = await request.formData();
     const front = formData.get('front');
     const back = formData.get('back');
+    const profilePhotoPath = typeof formData.get('profilePhotoPath') === 'string' ? String(formData.get('profilePhotoPath')) : '';
     const frontType = imageType(front); const backType = imageType(back);
     if (!(front instanceof File) || !(back instanceof File) || !ALLOWED_TYPES.has(frontType) || !ALLOWED_TYPES.has(backType) || front.size === 0 || back.size === 0 || front.size > MAX_PHOTO_BYTES || back.size > MAX_PHOTO_BYTES) return reply(request, { error: 'Send front and back ID photos as JPG, PNG, or WebP files no larger than 4 MB each.' }, 400);
 
@@ -29,6 +30,7 @@ Deno.serve(async (request) => {
     const admin = createClient(Deno.env.get('SUPABASE_URL')!, secretKey);
     const { data: { user }, error: userError } = await admin.auth.getUser(tokenFrom(request));
     if (userError || !user?.email_confirmed_at) return reply(request, { error: 'Confirm your email before submitting ID photos.' }, 401);
+    if (profilePhotoPath !== `candidate-profiles/${user.id}/profile`) return reply(request, { error: 'Add your professional profile photo before submitting ID photos.' }, 400);
     const reference = `SA-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
     const folder = `pending/${reference}`;
     const uploads = [
@@ -38,7 +40,7 @@ Deno.serve(async (request) => {
     const results = await Promise.all(uploads.map(({ path, file, type }) => admin.storage.from(BUCKET).upload(path, file, { cacheControl: '0', contentType: type, upsert: false })));
     const failed = results.find((result) => result.error)?.error;
     if (failed) { await admin.storage.from(BUCKET).remove(uploads.map(({ path }) => path)); throw failed; }
-    const record = JSON.stringify({ reviewReference: reference, userId: user.id, firstName: user.user_metadata.first_name || '', lastName: user.user_metadata.last_name || '', email: user.email || '', submittedAt: new Date().toISOString() });
+    const record = JSON.stringify({ reviewReference: reference, userId: user.id, firstName: user.user_metadata.first_name || '', lastName: user.user_metadata.last_name || '', email: user.email || '', profilePhotoPath, submittedAt: new Date().toISOString() });
     const { error: recordError } = await admin.storage.from(BUCKET).upload(`${folder}/candidate.json`, new Blob([record], { type: 'application/json' }), { contentType: 'application/json', cacheControl: '0', upsert: false });
     if (recordError) { await admin.storage.from(BUCKET).remove([...uploads.map(({ path }) => path), `${folder}/candidate.json`]); throw recordError; }
     return reply(request, { reference, status: 'photos_saved' }, 201);

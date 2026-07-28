@@ -279,8 +279,8 @@ experienceForm.addEventListener('submit', (event) => {
   sessionStorage.setItem(storageKey('experience'), JSON.stringify(serializeEntries()));
   submitButton.disabled = true;
   submitButton.textContent = 'Saving experience…';
-  showFormResult('Experience complete. Continuing to your ID photos…', 'success');
-  window.setTimeout(() => window.location.assign('./id-verification.html'), 650);
+  showFormResult('Experience complete. Continuing to your profile photo…', 'success');
+  window.setTimeout(() => window.location.assign('./candidate-profile.html'), 650);
 });
 
 setFormLocked(true);

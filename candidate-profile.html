@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#1d6be8" />
+    <title>Add your professional profile photo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./candidate-profile.css" />
+  </head>
+  <body>
+    <header class="profile-header"><a class="profile-brand" href="./jobs.html">EXECUTIVE <span>ASSISTANTS</span></a><span>Candidate profile</span><a href="./jobs.html">Exit</a></header>
+    <main class="profile-shell">
+      <aside class="profile-aside">
+        <p class="eyebrow">YOUR CANDIDATE PROFILE</p>
+        <h1>Add a professional photo.</h1>
+        <p>Employers will see this photo beside your name and experience in their hiring inbox.</p>
+        <div class="flow-steps"><span>✓</span><b>Account created</b><span>✓</span><b>Email confirmed</b><span>✓</span><b>Intro &amp; experience</b><span class="active">4</span><b>Profile photo</b><span>5</span><b>ID photos</b><span>6</span><b>ID video</b></div>
+      </aside>
+      <section class="profile-main">
+        <div class="profile-card">
+          <p class="eyebrow blue">STEP 4 OF 6</p>
+          <h2>Choose a clear headshot.</h2>
+          <p class="lead">Use a recent photo with your face clearly visible, neutral lighting, and a simple background.</p>
+          <p id="authStatus" class="status-box" aria-live="polite">Checking your verified account…</p>
+          <form id="profilePhotoForm" novalidate>
+            <label class="photo-picker" for="profilePhotoInput">
+              <input id="profilePhotoInput" type="file" accept="image/jpeg,image/png,image/webp" required />
+              <span id="photoPlaceholder" class="photo-placeholder"><b>+</b><strong>Add profile photo</strong><small>JPG, PNG, or WebP · maximum 4 MB</small></span>
+              <img id="profilePhotoPreview" alt="Your professional profile preview" hidden />
+            </label>
+            <ul class="photo-tips"><li>Face the camera directly</li><li>Use good, even lighting</li><li>Only you should appear in the photo</li></ul>
+            <div id="photoResult" class="status-box" aria-live="polite" hidden></div>
+            <button id="saveProfilePhoto" type="submit" disabled>Save photo and continue <span>→</span></button>
+          </form>
+        </div>
+      </section>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./auth-client.js"></script>
+    <script src="./candidate-profile.js"></script>
+  </body>
+</html>

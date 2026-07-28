@@ -147,7 +147,12 @@ $('#submitReview').addEventListener('click', async () => {
   try {
     const response = await fetch(REVIEW_ENDPOINT, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: formData }); const payload = await response.json();
     if (!response.ok) throw new Error(payload.error || 'The video could not be sent.');
-    const user = await window.getVerifiedCandidate(); $('#reviewReference').textContent = payload.reference; $('#summaryEmail').textContent = user?.email || 'Confirmed'; $('#recordPanel').hidden = true; $('#completePanel').hidden = false; window.scrollTo({ top: 0, behavior: 'smooth' });
+    const user = await window.getVerifiedCandidate(); $('#reviewReference').textContent = payload.reference; $('#summaryEmail').textContent = user?.email || 'Confirmed';
+    const applyingJob = sessionStorage.getItem('sava-applying-job');
+    const nextLink = $('#completeNextLink');
+    if (applyingJob) nextLink.href = `./application-questions.html?job=${encodeURIComponent(applyingJob)}`;
+    else { nextLink.href = './jobs.html'; nextLink.innerHTML = 'Browse jobs <span>→</span>'; }
+    $('#recordPanel').hidden = true; $('#completePanel').hidden = false; window.scrollTo({ top: 0, behavior: 'smooth' });
   } catch (error) { button.disabled = false; button.innerHTML = 'Send for review <span>→</span>'; showResult(error.message || 'The video could not be sent. Please try again.', 'error'); }
 });
 

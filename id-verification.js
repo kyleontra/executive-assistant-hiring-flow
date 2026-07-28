@@ -50,6 +50,11 @@ async function requireVerifiedAccount() {
     window.location.replace('./candidate-experience.html');
     return;
   }
+  const profilePhotoPath = sessionStorage.getItem(`sava:profile-photo:${user.id}`);
+  if (!profilePhotoPath) {
+    window.location.replace('./candidate-profile.html');
+    return;
+  }
   verified = true;
   authStatus.textContent = `Email confirmed for ${user.email}. You can now add your ID photos.`;
   authStatus.className = 'status-box success';
@@ -68,6 +73,8 @@ form.addEventListener('submit', async (event) => {
   const formData = new FormData();
   formData.append('front', document.querySelector('#frontPhoto').files[0]);
   formData.append('back', document.querySelector('#backPhoto').files[0]);
+  const verifiedUser = await window.getVerifiedCandidate();
+  formData.append('profilePhotoPath', verifiedUser ? sessionStorage.getItem(`sava:profile-photo:${verifiedUser.id}`) || '' : '');
   submitButton.disabled = true;
   submitButton.textContent = 'Saving photos…';
   try {

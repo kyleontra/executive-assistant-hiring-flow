@@ -4,6 +4,9 @@ const formResult = document.querySelector('#formResult');
 const confirmedEmail = document.querySelector('#confirmedEmail');
 const REGISTER_ENDPOINT = 'https://jyxamdvvnoylaxolhlht.supabase.co/functions/v1/register-candidate';
 
+const requestedJob = new URLSearchParams(window.location.search).get('job');
+if (requestedJob) sessionStorage.setItem('sava-applying-job', requestedJob);
+
 function showResult(message, type) {
   formResult.textContent = message;
   formResult.className = `form-result show ${type}`;
