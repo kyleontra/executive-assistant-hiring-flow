@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="./style.css" />
     <link rel="stylesheet" href="./employer-simple.css" />
+    <link rel="stylesheet" href="./post-flow.css" />
   </head>
   <body class="simple-employer-page">
     <header class="simple-header">
@@ -26,20 +27,27 @@
         <header><div class="company-logo">Y</div><div><b>Your company</b><small>Job preview</small></div><a href="./index.html">Edit</a></header>
         <section class="review-summary">
           <h2 data-review="title">Executive Assistant</h2>
-          <div class="review-pills"><span data-review="commitment">Full-time (40 hours per week)</span><span data-review="rate">$4.75 – $8 / hour</span></div>
+          <div class="review-pills"><span data-review="commitment">Full-time (40 hours per week)</span><span data-review="rate">$3 – $5 / hour</span></div>
         </section>
         <section class="simple-review-section"><div><h3>About the role</h3><a href="./index.html">Edit</a></div><p data-review="description">No description added.</p></section>
         <section class="simple-review-section"><div><h3>Applicant questions</h3><a href="./index.html">Edit</a></div><ol id="reviewQuestions" class="review-questions"></ol></section>
+        <section class="simple-review-section"><div><h3>Commitment and pay</h3><a href="./compensation.html">Edit</a></div><div class="review-pills review-pay-pills"><span data-review="commitment">Full-time (40 hours per week)</span><span data-review="rate">$3 – $5 / hour</span></div></section>
       </article>
 
       <fieldset class="promotion-card">
-        <legend>Would you like to promote this job post?</legend>
-        <p>Promotion can help the role reach more qualified candidates. No payment is collected yet.</p>
-        <label><input type="radio" name="promotion" value="false" checked /><span><b>Publish normally</b><small>No promotion</small></span></label>
-        <label><input type="radio" name="promotion" value="true" /><span><b>Yes, promote this job</b><small>Mark it for future ad spend</small></span></label>
+        <legend>Promote this job</legend>
+        <p>Choose whether you want to increase the reach of this post.</p>
+        <label><input type="radio" name="promotion" value="true" checked /><span><b>Promote this job</b><small>Set a daily promotion budget</small></span></label>
+        <label><input type="radio" name="promotion" value="false" /><span><b>Do not promote my post</b><small>Publish without promotion</small></span></label>
+        <div id="promotionBudgetPanel" class="promotion-budget">
+          <label for="promotionBudget">Money per day</label>
+          <div class="budget-input"><span>$</span><input id="promotionBudget" type="number" min="5" step="1" value="8" inputmode="numeric" /><small>USD / day</small></div>
+          <p>Minimum $5 per day.</p>
+        </div>
       </fieldset>
 
-      <footer class="review-footer"><a href="./index.html">← Back to edit</a><button id="publishJob" class="primary-button" type="button">Publish role <span>→</span></button></footer>
+      <div id="postFormResult" class="simple-form-result" aria-live="polite"></div>
+      <footer class="review-footer"><a href="./compensation.html">← Back to edit</a><button id="publishJob" class="primary-button" type="button">Publish role <span>→</span></button></footer>
     </main>
     <div class="toast" id="toast"></div>
     <script src="./script.js"></script>

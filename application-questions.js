@@ -42,7 +42,7 @@ async function initialize() {
 form.addEventListener('submit', (event) => {
   event.preventDefault();
   if (!candidate || !job || !form.reportValidity()) {
-    showResult('Answer all three questions before submitting your application.', 'error');
+    showResult('Answer every question before submitting your application.', 'error');
     return;
   }
   const answers = [...questionRoot.querySelectorAll('textarea')].map((textarea) => textarea.value.trim());

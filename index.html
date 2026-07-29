@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="./style.css" />
     <link rel="stylesheet" href="./employer-simple.css" />
+    <link rel="stylesheet" href="./post-flow.css" />
   </head>
   <body class="simple-employer-page">
     <header class="simple-header">
@@ -16,58 +17,39 @@
       <nav><a href="./applicants.html">Hiring inbox</a><a href="./jobs.html">View jobs</a></nav>
     </header>
 
-    <main class="post-shell">
-      <section class="post-intro">
-        <p class="simple-kicker">POST A JOB</p>
-        <h1>Tell candidates exactly what you need.</h1>
-        <p>One clear form. Add the role, the hourly range, and three questions every applicant must answer.</p>
-      </section>
+    <main class="job-flow-shell">
+      <nav class="flow-progress" aria-label="Job posting progress">
+        <span class="active"><b>1</b> Job details</span>
+        <i></i>
+        <span><b>2</b> Commitment &amp; pay</span>
+        <i></i>
+        <span><b>3</b> Review</span>
+      </nav>
 
-      <form id="postJobForm" class="simple-job-form" novalidate>
-        <section class="simple-form-section">
-          <div class="section-number">01</div>
-          <div class="section-content">
-            <h2>Job details</h2>
-            <p class="section-help">Keep the title specific and describe the day-to-day work clearly.</p>
-            <label class="simple-field">Job title <em>*</em><input id="title" name="title" maxlength="100" placeholder="e.g. Executive Assistant to the Founder" required /></label>
-            <label class="simple-field">Job description <em>*</em><textarea id="description" name="description" maxlength="5000" rows="12" placeholder="Describe the role, responsibilities, working relationship, and what success looks like." required></textarea><small><span id="descriptionCount">0</span> / 5,000 characters</small></label>
-          </div>
+      <form id="postJobForm" class="job-flow-card" novalidate>
+        <header class="flow-card-heading">
+          <p class="simple-kicker">POST A JOB</p>
+          <h1>Job details</h1>
+          <p>Give candidates a clear picture of the role and what you want to learn from them.</p>
+        </header>
+
+        <section class="wide-fields">
+          <label class="simple-field">Job title <em>*</em><input id="title" name="title" maxlength="100" placeholder="e.g. Executive Assistant to the Founder" required /></label>
+          <label class="simple-field">Job description <em>*</em><textarea id="description" name="description" maxlength="10000" rows="16" placeholder="Describe the responsibilities, working relationship, day-to-day work, and what success looks like." required></textarea><small><span id="descriptionCount">0</span> / 10,000 characters</small></label>
         </section>
 
-        <section class="simple-form-section">
-          <div class="section-number">02</div>
-          <div class="section-content">
-            <h2>Applicant questions</h2>
-            <p class="section-help">Every applicant will be required to submit a short written answer to all three questions.</p>
-            <label class="simple-field">Question 1 <em>*</em><input id="question1" name="question1" maxlength="240" placeholder="e.g. Tell us about a complex calendar you managed." required /></label>
-            <label class="simple-field">Question 2 <em>*</em><input id="question2" name="question2" maxlength="240" placeholder="e.g. How do you keep an executive's priorities on track?" required /></label>
-            <label class="simple-field">Question 3 <em>*</em><input id="question3" name="question3" maxlength="240" placeholder="e.g. Describe a time you solved a problem without being asked." required /></label>
+        <section class="question-builder">
+          <div class="question-builder-heading">
+            <div><h2>Applicant questions</h2><p>Add at least one question. Every applicant must answer every question you include.</p></div>
+            <button id="addQuestion" class="add-question-button" type="button"><span>+</span> Add question</button>
           </div>
-        </section>
-
-        <section class="simple-form-section">
-          <div class="section-number">03</div>
-          <div class="section-content">
-            <h2>Commitment and hourly pay</h2>
-            <p class="section-help">A public hourly range is required. Jobs without a clear range cannot be posted.</p>
-            <fieldset class="commitment-options">
-              <legend>Commitment <em>*</em></legend>
-              <label><input type="radio" name="commitment" value="Full-time (40 hours per week)" required /><span><b>Full-time</b><small>40 hours per week</small></span></label>
-              <label><input type="radio" name="commitment" value="Part-time (20 to 40 hours per week)" required /><span><b>Part-time</b><small>20 to 40 hours per week</small></span></label>
-              <label><input type="radio" name="commitment" value="Less than 20 hours per week" required /><span><b>Less than 20 hours</b><small>Per week</small></span></label>
-            </fieldset>
-            <div class="rate-row">
-              <label class="simple-field">Hourly rate from <em>*</em><div class="rate-input"><span>$</span><input id="minRate" name="minRate" type="number" min="4.75" step="0.25" required /><small>USD / hour</small></div></label>
-              <label class="simple-field">Hourly rate to <em>*</em><div class="rate-input"><span>$</span><input id="maxRate" name="maxRate" type="number" min="5" step="0.25" required /><small>USD / hour</small></div></label>
-            </div>
-            <p class="minimum-note">Minimum starting rate: <b>$4.75 USD per hour</b>.</p>
-          </div>
+          <div id="jobQuestionList" class="job-question-list"></div>
         </section>
 
         <div id="postFormResult" class="simple-form-result" aria-live="polite"></div>
-        <footer class="simple-form-footer">
-          <p>Everything can be edited before publishing.</p>
-          <button class="primary-button" type="submit">Review role <span>→</span></button>
+        <footer class="flow-card-footer">
+          <p>Step 1 of 3</p>
+          <button class="primary-button" type="submit">Continue to commitment &amp; pay <span>→</span></button>
         </footer>
       </form>
     </main>

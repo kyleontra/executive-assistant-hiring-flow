@@ -1,3 +1,61 @@
 <!doctype html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Executive Assistant — Pay</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="./style.css"></head>
-<body><div class="app-shell"><aside class="journey-panel"><div class="journey-copy"><p class="overline">NEW EXECUTIVE ASSISTANT ROLE</p><h1>Find the right executive assistant.</h1><p>A clear rate helps candidates decide whether the role is right for them before they apply.</p></div><div class="journey-steps"><div class="step done"><span>✓</span><div><b>Role details</b><small>Complete</small></div></div><div class="step done"><span>✓</span><div><b>Responsibilities</b><small>Complete</small></div></div><div class="step active"><span>03</span><div><b>Pay and post</b><small>Set a range and review</small></div></div></div><span class="orb orb-one"></span><span class="orb orb-two"></span><span class="grid-mark"></span></aside><main class="create-main"><header class="topbar"><span class="topbar-copy">Jobs <b>›</b> New Executive Assistant role</span><div><button class="save-button text-btn" type="button">Save draft</button><a class="close-button" href="./index.html">×</a></div></header><section class="form-intro"><p class="overline">STEP 03 OF 03</p><h2>Pay and final review</h2><p>Set a clear range and check the role details before posting.</p></section><form id="compensationForm" class="page-form"><section class="form-section"><div class="pay-toggle"><div class="money-mark">$</div><div><b>Show the hourly rate</b><p>You can still discuss the final rate with candidates.</p></div><label class="switch"><input type="checkbox" id="showPay" checked><span></span></label></div><div class="field-row pay-fields"><label class="field"><span>From <em>*</em></span><div class="currency-input"><b>$</b><input id="minRate" type="number" value="8" min="1"><span>/hr</span></div></label><label class="field"><span>To <em>*</em></span><div class="currency-input"><b>$</b><input id="maxRate" type="number" value="12" min="1"><span>/hr</span></div></label></div><div class="review-note"><span>✓</span><p><b>Review before posting.</b> Check the role details once more, then publish when you are ready.</p></div></section><footer class="form-footer"><a class="back-btn" href="./responsibilities.html">← Back</a><p class="autosave"><span>✓</span> Saved just now</p><button class="next-btn" type="submit">Review role <span>→</span></button></footer></form><aside class="preview-panel"><div class="preview-label"><span>YOUR JOB PREVIEW</span><i></i><i></i><i></i></div><div class="job-preview"><div class="company-row"><div class="company-logo">Y</div><div><b>Your company</b><small>Company name</small></div></div><h3 data-preview="title">Executive Assistant</h3><div class="meta"><span data-preview="type">Full-time</span><span data-preview="location">Remote · South Africa</span></div><p class="preview-description" data-preview="description">Add a description so candidates can understand the role before they apply.</p><div class="preview-skills" data-preview="skills"></div><div class="preview-bottom"><span data-preview="rate">$8 – $12 / hour</span></div></div></aside></main></div><div class="toast" id="toast"></div><script src="./script.js"></script></body></html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Commitment and Pay | Hire From SA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./style.css" />
+    <link rel="stylesheet" href="./employer-simple.css" />
+    <link rel="stylesheet" href="./post-flow.css" />
+  </head>
+  <body class="simple-employer-page">
+    <header class="simple-header">
+      <a class="simple-brand" href="./index.html">HIRE FROM <span>SA</span></a>
+      <nav><a href="./applicants.html">Hiring inbox</a><a href="./jobs.html">View jobs</a></nav>
+    </header>
+
+    <main class="job-flow-shell compact-flow-shell">
+      <nav class="flow-progress" aria-label="Job posting progress">
+        <span class="done"><b>✓</b> Job details</span>
+        <i></i>
+        <span class="active"><b>2</b> Commitment &amp; pay</span>
+        <i></i>
+        <span><b>3</b> Review</span>
+      </nav>
+
+      <form id="compensationForm" class="job-flow-card" novalidate>
+        <header class="flow-card-heading">
+          <p class="simple-kicker">STEP 2 OF 3</p>
+          <h1>Commitment and hourly pay</h1>
+          <p>Choose the expected weekly commitment and add a public hourly range.</p>
+        </header>
+
+        <fieldset class="commitment-options commitment-page-options">
+          <legend>Commitment <em>*</em></legend>
+          <label><input type="radio" name="commitment" value="Full-time (40 hours per week)" required /><span><b>Full-time</b><small>40 hours per week</small></span></label>
+          <label><input type="radio" name="commitment" value="Part-time (20 to 40 hours per week)" required /><span><b>Part-time</b><small>20 to 40 hours per week</small></span></label>
+          <label><input type="radio" name="commitment" value="Less than 20 hours per week" required /><span><b>Less than 20 hours</b><small>Per week</small></span></label>
+        </fieldset>
+
+        <section class="pay-section">
+          <div><h2>Hourly rate</h2><p>Enter the range candidates will see on the job post.</p></div>
+          <div class="rate-row">
+            <label class="simple-field">From <em>*</em><div class="rate-input"><span>$</span><input id="minRate" name="minRate" type="number" min="3" step="0.25" inputmode="decimal" required /><small>USD / hour</small></div></label>
+            <label class="simple-field">To <em>*</em><div class="rate-input"><span>$</span><input id="maxRate" name="maxRate" type="number" min="3.25" step="0.25" inputmode="decimal" required /><small>USD / hour</small></div></label>
+          </div>
+        </section>
+
+        <div id="postFormResult" class="simple-form-result" aria-live="polite"></div>
+        <footer class="flow-card-footer">
+          <a href="./index.html">← Back</a>
+          <button class="primary-button" type="submit">Review role <span>→</span></button>
+        </footer>
+      </form>
+    </main>
+    <div class="toast" id="toast"></div>
+    <script src="./script.js"></script>
+  </body>
+</html>
