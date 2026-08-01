@@ -3,12 +3,13 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 const BUCKET = 'sava-id-review-videos';
 const MAX_PHOTO_BYTES = 4 * 1024 * 1024;
 const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
-const ALLOWED_ORIGIN = 'https://executive-assistant-hiring-flow.vercel.app';
+const PRIMARY_ORIGIN = 'https://www.hirefromsa.com';
+const ALLOWED_ORIGINS = new Set([PRIMARY_ORIGIN, 'https://hirefromsa.com', 'https://executive-assistant-hiring-flow.vercel.app']);
 
 function headers(request: Request) {
-  const origin = request.headers.get('origin');
+  const origin = request.headers.get('origin') || '';
   return {
-    'Access-Control-Allow-Origin': origin === ALLOWED_ORIGIN ? origin : ALLOWED_ORIGIN,
+    'Access-Control-Allow-Origin': ALLOWED_ORIGINS.has(origin) ? origin : PRIMARY_ORIGIN,
     'Access-Control-Allow-Headers': 'content-type, authorization',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Content-Type': 'application/json',
@@ -27,7 +28,7 @@ function tokenFrom(request: Request) {
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response('ok', { headers: headers(request) });
   if (request.method !== 'POST') return reply(request, { error: 'Method not allowed.' }, 405);
-  if (request.headers.get('origin') !== ALLOWED_ORIGIN) return reply(request, { error: 'This endpoint only accepts requests from the hiring site.' }, 403);
+  if (!ALLOWED_ORIGINS.has(request.headers.get('origin') || '')) return reply(request, { error: 'This endpoint only accepts requests from the hiring site.' }, 403);
 
   try {
     const formData = await request.formData();

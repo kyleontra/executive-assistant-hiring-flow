@@ -19,6 +19,7 @@ form.addEventListener('submit', async (event) => {
     firstName: document.querySelector('#firstName').value.trim(),
     lastName: document.querySelector('#lastName').value.trim(),
     email: document.querySelector('#email').value.trim(),
+    calendarLink: document.querySelector('#calendarLink').value.trim(),
     password: document.querySelector('#password').value,
   };
   submitButton.disabled = true;

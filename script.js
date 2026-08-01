@@ -274,13 +274,32 @@ function bindApplicants() {
   const candidates = [...document.querySelectorAll('.simple-candidate')];
   if (!candidates.length) return;
   const filter = $('#jobFilter');
+  const calendarInput = $('#interviewCalendarLink');
+  const rankSelect = $('#candidateRank');
+  const calendarStorageKey = 'sava-interview-calendar';
+  let selectedCandidate = null;
   const newestOption = filter.querySelector('option[value="current"]');
   newestOption.textContent = read().published ? read().title : 'Your newest role';
+  calendarInput.value = localStorage.getItem(calendarStorageKey) || '';
   candidates.filter((candidate) => candidate.dataset.job === 'current').forEach((candidate) => {
     candidate.querySelector('.candidate-role').textContent = read().published ? read().title : candidate.dataset.role;
   });
 
+  function candidateRankKey(candidate) {
+    return `sava-candidate-rank:${candidate.dataset.job}:${candidate.dataset.name}`;
+  }
+
+  function validCalendarLink(value) {
+    try {
+      const url = new URL(value);
+      return url.protocol === 'https:' || url.protocol === 'http:';
+    } catch {
+      return false;
+    }
+  }
+
   function selectCandidate(candidate) {
+    selectedCandidate = candidate;
     candidates.forEach((item) => item.classList.toggle('active', item === candidate));
     const roleName = candidate.dataset.job === 'current' && read().published ? read().title : candidate.dataset.role;
     const questions = questionsForCandidate(candidate.dataset.job);
@@ -290,6 +309,8 @@ function bindApplicants() {
     $('#profileRole').textContent = roleName;
     $('#profileExperience').textContent = candidate.dataset.experience;
     $('#profileMatch').textContent = `${candidate.dataset.match}% match`;
+    $('#profileSummary').textContent = candidate.dataset.summary;
+    rankSelect.value = localStorage.getItem(candidateRankKey(candidate)) || '';
     [1, 2, 3].forEach((number) => {
       const questionElement = $(`#profileQuestion${number}`);
       const card = questionElement.closest('.answer-card');
@@ -318,6 +339,45 @@ function bindApplicants() {
 
   candidates.forEach((candidate) => candidate.addEventListener('click', () => selectCandidate(candidate)));
   filter.addEventListener('change', applyFilter);
+  calendarInput.addEventListener('change', () => {
+    const value = calendarInput.value.trim();
+    if (!value) {
+      localStorage.removeItem(calendarStorageKey);
+      return;
+    }
+    if (!validCalendarLink(value)) {
+      toast('Enter a valid calendar link beginning with https://');
+      calendarInput.focus();
+      return;
+    }
+    localStorage.setItem(calendarStorageKey, value);
+    toast('Interview calendar saved');
+  });
+  rankSelect.addEventListener('change', () => {
+    if (!selectedCandidate) return;
+    const key = candidateRankKey(selectedCandidate);
+    if (rankSelect.value) {
+      localStorage.setItem(key, rankSelect.value);
+      toast(`${selectedCandidate.dataset.name} ranked ${rankSelect.value} out of 10`);
+    } else {
+      localStorage.removeItem(key);
+      toast(`Ranking removed for ${selectedCandidate.dataset.name}`);
+    }
+  });
+  $('#messageCandidate').addEventListener('click', () => {
+    if (selectedCandidate) toast(`Message thread opened for ${selectedCandidate.dataset.name}`);
+  });
+  $('#inviteInterview').addEventListener('click', () => {
+    if (!selectedCandidate) return;
+    const calendarLink = calendarInput.value.trim();
+    if (!validCalendarLink(calendarLink)) {
+      toast('Add your interview calendar link first');
+      calendarInput.focus();
+      return;
+    }
+    localStorage.setItem(calendarStorageKey, calendarLink);
+    toast(`Interview invite prepared for ${selectedCandidate.dataset.name}`);
+  });
   $('#shortlist').addEventListener('click', () => { $('#shortlist').textContent = 'Shortlisted ✓'; toast('Candidate moved to Shortlisted'); });
   applyFilter();
 }

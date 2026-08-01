@@ -3,12 +3,13 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 const BUCKET = 'sava-id-review-videos';
 const MAX_VIDEO_BYTES = 4 * 1024 * 1024;
 const ALLOWED_TYPES = new Set(['video/webm', 'video/mp4']);
-const ALLOWED_ORIGIN = 'https://executive-assistant-hiring-flow.vercel.app';
+const PRIMARY_ORIGIN = 'https://www.hirefromsa.com';
+const ALLOWED_ORIGINS = new Set([PRIMARY_ORIGIN, 'https://hirefromsa.com', 'https://executive-assistant-hiring-flow.vercel.app']);
 const REFERENCE_PATTERN = /^SA-[A-Z0-9]{8}$/;
 
 function headers(request: Request) {
-  const origin = request.headers.get('origin');
-  return { 'Access-Control-Allow-Origin': origin === ALLOWED_ORIGIN ? origin : ALLOWED_ORIGIN, 'Access-Control-Allow-Headers': 'content-type, authorization', 'Access-Control-Allow-Methods': 'POST, OPTIONS', 'Content-Type': 'application/json', 'Vary': 'Origin' };
+  const origin = request.headers.get('origin') || '';
+  return { 'Access-Control-Allow-Origin': ALLOWED_ORIGINS.has(origin) ? origin : PRIMARY_ORIGIN, 'Access-Control-Allow-Headers': 'content-type, authorization', 'Access-Control-Allow-Methods': 'POST, OPTIONS', 'Content-Type': 'application/json', 'Vary': 'Origin' };
 }
 function reply(request: Request, body: Record<string, string>, status: number) { return new Response(JSON.stringify(body), { status, headers: headers(request) }); }
 function tokenFrom(request: Request) { return request.headers.get('authorization')?.replace(/^Bearer\s+/i, '') || ''; }
@@ -16,7 +17,7 @@ function tokenFrom(request: Request) { return request.headers.get('authorization
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response('ok', { headers: headers(request) });
   if (request.method !== 'POST') return reply(request, { error: 'Method not allowed.' }, 405);
-  if (request.headers.get('origin') !== ALLOWED_ORIGIN) return reply(request, { error: 'This review endpoint only accepts requests from the hiring site.' }, 403);
+  if (!ALLOWED_ORIGINS.has(request.headers.get('origin') || '')) return reply(request, { error: 'This review endpoint only accepts requests from the hiring site.' }, 403);
   try {
     const formData = await request.formData();
     const video = formData.get('video');

@@ -31,6 +31,8 @@
               <label>Last name<input id="lastName" name="lastName" autocomplete="family-name" required maxlength="80" /></label>
             </div>
             <label>Email address<input id="email" name="email" type="email" autocomplete="email" required maxlength="254" placeholder="you@example.com" /></label>
+            <label>Calendar scheduling link <span>(optional)</span><input id="calendarLink" name="calendarLink" type="url" inputmode="url" autocomplete="url" maxlength="500" placeholder="https://cal.com/your-name" /></label>
+            <p class="field-help">Employers can use this link to invite you to an interview in one click. You can leave it blank for now.</p>
             <label>Password<input id="password" name="password" type="password" autocomplete="new-password" required minlength="10" maxlength="128" placeholder="At least 10 characters" /></label>
             <p class="field-help">Your password is stored securely by Supabase. It is never added to your ID review files.</p>
             <div id="formResult" class="form-result" aria-live="polite"></div>
