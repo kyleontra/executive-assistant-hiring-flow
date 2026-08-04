@@ -1,4 +1,6 @@
 const params = new URLSearchParams(window.location.search);
+const schedulerEndpoint = 'https://jyxamdvvnoylaxolhlht.supabase.co/functions/v1/interview-scheduler';
+const schedulerId = params.get('scheduler') || '';
 const timezoneLabels = {
   'America/New_York': 'Eastern Time',
   'America/Chicago': 'Central Time',
@@ -7,7 +9,6 @@ const timezoneLabels = {
   'Africa/Johannesburg': 'South Africa Time',
   'Europe/London': 'London Time',
 };
-const bookingStorageKey = 'sava-interview-bookings';
 const localConfig = (() => { try { return JSON.parse(localStorage.getItem('sava-scheduler-config') || '{}'); } catch { return {}; } })();
 const defaultAvailability = [
   { day: 1, start: '09:00', end: '17:00' }, { day: 2, start: '09:00', end: '17:00' },
@@ -37,16 +38,46 @@ let calendarOffset = 0;
 let selectedDate = null;
 let selectedStart = null;
 let selectedEnd = null;
+let bookedStartTimes = new Set();
 
-document.querySelector('#bookingEventName').textContent = bookingConfig.eventName;
-document.querySelector('#bookingDuration').textContent = `${bookingConfig.duration} minutes`;
-document.querySelector('#bookingLocation').textContent = bookingConfig.location;
-document.querySelector('#bookingTimezone').textContent = timezoneLabels[bookingConfig.timezone] || bookingConfig.timezone;
-if (bookingConfig.candidate) {
-  const greeting = document.querySelector('#candidateGreeting');
-  greeting.textContent = `${bookingConfig.candidate}, choose a time for your ${bookingConfig.role || 'role'} interview.`;
-  greeting.hidden = false;
-  document.querySelector('#guestName').value = bookingConfig.candidate;
+async function schedulerRequest(action, payload = {}) {
+  const response = await fetch(schedulerEndpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action, schedulerId, ...payload }),
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const error = new Error(body.error || 'The scheduler could not connect to the backend.');
+    error.status = response.status;
+    throw error;
+  }
+  return body;
+}
+
+function showBookingError(message) {
+  const status = document.querySelector('#bookingFormStatus');
+  status.textContent = message;
+  status.hidden = false;
+}
+
+function clearBookingError() {
+  const status = document.querySelector('#bookingFormStatus');
+  status.textContent = '';
+  status.hidden = true;
+}
+
+function hydrateEventDetails() {
+  document.querySelector('#bookingEventName').textContent = bookingConfig.eventName;
+  document.querySelector('#bookingDuration').textContent = `${bookingConfig.duration} minutes`;
+  document.querySelector('#bookingLocation').textContent = bookingConfig.location;
+  document.querySelector('#bookingTimezone').textContent = timezoneLabels[bookingConfig.timezone] || bookingConfig.timezone;
+  if (bookingConfig.candidate) {
+    const greeting = document.querySelector('#candidateGreeting');
+    greeting.textContent = `${bookingConfig.candidate}, choose a time for your ${bookingConfig.role || 'role'} interview.`;
+    greeting.hidden = false;
+    document.querySelector('#guestName').value = bookingConfig.candidate;
+  }
 }
 
 function dateKey(date) {
@@ -82,7 +113,7 @@ function slotStartsForDate(key, availability) {
   for (let minutes = start; minutes + bookingConfig.duration <= end; minutes += bookingConfig.duration) {
     const time = minutesToTime(minutes);
     const utc = zonedDateToUtc(key, time, bookingConfig.timezone);
-    if (utc.getTime() > Date.now() + 2 * 60 * 60 * 1000) slots.push({ time, utc });
+    if (utc.getTime() > Date.now() + 2 * 60 * 60 * 1000 && !bookedStartTimes.has(utc.toISOString())) slots.push({ time, utc });
   }
   return slots;
 }
@@ -126,6 +157,7 @@ function renderTimes() {
 }
 
 function showDetails(time) {
+  clearBookingError();
   selectedStart = zonedDateToUtc(selectedDate, time, bookingConfig.timezone);
   selectedEnd = new Date(selectedStart.getTime() + bookingConfig.duration * 60 * 1000);
   const viewerValue = document.querySelector('#viewerTimezone').value;
@@ -152,32 +184,49 @@ document.querySelector('#nextDates').addEventListener('click', () => { calendarO
 document.querySelector('#viewerTimezone').addEventListener('change', () => { if (selectedDate) renderTimes(); });
 document.querySelector('#backToTimes').addEventListener('click', () => { document.querySelector('#bookingDetailsForm').hidden = true; document.querySelector('#dateStep').hidden = false; });
 
-document.querySelector('#bookingDetailsForm').addEventListener('submit', (event) => {
+document.querySelector('#bookingDetailsForm').addEventListener('submit', async (event) => {
   event.preventDefault();
-  if (!event.currentTarget.reportValidity()) return;
-  const booking = {
-    id: crypto.randomUUID ? crypto.randomUUID() : `booking-${Date.now()}`,
-    eventName: bookingConfig.eventName,
-    duration: bookingConfig.duration,
-    timezone: bookingConfig.timezone,
-    location: bookingConfig.location,
-    name: document.querySelector('#guestName').value.trim(),
-    email: document.querySelector('#guestEmail').value.trim(),
-    note: document.querySelector('#guestNote').value.trim(),
-    role: bookingConfig.role,
-    startAt: selectedStart.toISOString(),
-    endAt: selectedEnd.toISOString(),
-    createdAt: new Date().toISOString(),
-  };
-  let bookings = [];
-  try { bookings = JSON.parse(localStorage.getItem(bookingStorageKey) || '[]'); } catch { bookings = []; }
-  bookings.push(booking);
-  localStorage.setItem(bookingStorageKey, JSON.stringify(bookings));
-  document.querySelector('#bookingDetailsForm').hidden = true;
-  document.querySelector('#bookingConfirmation').hidden = false;
-  document.querySelector('#confirmationMessage').textContent = `A confirmation has been prepared for ${booking.email}.`;
-  document.querySelector('#confirmationFacts').textContent = `${new Intl.DateTimeFormat('en-US', { dateStyle: 'full', timeStyle: 'short' }).format(selectedStart)} · ${booking.location}`;
-  document.querySelector('#addToCalendar').dataset.bookingId = booking.id;
+  const form = event.currentTarget;
+  if (!form.reportValidity()) return;
+  if (!schedulerId) {
+    showBookingError('This is an old booking link. Ask the employer for a new interview link.');
+    return;
+  }
+  const button = form.querySelector('button[type="submit"]');
+  button.disabled = true;
+  clearBookingError();
+  try {
+    const result = await schedulerRequest('book', {
+      name: document.querySelector('#guestName').value.trim(),
+      email: document.querySelector('#guestEmail').value.trim(),
+      note: document.querySelector('#guestNote').value.trim(),
+      role: bookingConfig.role,
+      startAt: selectedStart.toISOString(),
+      endAt: selectedEnd.toISOString(),
+    });
+    bookedStartTimes.add(selectedStart.toISOString());
+    form.hidden = true;
+    document.querySelector('#bookingConfirmation').hidden = false;
+    document.querySelector('#confirmationMessage').textContent = `Your interview is confirmed for ${document.querySelector('#guestEmail').value.trim()}.`;
+    document.querySelector('#confirmationFacts').textContent = `${new Intl.DateTimeFormat('en-US', { dateStyle: 'full', timeStyle: 'short' }).format(selectedStart)} · ${bookingConfig.location}`;
+    document.querySelector('#addToCalendar').dataset.bookingId = result.bookingId;
+  } catch (error) {
+    if (error.status === 409) {
+      bookedStartTimes.add(selectedStart.toISOString());
+      form.hidden = true;
+      document.querySelector('#dateStep').hidden = false;
+      selectedDate = null;
+      renderDates();
+      document.querySelector('#timeGrid').innerHTML = '';
+      const prompt = document.querySelector('#selectDatePrompt');
+      prompt.textContent = error.message;
+      prompt.hidden = false;
+    } else {
+      showBookingError(error.message);
+    }
+  } finally {
+    button.disabled = false;
+  }
 });
 
 document.querySelector('#addToCalendar').addEventListener('click', () => {
@@ -192,4 +241,19 @@ document.querySelector('#addToCalendar').addEventListener('click', () => {
   URL.revokeObjectURL(link.href);
 });
 
-renderDates();
+async function initializeScheduler() {
+  if (schedulerId) {
+    try {
+      const { scheduler, bookedStarts } = await schedulerRequest('get');
+      Object.assign(bookingConfig, scheduler, { duration: Number(scheduler.duration) });
+      bookedStartTimes = new Set(bookedStarts || []);
+    } catch (error) {
+      document.querySelector('#selectDatePrompt').textContent = error.message;
+      if (error.status === 404) bookingConfig.availability = [];
+    }
+  }
+  hydrateEventDetails();
+  renderDates();
+}
+
+initializeScheduler();

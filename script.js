@@ -386,9 +386,13 @@ function bindApplicants() {
   function schedulerLink(candidate) {
     const defaults = { eventName: 'Intro interview', duration: '30', timezone: 'America/New_York', location: 'Google Meet link sent after booking', availability: [{ day: 1, start: '09:00', end: '17:00' }, { day: 2, start: '09:00', end: '17:00' }, { day: 3, start: '09:00', end: '17:00' }, { day: 4, start: '09:00', end: '17:00' }, { day: 5, start: '09:00', end: '15:00' }] };
     let config = defaults;
+    let identity = null;
     try { config = { ...defaults, ...JSON.parse(localStorage.getItem('sava-scheduler-config') || '{}') }; } catch { /* Use defaults. */ }
+    try { identity = JSON.parse(localStorage.getItem('sava-scheduler-identity') || 'null'); } catch { /* The settings page will create an identity. */ }
+    if (!identity?.schedulerId || !identity.saved) return '';
     const origin = window.location.protocol === 'file:' ? 'https://www.hirefromsa.com' : window.location.origin;
     const url = new URL('/schedule-interview.html', origin);
+    url.searchParams.set('scheduler', identity.schedulerId);
     url.searchParams.set('event', config.eventName);
     url.searchParams.set('duration', config.duration);
     url.searchParams.set('tz', config.timezone);
@@ -471,7 +475,12 @@ function bindApplicants() {
   });
   $('#inviteInterview').addEventListener('click', async () => {
     if (!selectedCandidate) return;
-    await copyText(schedulerLink(selectedCandidate));
+    const link = schedulerLink(selectedCandidate);
+    if (!link) {
+      window.location.href = './scheduler-settings.html';
+      return;
+    }
+    await copyText(link);
     toast(`Booking link copied for ${selectedCandidate.dataset.name}`);
   });
   $('#shortlist').addEventListener('click', () => { $('#shortlist').textContent = 'Shortlisted ✓'; toast('Candidate moved to Shortlisted'); });
