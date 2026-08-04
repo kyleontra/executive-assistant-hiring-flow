@@ -72,6 +72,21 @@ function minutesToTime(total) {
   return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
 }
 
+function slotStartsForDate(key, availability) {
+  if (!availability) return [];
+  const [startHour, startMinute] = availability.start.split(':').map(Number);
+  const [endHour, endMinute] = availability.end.split(':').map(Number);
+  const start = startHour * 60 + startMinute;
+  const end = endHour * 60 + endMinute;
+  const slots = [];
+  for (let minutes = start; minutes + bookingConfig.duration <= end; minutes += bookingConfig.duration) {
+    const time = minutesToTime(minutes);
+    const utc = zonedDateToUtc(key, time, bookingConfig.timezone);
+    if (utc.getTime() > Date.now() + 2 * 60 * 60 * 1000) slots.push({ time, utc });
+  }
+  return slots;
+}
+
 function generateDates() {
   const dates = [];
   const first = new Date();
@@ -92,7 +107,8 @@ function renderDates() {
   document.querySelector('#calendarRange').textContent = `${dates[0].toLocaleDateString('en-US', { month: 'long', day: 'numeric' })} – ${dates[dates.length - 1].toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}`;
   grid.innerHTML = dates.map((date) => {
     const key = dateKey(date);
-    const available = bookingConfig.availability.some((item) => Number(item.day) === date.getDay());
+    const dayAvailability = bookingConfig.availability.find((item) => Number(item.day) === date.getDay());
+    const available = slotStartsForDate(key, dayAvailability).length > 0;
     return `<button class="booking-date-button${available ? '' : ' unavailable'}${selectedDate === key ? ' selected' : ''}" type="button" data-date="${key}" ${available ? '' : 'disabled'}><span>${date.toLocaleDateString('en-US', { weekday: 'short' })}</span><b>${date.getDate()}</b></button>`;
   }).join('');
 }
@@ -102,16 +118,7 @@ function renderTimes() {
   const grid = document.querySelector('#timeGrid');
   const prompt = document.querySelector('#selectDatePrompt');
   if (!availability) { grid.innerHTML = ''; return; }
-  const [startHour, startMinute] = availability.start.split(':').map(Number);
-  const [endHour, endMinute] = availability.end.split(':').map(Number);
-  const start = startHour * 60 + startMinute;
-  const end = endHour * 60 + endMinute;
-  const slots = [];
-  for (let minutes = start; minutes + bookingConfig.duration <= end; minutes += bookingConfig.duration) {
-    const time = minutesToTime(minutes);
-    const utc = zonedDateToUtc(selectedDate, time, bookingConfig.timezone);
-    if (utc.getTime() > Date.now() + 2 * 60 * 60 * 1000) slots.push({ time, utc });
-  }
+  const slots = slotStartsForDate(selectedDate, availability);
   prompt.hidden = true;
   const viewerValue = document.querySelector('#viewerTimezone').value;
   const viewerTimezone = viewerValue === 'local' ? Intl.DateTimeFormat().resolvedOptions().timeZone : viewerValue;
