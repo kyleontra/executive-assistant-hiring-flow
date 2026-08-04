@@ -86,6 +86,32 @@ function bindPostJob() {
   $('#descriptionCount').textContent = description.value.length.toLocaleString();
   description.addEventListener('input', () => { $('#descriptionCount').textContent = description.value.length.toLocaleString(); });
 
+  document.querySelectorAll('[data-format]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const start = description.selectionStart;
+      const end = description.selectionEnd;
+      const selected = description.value.slice(start, end);
+      const format = button.dataset.format;
+      const replacements = {
+        bold: `**${selected || 'bold text'}**`,
+        italic: `_${selected || 'italic text'}_`,
+        bullet: selected ? selected.split('\n').map((line) => `• ${line.replace(/^[•\-]\s*/, '')}`).join('\n') : '• ',
+        number: selected ? selected.split('\n').map((line, index) => `${index + 1}. ${line.replace(/^\d+\.\s*/, '')}`).join('\n') : '1. ',
+      };
+      description.setRangeText(replacements[format], start, end, 'end');
+      description.dispatchEvent(new Event('input', { bubbles: true }));
+      description.focus();
+    });
+  });
+
+  $('#draftDescription').addEventListener('click', () => {
+    if (text(description.value) && !window.confirm('Replace the current description with a structured starting point?')) return;
+    const roleTitle = text(title.value) || 'this role';
+    description.value = `About the role\n\nWe are looking for a ${roleTitle} to help our team stay organised, move priorities forward, and communicate clearly.\n\nWhat you will manage\n• Add the core responsibilities for this role\n• Add the recurring tasks and relationships they will own\n• Explain what success looks like after 30, 60, and 90 days\n\nWhat makes someone a strong fit\n• Add the experience that matters most\n• Add the tools or working style they should know\n• Add any must-have availability or communication expectations`;
+    description.dispatchEvent(new Event('input', { bubbles: true }));
+    description.focus();
+  });
+
   function refreshQuestionRows() {
     const rows = [...questionList.querySelectorAll('.job-question-row')];
     rows.forEach((row, index) => {
@@ -274,13 +300,10 @@ function bindApplicants() {
   const candidates = [...document.querySelectorAll('.simple-candidate')];
   if (!candidates.length) return;
   const filter = $('#jobFilter');
-  const calendarInput = $('#interviewCalendarLink');
   const rankSelect = $('#candidateRank');
-  const calendarStorageKey = 'sava-interview-calendar';
   let selectedCandidate = null;
   const newestOption = filter.querySelector('option[value="current"]');
   newestOption.textContent = read().published ? read().title : 'Your newest role';
-  calendarInput.value = localStorage.getItem(calendarStorageKey) || '';
   candidates.filter((candidate) => candidate.dataset.job === 'current').forEach((candidate) => {
     candidate.querySelector('.candidate-role').textContent = read().published ? read().title : candidate.dataset.role;
   });
@@ -289,12 +312,34 @@ function bindApplicants() {
     return `sava-candidate-rank:${candidate.dataset.job}:${candidate.dataset.name}`;
   }
 
-  function validCalendarLink(value) {
+  function schedulerLink(candidate) {
+    const defaults = { eventName: 'Intro interview', duration: '30', timezone: 'America/New_York', location: 'Google Meet link sent after booking', availability: [{ day: 1, start: '09:00', end: '17:00' }, { day: 2, start: '09:00', end: '17:00' }, { day: 3, start: '09:00', end: '17:00' }, { day: 4, start: '09:00', end: '17:00' }, { day: 5, start: '09:00', end: '15:00' }] };
+    let config = defaults;
+    try { config = { ...defaults, ...JSON.parse(localStorage.getItem('sava-scheduler-config') || '{}') }; } catch { /* Use defaults. */ }
+    const origin = window.location.protocol === 'file:' ? 'https://www.hirefromsa.com' : window.location.origin;
+    const url = new URL('/schedule-interview.html', origin);
+    url.searchParams.set('event', config.eventName);
+    url.searchParams.set('duration', config.duration);
+    url.searchParams.set('tz', config.timezone);
+    url.searchParams.set('location', config.location);
+    url.searchParams.set('availability', config.availability.map((item) => `${item.day}-${item.start}-${item.end}`).join(','));
+    url.searchParams.set('candidate', candidate.dataset.name);
+    url.searchParams.set('role', candidate.dataset.role);
+    return url.toString();
+  }
+
+  async function copyText(value) {
     try {
-      const url = new URL(value);
-      return url.protocol === 'https:' || url.protocol === 'http:';
+      await navigator.clipboard.writeText(value);
     } catch {
-      return false;
+      const temporary = document.createElement('textarea');
+      temporary.value = value;
+      temporary.style.position = 'fixed';
+      temporary.style.opacity = '0';
+      document.body.appendChild(temporary);
+      temporary.select();
+      document.execCommand('copy');
+      temporary.remove();
     }
   }
 
@@ -339,20 +384,6 @@ function bindApplicants() {
 
   candidates.forEach((candidate) => candidate.addEventListener('click', () => selectCandidate(candidate)));
   filter.addEventListener('change', applyFilter);
-  calendarInput.addEventListener('change', () => {
-    const value = calendarInput.value.trim();
-    if (!value) {
-      localStorage.removeItem(calendarStorageKey);
-      return;
-    }
-    if (!validCalendarLink(value)) {
-      toast('Enter a valid calendar link beginning with https://');
-      calendarInput.focus();
-      return;
-    }
-    localStorage.setItem(calendarStorageKey, value);
-    toast('Interview calendar saved');
-  });
   rankSelect.addEventListener('change', () => {
     if (!selectedCandidate) return;
     const key = candidateRankKey(selectedCandidate);
@@ -367,16 +398,10 @@ function bindApplicants() {
   $('#messageCandidate').addEventListener('click', () => {
     if (selectedCandidate) toast(`Message thread opened for ${selectedCandidate.dataset.name}`);
   });
-  $('#inviteInterview').addEventListener('click', () => {
+  $('#inviteInterview').addEventListener('click', async () => {
     if (!selectedCandidate) return;
-    const calendarLink = calendarInput.value.trim();
-    if (!validCalendarLink(calendarLink)) {
-      toast('Add your interview calendar link first');
-      calendarInput.focus();
-      return;
-    }
-    localStorage.setItem(calendarStorageKey, calendarLink);
-    toast(`Interview invite prepared for ${selectedCandidate.dataset.name}`);
+    await copyText(schedulerLink(selectedCandidate));
+    toast(`Booking link copied for ${selectedCandidate.dataset.name}`);
   });
   $('#shortlist').addEventListener('click', () => { $('#shortlist').textContent = 'Shortlisted ✓'; toast('Candidate moved to Shortlisted'); });
   applyFilter();

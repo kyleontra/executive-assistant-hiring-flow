@@ -86,6 +86,84 @@
   max-width: 620px;
 }
 
+.job-title-editor {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px 22px;
+  border: 1px solid #dce5f1;
+  border-radius: 11px;
+  background: #f9fbfe;
+}
+
+.job-title-editor .simple-field {
+  width: min(620px, 100%);
+  margin: 0;
+}
+
+.job-location-preview {
+  flex: 0 0 auto;
+  margin-bottom: 14px;
+  color: #8190a4;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.description-field {
+  margin-top: 22px;
+}
+
+.description-editor-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+  padding: 8px;
+  border: 1px solid #ccd8e7;
+  border-bottom: 0;
+  border-radius: 9px 9px 0 0;
+  background: #f8fafc;
+}
+
+.format-tools {
+  display: flex;
+  gap: 5px;
+}
+
+.description-editor-toolbar button {
+  min-width: 34px;
+  height: 31px;
+  padding: 0 9px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: #4f5f76;
+  font: 700 10px "DM Sans", sans-serif;
+  cursor: pointer;
+}
+
+.description-editor-toolbar button:hover {
+  border-color: #cfdae8;
+  background: #fff;
+}
+
+.description-editor-toolbar .draft-description-button {
+  border-color: #c9dafa;
+  background: #edf4ff;
+  color: #246fe5;
+}
+
+.draft-description-button span {
+  margin-right: 4px;
+}
+
+.description-field textarea {
+  margin-top: 0;
+  border-radius: 0 0 9px 9px;
+}
+
 .wide-fields .simple-field textarea {
   min-height: 360px;
 }
@@ -308,6 +386,16 @@
   .flow-card-footer {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .job-title-editor,
+  .description-editor-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .job-location-preview {
+    margin: 0;
   }
 
   .add-question-button,

@@ -19,6 +19,8 @@ const pages = {
   candidateExperience: 'candidate-experience.html',
   candidateProfile: 'candidate-profile.html',
   applicationQuestions: 'application-questions.html',
+  schedulerSettings: 'scheduler-settings.html',
+  scheduleInterview: 'schedule-interview.html',
 };
 
 module.exports = defineConfig({
@@ -30,7 +32,7 @@ module.exports = defineConfig({
   plugins: [{
     name: 'copy-classic-browser-scripts',
     writeBundle() {
-      ['script.js', 'auth-client.js', 'verification.js', 'id-verification.js', 'candidate-signup.js', 'email-confirmed.js', 'candidate-experience.js', 'candidate-profile.js', 'application-questions.js'].forEach(file => {
+      ['script.js', 'auth-client.js', 'verification.js', 'id-verification.js', 'candidate-signup.js', 'email-confirmed.js', 'candidate-experience.js', 'candidate-profile.js', 'application-questions.js', 'scheduler-settings.js', 'schedule-interview.js'].forEach(file => {
         copyFileSync(resolve(__dirname, file), resolve(__dirname, 'dist', file));
       });
     },

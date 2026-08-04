@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Schedule an Interview | Hire From SA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./scheduler.css" />
+  </head>
+  <body class="booking-page">
+    <header class="booking-header"><a href="./jobs.html">HIRE FROM <span>SA</span></a><span>Secure interview scheduling</span></header>
+    <main class="booking-shell">
+      <section class="booking-event-panel">
+        <a class="booking-back-link" href="./jobs.html">← Back to jobs</a>
+        <div class="booking-host-mark">HF</div>
+        <p class="booking-host">Hire From SA interview</p>
+        <h1 id="bookingEventName">Intro interview</h1>
+        <p id="candidateGreeting" class="candidate-greeting" hidden></p>
+        <ul class="booking-event-facts"><li><span>◷</span><b id="bookingDuration">30 minutes</b></li><li><span>◎</span><b id="bookingLocation">Google Meet link sent after booking</b></li><li><span>◉</span><b id="bookingTimezone">Eastern Time</b></li></ul>
+        <p class="booking-description">Choose a time for a focused conversation about the role, your experience, and what working together could look like.</p>
+      </section>
+
+      <section class="booking-picker-panel">
+        <div id="dateStep" class="booking-step active">
+          <div class="booking-step-heading"><div><p class="simple-kicker">STEP 1 OF 2</p><h2>Select a date and time</h2></div><label>Timezone<select id="viewerTimezone"><option value="local">My local time</option><option value="America/New_York">Eastern Time</option><option value="Africa/Johannesburg">South Africa Time</option><option value="Europe/London">London Time</option></select></label></div>
+          <div class="booking-calendar-heading"><button id="previousDates" type="button" aria-label="Previous dates">←</button><strong id="calendarRange"></strong><button id="nextDates" type="button" aria-label="Next dates">→</button></div>
+          <div id="dateGrid" class="booking-date-grid"></div>
+          <p id="selectDatePrompt" class="select-date-prompt">Select an available day to see interview times.</p>
+          <div id="timeGrid" class="booking-time-grid"></div>
+        </div>
+
+        <form id="bookingDetailsForm" class="booking-step booking-details-step" hidden>
+          <button id="backToTimes" class="booking-back-button" type="button">← Choose another time</button>
+          <p class="simple-kicker">STEP 2 OF 2</p><h2>Your details</h2>
+          <div id="selectedTimeSummary" class="selected-time-summary"></div>
+          <label>Full name<input id="guestName" maxlength="120" autocomplete="name" required /></label>
+          <label>Email address<input id="guestEmail" type="email" maxlength="254" autocomplete="email" required /></label>
+          <label>Anything the interviewer should know? <span>(optional)</span><textarea id="guestNote" maxlength="1000" rows="4"></textarea></label>
+          <button class="book-interview-button" type="submit">Schedule interview</button>
+        </form>
+
+        <section id="bookingConfirmation" class="booking-confirmation" hidden>
+          <div class="confirmation-check">✓</div><p class="simple-kicker">INTERVIEW SCHEDULED</p><h2>You’re booked.</h2><p id="confirmationMessage"></p>
+          <div id="confirmationFacts" class="confirmation-facts"></div>
+          <div class="confirmation-actions"><button id="addToCalendar" type="button">Add to calendar</button><a href="./jobs.html">View open jobs</a></div>
+        </section>
+      </section>
+    </main>
+    <script src="./schedule-interview.js"></script>
+  </body>
+</html>

@@ -9,29 +9,38 @@
   gap: 12px;
 }
 
-.calendar-setting {
-  color: #637188;
-  font-size: 10px;
-  font-weight: 700;
-}
-
-.calendar-setting input {
-  display: block;
-  width: 100%;
-  height: 43px;
-  margin-top: 7px;
-  padding: 0 12px;
-  border: 1px solid #ccd8e7;
-  border-radius: 8px;
-  background: #fff;
+.scheduler-quick-card {
+  display: flex;
+  min-height: 58px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 13px;
+  border: 1px solid #ccd9eb;
+  border-radius: 9px;
+  background: #f7faff;
   color: #142238;
-  font: 500 11px "DM Sans", sans-serif;
-  outline: none;
+  text-decoration: none;
 }
 
-.calendar-setting input:focus {
-  border-color: #246fe5;
-  box-shadow: 0 0 0 3px #246fe516;
+.scheduler-quick-card span {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.scheduler-quick-card b {
+  font-size: 10px;
+}
+
+.scheduler-quick-card small {
+  color: #7d8ba0;
+  font-size: 8px;
+}
+
+.scheduler-quick-card strong {
+  color: #246fe5;
+  font-size: 9px;
 }
 
 .simple-applicant-layout {

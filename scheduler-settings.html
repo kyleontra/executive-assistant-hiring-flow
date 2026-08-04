@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Interview Scheduler | Hire From SA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./employer-simple.css" />
+    <link rel="stylesheet" href="./scheduler.css" />
+  </head>
+  <body class="simple-employer-page scheduler-admin-page">
+    <header class="simple-header">
+      <a class="simple-brand" href="./index.html">HIRE FROM <span>SA</span></a>
+      <nav><a href="./applicants.html">Hiring inbox</a><a class="active" href="./scheduler-settings.html">Interview scheduler</a><a href="./index.html">Post a job</a></nav>
+    </header>
+
+    <main class="scheduler-admin-shell">
+      <header class="scheduler-admin-heading">
+        <div><p class="simple-kicker">INTERVIEW SCHEDULER</p><h1>Let candidates book the right time.</h1><p>Set one interview event, choose your weekly availability, then share the booking link from any applicant profile.</p></div>
+        <a id="previewSchedule" class="scheduler-preview-link" href="./schedule-interview.html" target="_blank" rel="noopener">Preview booking page ↗</a>
+      </header>
+
+      <div class="scheduler-admin-grid">
+        <form id="schedulerSettingsForm" class="scheduler-settings-card">
+          <section>
+            <div class="scheduler-section-heading"><span>1</span><div><h2>Interview details</h2><p>What candidates see before selecting a time.</p></div></div>
+            <div class="scheduler-field-grid">
+              <label class="scheduler-field scheduler-field-wide">Event name<input id="eventName" maxlength="80" required value="Intro interview" /></label>
+              <label class="scheduler-field">Duration<select id="eventDuration"><option value="15">15 minutes</option><option value="30" selected>30 minutes</option><option value="45">45 minutes</option><option value="60">60 minutes</option></select></label>
+              <label class="scheduler-field">Timezone<select id="eventTimezone"><option value="America/New_York">Eastern Time</option><option value="America/Chicago">Central Time</option><option value="America/Denver">Mountain Time</option><option value="America/Los_Angeles">Pacific Time</option><option value="Africa/Johannesburg">South Africa Time</option><option value="Europe/London">London Time</option></select></label>
+              <label class="scheduler-field scheduler-field-wide">Meeting location<input id="meetingLocation" maxlength="180" value="Google Meet link sent after booking" /></label>
+            </div>
+          </section>
+
+          <section>
+            <div class="scheduler-section-heading"><span>2</span><div><h2>Weekly availability</h2><p>Choose which days candidates can book.</p></div></div>
+            <div id="availabilityRows" class="availability-rows">
+              <label class="availability-row"><input type="checkbox" value="1" checked /><b>Monday</b><input class="availability-time start-time" type="time" value="09:00" /><span>to</span><input class="availability-time end-time" type="time" value="17:00" /></label>
+              <label class="availability-row"><input type="checkbox" value="2" checked /><b>Tuesday</b><input class="availability-time start-time" type="time" value="09:00" /><span>to</span><input class="availability-time end-time" type="time" value="17:00" /></label>
+              <label class="availability-row"><input type="checkbox" value="3" checked /><b>Wednesday</b><input class="availability-time start-time" type="time" value="09:00" /><span>to</span><input class="availability-time end-time" type="time" value="17:00" /></label>
+              <label class="availability-row"><input type="checkbox" value="4" checked /><b>Thursday</b><input class="availability-time start-time" type="time" value="09:00" /><span>to</span><input class="availability-time end-time" type="time" value="17:00" /></label>
+              <label class="availability-row"><input type="checkbox" value="5" checked /><b>Friday</b><input class="availability-time start-time" type="time" value="09:00" /><span>to</span><input class="availability-time end-time" type="time" value="15:00" /></label>
+              <label class="availability-row"><input type="checkbox" value="6" /><b>Saturday</b><input class="availability-time start-time" type="time" value="09:00" /><span>to</span><input class="availability-time end-time" type="time" value="13:00" /></label>
+              <label class="availability-row"><input type="checkbox" value="0" /><b>Sunday</b><input class="availability-time start-time" type="time" value="09:00" /><span>to</span><input class="availability-time end-time" type="time" value="13:00" /></label>
+            </div>
+          </section>
+          <footer class="scheduler-settings-footer"><span id="saveStatus" aria-live="polite">Changes save to this browser.</span><button class="primary-button" type="submit">Save scheduler</button></footer>
+        </form>
+
+        <aside class="scheduler-side-column">
+          <section class="booking-link-card">
+            <span class="booking-icon">↗</span>
+            <p class="simple-kicker">YOUR BOOKING LINK</p>
+            <h2 id="linkEventName">Intro interview</h2>
+            <p id="linkEventMeta">30 minutes · Eastern Time</p>
+            <div class="booking-link-box"><input id="bookingLink" readonly /><button id="copyBookingLink" type="button">Copy</button></div>
+            <small>Use Invite to interview on an applicant to copy a personalized version of this link.</small>
+          </section>
+          <section class="upcoming-bookings-card">
+            <div><p class="simple-kicker">UPCOMING</p><span id="bookingCount">0 bookings</span></div>
+            <div id="upcomingBookings" class="upcoming-bookings"><p>No interviews booked on this browser yet.</p></div>
+          </section>
+        </aside>
+      </div>
+    </main>
+    <div class="toast" id="toast"></div>
+    <script src="./scheduler-settings.js"></script>
+  </body>
+</html>
