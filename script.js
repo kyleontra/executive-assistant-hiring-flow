@@ -1,9 +1,9 @@
 const $ = (selector) => document.querySelector(selector);
 const storageKey = 'ea-hiring-role';
 const sampleQuestions = [
-  'Tell us about the most complex executive calendar you have managed.',
-  'How do you keep an executive’s priorities and follow-ups on track?',
-  'Describe a problem you noticed and solved without being asked.',
+  { text: 'Tell us about the most complex executive calendar you have managed.', type: 'text', options: [] },
+  { text: 'How do you keep an executive’s priorities and follow-ups on track?', type: 'text', options: [] },
+  { text: 'Which working schedule can you reliably support?', type: 'multiple-choice', options: ['US Eastern business hours', 'South African business hours', 'Flexible overlap with both'] },
 ];
 const defaults = {
   title: 'Executive Assistant',
@@ -11,7 +11,7 @@ const defaults = {
   commitment: 'Full-time (40 hours per week)',
   minRate: '3',
   maxRate: '5',
-  questions: [''],
+  questions: [{ text: '', type: 'text', options: [] }],
   promote: true,
   promotionBudget: '8',
   published: false,
@@ -28,9 +28,9 @@ function read() {
   try {
     const stored = JSON.parse(localStorage.getItem(storageKey) || '{}');
     const questions = Array.isArray(stored.questions) && stored.questions.length ? stored.questions : defaults.questions;
-    return { ...defaults, ...stored, questions };
+    return { ...defaults, ...stored, questions: questions.map(normalizeQuestion) };
   } catch {
-    return { ...defaults };
+    return { ...defaults, questions: defaults.questions.map(normalizeQuestion) };
   }
 }
 
@@ -41,6 +41,13 @@ function write(patch) {
 }
 
 function text(value) { return (value || '').trim(); }
+function normalizeQuestion(question) {
+  if (typeof question === 'string') return { text: text(question), type: 'text', options: [] };
+  const type = question?.type === 'multiple-choice' ? 'multiple-choice' : 'text';
+  const options = Array.isArray(question?.options) ? question.options.map(text).filter(Boolean) : [];
+  return { text: text(question?.text), type, options };
+}
+function questionText(question) { return normalizeQuestion(question).text; }
 function money(value) { const number = Number(value); return Number.isInteger(number) ? String(number) : number.toFixed(2).replace(/0$/, ''); }
 function rate(role) { return `$${money(role.minRate)} – $${money(role.maxRate)} / hour`; }
 function escapeHtml(value) { return String(value ?? '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character])); }
@@ -62,7 +69,11 @@ function hydrateRoleContent() {
   document.querySelectorAll('[data-review="location"]').forEach((element) => { element.textContent = `${role.arrangement} · ${role.location}`; });
   document.querySelectorAll('[data-review="type"]').forEach((element) => { element.textContent = role.commitment.split(' (')[0]; });
   const reviewQuestions = $('#reviewQuestions');
-  if (reviewQuestions) reviewQuestions.innerHTML = role.questions.filter(text).map((question) => `<li>${escapeHtml(question)}</li>`).join('');
+  if (reviewQuestions) reviewQuestions.innerHTML = role.questions.filter((question) => questionText(question)).map((question) => {
+    const normalized = normalizeQuestion(question);
+    const detail = normalized.type === 'multiple-choice' ? `<small>Multiple choice · ${normalized.options.map(escapeHtml).join(' · ')}</small>` : '<small>Written response</small>';
+    return `<li><span>${escapeHtml(normalized.text)}</span>${detail}</li>`;
+  }).join('');
 }
 
 function showPostError(message) {
@@ -115,25 +126,75 @@ function bindPostJob() {
   function refreshQuestionRows() {
     const rows = [...questionList.querySelectorAll('.job-question-row')];
     rows.forEach((row, index) => {
-      row.querySelector('label').firstChild.textContent = `Question ${index + 1} `;
+      row.querySelector('.question-label-text').textContent = `Question ${index + 1}`;
       row.querySelector('.remove-question').hidden = rows.length === 1;
     });
   }
 
-  function addQuestion(value = '', focus = false) {
-    const row = document.createElement('div');
-    row.className = 'job-question-row';
-    row.innerHTML = `<label class="simple-field">Question <em>*</em><input class="job-question-input" maxlength="240" placeholder="e.g. Tell us about relevant experience for this role." required /></label><button class="remove-question" type="button" aria-label="Remove question">×</button>`;
-    row.querySelector('input').value = value;
-    questionList.appendChild(row);
-    refreshQuestionRows();
-    if (focus) row.querySelector('input').focus();
+  function refreshOptionRows(row) {
+    const options = [...row.querySelectorAll('.question-option-row')];
+    options.forEach((option, index) => {
+      option.querySelector('.option-number').textContent = `Option ${index + 1}`;
+      option.querySelector('.remove-option').hidden = options.length <= 2;
+    });
   }
 
-  const savedQuestions = role.questions.length ? role.questions : [''];
+  function addOption(row, value = '', focus = false) {
+    const option = document.createElement('div');
+    option.className = 'question-option-row';
+    option.innerHTML = `<label><span class="option-number">Option</span><input class="question-option-input" maxlength="120" placeholder="Enter an answer choice" /></label><button class="remove-option" type="button" aria-label="Remove answer option">×</button>`;
+    option.querySelector('input').value = value;
+    row.querySelector('.question-option-list').appendChild(option);
+    refreshOptionRows(row);
+    if (focus) option.querySelector('input').focus();
+  }
+
+  function updateQuestionType(row) {
+    const isMultipleChoice = row.querySelector('.job-question-type').value === 'multiple-choice';
+    const builder = row.querySelector('.multiple-choice-builder');
+    builder.hidden = !isMultipleChoice;
+    builder.querySelectorAll('input').forEach((input) => {
+      input.disabled = !isMultipleChoice;
+      input.required = isMultipleChoice;
+    });
+  }
+
+  function addQuestion(value = { text: '', type: 'text', options: [] }, focus = false) {
+    const question = normalizeQuestion(value);
+    const row = document.createElement('div');
+    row.className = 'job-question-row';
+    row.innerHTML = `<div class="job-question-main"><label class="simple-field"><span><span class="question-label-text">Question</span> <em>*</em></span><input class="job-question-input" maxlength="240" placeholder="e.g. Tell us about relevant experience for this role." required /></label><label class="simple-field question-type-field"><span>Answer type <em>*</em></span><select class="job-question-type"><option value="text">Written response</option><option value="multiple-choice">Multiple choice</option></select></label><button class="remove-question" type="button" aria-label="Remove question">×</button></div><section class="multiple-choice-builder" hidden><div class="option-builder-heading"><div><b>Answer options</b><small>Add at least two choices.</small></div><button class="add-option" type="button"><span>+</span> Add option</button></div><div class="question-option-list"></div></section>`;
+    row.querySelector('.job-question-input').value = question.text;
+    row.querySelector('.job-question-type').value = question.type;
+    questionList.appendChild(row);
+    const optionValues = question.options.length >= 2 ? question.options : ['', ''];
+    optionValues.forEach((option) => addOption(row, option));
+    updateQuestionType(row);
+    refreshQuestionRows();
+    if (focus) row.querySelector('.job-question-input').focus();
+  }
+
+  const savedQuestions = role.questions.length ? role.questions : defaults.questions;
   savedQuestions.forEach((question) => addQuestion(question));
-  addButton.addEventListener('click', () => addQuestion('', true));
+  addButton.addEventListener('click', () => addQuestion(undefined, true));
+  questionList.addEventListener('change', (event) => {
+    if (!event.target.matches('.job-question-type')) return;
+    updateQuestionType(event.target.closest('.job-question-row'));
+  });
   questionList.addEventListener('click', (event) => {
+    const addOptionButton = event.target.closest('.add-option');
+    if (addOptionButton) {
+      addOption(addOptionButton.closest('.job-question-row'), '', true);
+      return;
+    }
+    const removeOptionButton = event.target.closest('.remove-option');
+    if (removeOptionButton) {
+      const row = removeOptionButton.closest('.job-question-row');
+      if (row.querySelectorAll('.question-option-row').length <= 2) return;
+      removeOptionButton.closest('.question-option-row').remove();
+      refreshOptionRows(row);
+      return;
+    }
     const removeButton = event.target.closest('.remove-question');
     if (!removeButton || questionList.children.length === 1) return;
     removeButton.closest('.job-question-row').remove();
@@ -146,7 +207,14 @@ function bindPostJob() {
       showPostError('Add the job title, description, and at least one applicant question.');
       return;
     }
-    const questions = [...questionList.querySelectorAll('.job-question-input')].map((input) => text(input.value));
+    const questions = [...questionList.querySelectorAll('.job-question-row')].map((row) => {
+      const type = row.querySelector('.job-question-type').value;
+      return {
+        text: text(row.querySelector('.job-question-input').value),
+        type,
+        options: type === 'multiple-choice' ? [...row.querySelectorAll('.question-option-input')].map((input) => text(input.value)) : [],
+      };
+    });
     write({
       title: text(title.value),
       description: text(description.value),
@@ -280,7 +348,10 @@ function bindJobDetail() {
   $('#detailResponsibilities').innerHTML = job.responsibilities.length ? job.responsibilities.map((item) => `<li>${escapeHtml(item)}</li>`).join('') : '<li>Responsibilities are included in the full job description above.</li>';
   $('#detailSkills').innerHTML = job.skills.length ? job.skills.map((item) => `<span>${escapeHtml(item)}</span>`).join('') : '<span>Role-specific experience</span>';
   const questions = $('#detailQuestions');
-  if (questions) questions.innerHTML = job.questions.map((question) => `<li>${escapeHtml(question)}</li>`).join('');
+  if (questions) questions.innerHTML = job.questions.map((question) => {
+    const normalized = normalizeQuestion(question);
+    return `<li><span>${escapeHtml(normalized.text)}</span><small class="question-type-note">${normalized.type === 'multiple-choice' ? 'Multiple choice' : 'Written response'}</small></li>`;
+  }).join('');
   $('#showApplication').addEventListener('click', () => {
     sessionStorage.setItem('sava-applying-job', job.id);
     window.location.href = `./candidate-signup.html?job=${encodeURIComponent(job.id)}`;
@@ -289,8 +360,8 @@ function bindJobDetail() {
 
 function questionsForCandidate(job) {
   if (job === 'current') {
-    const savedQuestions = read().questions.filter(text);
-    return savedQuestions.length ? savedQuestions : sampleQuestions;
+    const savedQuestions = read().questions.map(questionText).filter(Boolean);
+    return savedQuestions.length ? savedQuestions : sampleQuestions.map(questionText);
   }
   if (job === 'operations') return ['How have you kept an operations leader organised?', 'How do you follow up across multiple departments?', 'Describe a process you improved without being asked.'];
   return ['How have you supported a customer-facing leader?', 'How do you track customer commitments and risks?', 'Describe a customer process you improved proactively.'];
@@ -417,3 +488,4 @@ bindJobDetail();
 
 window.savaJobBoard = jobBoard;
 window.savaEscapeHtml = escapeHtml;
+window.savaNormalizeQuestion = normalizeQuestion;

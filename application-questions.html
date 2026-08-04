@@ -8,11 +8,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="./application-questions.css" />
+    <link rel="stylesheet" href="./screening-questions.css" />
   </head>
   <body>
     <header class="application-header"><a href="./jobs.html">EXECUTIVE <span>ASSISTANTS</span></a><span>Final application step</span><a href="./jobs.html">Exit</a></header>
     <main class="application-shell">
-      <section class="application-intro"><p class="eyebrow">SHORT WRITTEN RESPONSES</p><h1>Complete your application.</h1><p>Answer each employer question clearly. Your profile and these responses will appear together in the hiring inbox.</p></section>
+      <section class="application-intro"><p class="eyebrow">SCREENING QUESTIONS</p><h1>Complete your application.</h1><p>Answer each employer question using the format requested. Your profile and these responses will appear together in the hiring inbox.</p></section>
       <section class="application-card">
         <header><p class="eyebrow blue">APPLYING FOR</p><h2 id="applicationRole">Executive Assistant</h2><p id="applicationCompany">Your company</p></header>
         <p id="authStatus" class="status-box" aria-live="polite">Checking your candidate profile…</p>
@@ -21,7 +22,7 @@
           <div id="applicationResult" class="status-box" aria-live="polite" hidden></div>
           <button id="submitApplication" type="submit">Submit application <span>→</span></button>
         </form>
-        <section id="applicationComplete" class="complete-state" hidden><span>✓</span><h2>Application submitted.</h2><p>Your profile and written answers are ready for the employer to review.</p><a href="./jobs.html">Browse more jobs →</a></section>
+        <section id="applicationComplete" class="complete-state" hidden><span>✓</span><h2>Application submitted.</h2><p>Your profile and answers are ready for the employer to review.</p><a href="./jobs.html">Browse more jobs →</a></section>
       </section>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

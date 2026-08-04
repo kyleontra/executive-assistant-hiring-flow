@@ -35,7 +35,14 @@ async function initialize() {
   document.querySelector('#applicationCompany').textContent = job.company;
   document.querySelector('#authStatus').textContent = `Profile ready for ${candidate.email}.`;
   document.querySelector('#authStatus').className = 'status-box success';
-  questionRoot.innerHTML = job.questions.map((question, index) => `<label class="question-field">${window.savaEscapeHtml(question)}<textarea name="answer${index + 1}" maxlength="1000" required></textarea><small><span>0</span> / 1,000 characters</small></label>`).join('');
+  questionRoot.innerHTML = job.questions.map((question, index) => {
+    const normalized = window.savaNormalizeQuestion(question);
+    if (normalized.type === 'multiple-choice') {
+      const options = normalized.options.map((option, optionIndex) => `<label class="choice-option"><input type="radio" name="answer${index + 1}" value="${window.savaEscapeHtml(option)}" ${optionIndex === 0 ? 'required' : ''} /><span>${window.savaEscapeHtml(option)}</span></label>`).join('');
+      return `<fieldset class="question-field choice-question"><legend>${window.savaEscapeHtml(normalized.text)}</legend><small>Choose one answer</small><div class="choice-options">${options}</div></fieldset>`;
+    }
+    return `<label class="question-field">${window.savaEscapeHtml(normalized.text)}<textarea name="answer${index + 1}" maxlength="1000" required></textarea><small><span>0</span> / 1,000 characters</small></label>`;
+  }).join('');
   questionRoot.querySelectorAll('textarea').forEach((textarea) => textarea.addEventListener('input', () => { textarea.nextElementSibling.querySelector('span').textContent = textarea.value.length; }));
 }
 
@@ -45,8 +52,16 @@ form.addEventListener('submit', (event) => {
     showResult('Answer every question before submitting your application.', 'error');
     return;
   }
-  const answers = [...questionRoot.querySelectorAll('textarea')].map((textarea) => textarea.value.trim());
-  sessionStorage.setItem(`sava:application:${job.id}:${candidate.id}`, JSON.stringify({ jobId: job.id, answers, submittedAt: new Date().toISOString() }));
+  const answerDetails = job.questions.map((question, index) => {
+    const normalized = window.savaNormalizeQuestion(question);
+    const fieldName = `answer${index + 1}`;
+    const answer = normalized.type === 'multiple-choice'
+      ? form.querySelector(`input[name="${fieldName}"]:checked`)?.value || ''
+      : form.elements[fieldName].value.trim();
+    return { question: normalized.text, type: normalized.type, answer };
+  });
+  const answers = answerDetails.map((detail) => detail.answer);
+  sessionStorage.setItem(`sava:application:${job.id}:${candidate.id}`, JSON.stringify({ jobId: job.id, answers, answerDetails, submittedAt: new Date().toISOString() }));
   form.hidden = true;
   document.querySelector('#authStatus').hidden = true;
   document.querySelector('#applicationComplete').hidden = false;

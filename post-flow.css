@@ -215,14 +215,32 @@
 }
 
 .job-question-row {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: end;
-  gap: 9px;
+  padding: 16px;
+  border: 1px solid #dce4ef;
+  border-radius: 10px;
+  background: #fbfcfe;
 }
 
 .job-question-row .simple-field {
   margin: 0;
+}
+
+.job-question-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 190px auto;
+  align-items: end;
+  gap: 9px;
+}
+
+.job-question-main select {
+  width: 100%;
+  height: 46px;
+  padding: 0 35px 0 12px;
+  border: 1px solid #ccd8e7;
+  border-radius: 8px;
+  background: #fff;
+  color: #142238;
+  font: 500 12px "DM Sans", sans-serif;
 }
 
 .remove-question {
@@ -233,6 +251,92 @@
   background: #fff7f8;
   color: #b25260;
   font-size: 18px;
+  cursor: pointer;
+}
+
+.multiple-choice-builder {
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid #dce7f5;
+  border-radius: 8px;
+  background: #f3f7fc;
+}
+
+.multiple-choice-builder[hidden] {
+  display: none;
+}
+
+.option-builder-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.option-builder-heading b,
+.option-builder-heading small {
+  display: block;
+}
+
+.option-builder-heading b {
+  color: #34445d;
+  font-size: 11px;
+}
+
+.option-builder-heading small {
+  margin-top: 3px;
+  color: #8894a5;
+  font-size: 9px;
+}
+
+.add-option {
+  border: 0;
+  background: transparent;
+  color: #246fe5;
+  font: 700 10px "DM Sans", sans-serif;
+  cursor: pointer;
+}
+
+.question-option-list {
+  display: grid;
+  gap: 8px;
+}
+
+.question-option-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: 8px;
+}
+
+.question-option-row label span {
+  display: block;
+  margin-bottom: 5px;
+  color: #68758a;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.question-option-row input {
+  width: 100%;
+  height: 40px;
+  padding: 0 11px;
+  border: 1px solid #ccd8e7;
+  border-radius: 7px;
+  background: #fff;
+  color: #142238;
+  font: 500 11px "DM Sans", sans-serif;
+}
+
+.remove-option {
+  width: 38px;
+  height: 40px;
+  border: 1px solid #ead8dc;
+  border-radius: 7px;
+  background: #fff;
+  color: #b25260;
+  font-size: 16px;
   cursor: pointer;
 }
 
@@ -401,5 +505,22 @@
   .add-question-button,
   .flow-card-footer .primary-button {
     width: 100%;
+  }
+
+  .job-question-main {
+    grid-template-columns: 1fr;
+  }
+
+  .question-type-field {
+    width: 100%;
+  }
+
+  .remove-question {
+    width: 100%;
+  }
+
+  .option-builder-heading {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }
