@@ -1214,3 +1214,92 @@
     border-top: 1px solid #e1e6ec;
   }
 }
+
+/* Final section spacing overrides */
+.job-title-editor::before,
+.description-field::before,
+.question-builder::before {
+  content: attr(data-section-number);
+  display: block;
+  width: max-content;
+  margin-bottom: 14px;
+  color: #246fe5;
+  font: 800 9px/1 Manrope, sans-serif;
+  letter-spacing: 1.2px;
+}
+
+.job-title-editor {
+  padding-bottom: 42px;
+}
+
+.job-title-editor .simple-field input {
+  height: 62px;
+  font-size: 23px;
+}
+
+.description-field {
+  margin-top: 40px;
+}
+
+.description-field::before {
+  margin-bottom: 14px;
+}
+
+.description-editor-toolbar {
+  margin-top: 12px;
+}
+
+.description-field textarea {
+  height: 210px;
+  min-height: 210px !important;
+}
+
+.question-builder {
+  margin-top: 46px;
+  padding-top: 38px;
+}
+
+.question-builder::before {
+  margin-bottom: 16px;
+}
+
+.question-builder-heading {
+  align-items: flex-end;
+}
+
+.job-question-list {
+  margin-top: 18px;
+}
+
+.flow-card-footer {
+  margin-top: 34px;
+  padding-bottom: 8px;
+}
+
+@media (max-width: 720px) {
+  .job-title-editor {
+    padding-bottom: 34px;
+  }
+
+  .job-title-editor .simple-field input {
+    height: 56px;
+    font-size: 18px;
+  }
+
+  .description-field {
+    margin-top: 32px;
+  }
+
+  .description-field textarea {
+    height: 210px;
+  }
+
+  .question-builder {
+    margin-top: 38px;
+    padding-top: 32px;
+  }
+
+  .question-builder-heading {
+    align-items: stretch;
+  }
+}

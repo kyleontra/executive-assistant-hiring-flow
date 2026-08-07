@@ -33,10 +33,10 @@
         </header>
 
         <section class="wide-fields">
-          <div class="job-title-editor">
+          <div class="job-title-editor" data-section-number="01">
             <label class="simple-field">Job title <em>*</em><input id="title" name="title" maxlength="100" placeholder="e.g. Executive Assistant to the Founder" required /></label>
           </div>
-          <label class="simple-field description-field">Job description <em>*</em>
+          <label class="simple-field description-field" data-section-number="02">Job description <em>*</em>
             <span class="description-editor-toolbar" aria-label="Job description formatting tools">
               <span class="format-tools">
                 <button type="button" data-format="bold" aria-label="Bold selected text"><b>B</b></button>
@@ -50,7 +50,7 @@
           </label>
         </section>
 
-        <section class="question-builder">
+        <section class="question-builder" data-section-number="03">
           <div class="question-builder-heading">
             <div><h2>Applicant questions</h2><p>1+ required</p></div>
             <button id="addQuestion" class="add-question-button" type="button"><span>+</span> Add question</button>
