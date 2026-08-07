@@ -400,7 +400,9 @@ function bindApplicants() {
   const candidates = [...document.querySelectorAll('.simple-candidate')];
   if (!candidates.length) return;
   const filter = $('#jobFilter');
+  const candidateList = $('#candidateList');
   const pipelineButtons = [...document.querySelectorAll('.simple-pipeline [data-status]')];
+  const previewButtons = [...document.querySelectorAll('.preview-switch [data-preview]')];
   const profilePanel = $('#profilePanel');
   const messagePanel = $('#messagePanel');
   const messageThread = $('#messageThread');
@@ -409,11 +411,16 @@ function bindApplicants() {
   const messageStatus = $('#messageStatus');
   let selectedCandidate = null;
   let activeStatus = 'all';
+  let activePreview = 'match';
   let pendingInterviewCandidate = null;
-  const newestOption = filter.querySelector('option[value="current"]');
-  newestOption.textContent = read().published ? read().title : 'Your newest role';
-  candidates.filter((candidate) => candidate.dataset.job === 'current').forEach((candidate) => {
-    candidate.querySelector('.candidate-role').textContent = read().published ? read().title : candidate.dataset.role;
+  const currentJobTitle = read().published ? read().title : 'Your newest role';
+  const newestOption = document.querySelector('#activeJobs option[data-job="current"]');
+  newestOption.value = currentJobTitle;
+  candidates.forEach((candidate) => {
+    const roleName = candidate.dataset.job === 'current' ? currentJobTitle : candidate.dataset.role;
+    const years = candidate.dataset.experience.match(/\d+/)?.[0] || candidate.dataset.experience;
+    candidate.dataset.experience = `${years} years relevant experience`;
+    candidate.querySelector('.candidate-identity small').textContent = `${roleName} · ${years} years relevant`;
   });
 
   function candidateStatusKey(candidate) {
@@ -422,6 +429,22 @@ function bindApplicants() {
 
   function candidateStatus(candidate) {
     return localStorage.getItem(candidateStatusKey(candidate)) || candidate.dataset.status || 'new';
+  }
+
+  function candidateJobLabel(candidate) {
+    return candidate.dataset.job === 'current' ? currentJobTitle : candidate.dataset.role;
+  }
+
+  function matchesJobSearch(candidate) {
+    const query = filter.value.trim().toLowerCase();
+    return !query || query === 'all active jobs' || candidateJobLabel(candidate).toLowerCase().includes(query);
+  }
+
+  function refreshRowPreviews() {
+    candidateList.dataset.preview = activePreview;
+    candidates.forEach((candidate) => {
+      candidate.querySelector('.candidate-overview').textContent = activePreview === 'answers' ? candidate.dataset.answer1 : candidate.dataset.summary;
+    });
   }
 
   function messagingIdentity() {
@@ -577,7 +600,7 @@ function bindApplicants() {
 
   function updateCounts() {
     const statuses = candidates
-      .filter((candidate) => filter.value === 'all' || candidate.dataset.job === filter.value)
+      .filter(matchesJobSearch)
       .map(candidateStatus);
     $('#allCandidateCount').textContent = statuses.filter((status) => status !== 'rejected').length;
     $('#newCandidateCount').textContent = statuses.filter((status) => status === 'new').length;
@@ -586,22 +609,26 @@ function bindApplicants() {
   }
 
   function applyFilter() {
-    const job = filter.value;
     let visibleCount = 0;
     candidates.forEach((candidate) => {
       const status = candidateStatus(candidate);
-      const matchesJob = job === 'all' || candidate.dataset.job === job;
       const matchesStatus = activeStatus === 'all' ? status !== 'rejected' : status === activeStatus;
-      const visible = matchesJob && matchesStatus;
+      const visible = matchesJobSearch(candidate) && matchesStatus;
       candidate.hidden = !visible;
       if (visible) visibleCount += 1;
     });
     $('#candidateEmpty').hidden = visibleCount > 0;
+    $('#applicantResultSummary').textContent = `${visibleCount} applicant${visibleCount === 1 ? '' : 's'}`;
     updateCounts();
   }
 
   candidates.forEach((candidate) => candidate.addEventListener('click', () => openProfile(candidate)));
-  filter.addEventListener('change', applyFilter);
+  filter.addEventListener('input', applyFilter);
+  previewButtons.forEach((button) => button.addEventListener('click', () => {
+    activePreview = button.dataset.preview;
+    previewButtons.forEach((item) => item.classList.toggle('selected', item === button));
+    refreshRowPreviews();
+  }));
   pipelineButtons.forEach((button) => button.addEventListener('click', () => {
     activeStatus = button.dataset.status;
     pipelineButtons.forEach((item) => item.classList.toggle('selected', item === button));
@@ -668,6 +695,7 @@ function bindApplicants() {
     applyFilter();
     toast('Candidate removed from the inbox');
   });
+  refreshRowPreviews();
   applyFilter();
 }
 

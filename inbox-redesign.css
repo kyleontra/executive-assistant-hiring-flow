@@ -33,15 +33,21 @@
   text-transform: uppercase;
 }
 
-.job-filter select {
+.job-filter input {
   width: 100%;
   height: 42px;
-  padding: 0 36px 0 12px;
+  padding: 0 12px;
   border: 1px solid #d7e0eb;
   border-radius: 7px;
   background: #fff;
   color: #142238;
   font: 600 12px "DM Sans", sans-serif;
+  outline: none;
+}
+
+.job-filter input:focus {
+  border-color: #246fe5;
+  box-shadow: 0 0 0 3px rgba(36, 111, 229, .09);
 }
 
 .simple-pipeline {
@@ -93,6 +99,45 @@
   background: #f0f4f9;
   color: #64758c;
   font-size: 8px;
+}
+
+.queue-toolbar {
+  display: flex;
+  min-height: 47px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid #e6ebf2;
+  color: #7b899b;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.preview-switch {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.preview-switch > span {
+  margin-right: 5px;
+  color: #929dac;
+}
+
+.preview-switch button {
+  height: 26px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: #7c899a;
+  font: 700 9px "DM Sans", sans-serif;
+  cursor: pointer;
+}
+
+.preview-switch button.selected {
+  background: #edf4ff;
+  color: #246fe5;
 }
 
 .simple-candidate-list {
@@ -163,13 +208,24 @@
 }
 
 .candidate-overview {
-  display: -webkit-box;
+  display: block;
   overflow: hidden;
   color: #53637a;
   font-size: 11px;
   line-height: 1.55;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.candidate-overview::before {
+  color: #96a1b0;
+  content: "Match · ";
+  font-size: 8px;
+  font-weight: 800;
+}
+
+#candidateList[data-preview="answers"] .candidate-overview::before {
+  content: "Answer · ";
 }
 
 .simple-candidate .match-badge {
@@ -533,6 +589,13 @@ body.messages-open {
 
   .job-filter {
     width: 100%;
+  }
+
+  .queue-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+    padding: 13px 0;
   }
 
   .simple-pipeline {
