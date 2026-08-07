@@ -758,6 +758,19 @@
   }
 }
 
+/* Keep the first step visually centered from heading through action. */
+.title-step-shell .job-title-editor .simple-field input {
+  text-align: center;
+}
+
+.title-step-shell .flow-card-footer {
+  justify-content: center;
+}
+
+.title-step-shell .flow-card-footer > span:empty {
+  display: none;
+}
+
 @media (max-width: 520px) {
   .simple-header {
     height: auto;
