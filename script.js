@@ -148,7 +148,7 @@ function bindPostJob() {
     const rows = [...questionList.querySelectorAll('.job-question-row')];
     rows.forEach((row, index) => {
       row.querySelector('.question-number').textContent = String(index + 1).padStart(2, '0');
-      row.querySelector('.question-label-text').textContent = 'Question';
+      row.querySelector('.question-label-text').textContent = `Question ${index + 1}`;
       row.querySelector('.remove-question').hidden = rows.length === 1;
     });
   }
@@ -185,7 +185,7 @@ function bindPostJob() {
     const question = normalizeQuestion(value);
     const row = document.createElement('div');
     row.className = 'job-question-row';
-    row.innerHTML = `<span class="question-number" aria-hidden="true">01</span><div class="question-content"><div class="job-question-main"><label class="simple-field"><span><span class="question-label-text">Question</span> <em>*</em></span><input class="job-question-input" maxlength="240" placeholder="e.g. Tell us about relevant experience for this role." required /></label><label class="simple-field question-type-field"><span>Answer type <em>*</em></span><select class="job-question-type"><option value="text">Written response</option><option value="multiple-choice">Multiple choice</option></select></label><button class="remove-question" type="button" aria-label="Remove question">×</button></div><section class="multiple-choice-builder" hidden><div class="option-builder-heading"><div><b>Answer options</b><small>Add at least two choices.</small></div><button class="add-option" type="button"><span>+</span> Add option</button></div><div class="question-option-list"></div></section></div>`;
+    row.innerHTML = `<span class="question-number" aria-hidden="true">01</span><div class="question-content"><div class="job-question-main"><label class="simple-field"><span><span class="question-label-text">Question 1</span> <em>*</em></span><input class="job-question-input" maxlength="240" placeholder="Enter a question" required /></label><label class="simple-field question-type-field"><span>Answer type <em>*</em></span><select class="job-question-type"><option value="text">Written response</option><option value="multiple-choice">Multiple choice</option></select></label><button class="remove-question" type="button" aria-label="Remove question">×</button></div><section class="multiple-choice-builder" hidden><div class="option-builder-heading"><div><b>Answer options</b><small>Add at least two choices.</small></div><button class="add-option" type="button"><span>+</span> Add option</button></div><div class="question-option-list"></div></section></div>`;
     row.querySelector('.job-question-input').value = question.text;
     row.querySelector('.job-question-type').value = question.type;
     questionList.appendChild(row);

@@ -29,10 +29,10 @@
       <form id="postJobForm" class="job-flow-card" data-step="description" novalidate>
         <header class="flow-card-heading">
           <p class="simple-kicker">POST A JOB</p>
-          <h1>What will this person do?</h1>
+          <h1>Job description <em>*</em></h1>
         </header>
 
-        <label class="simple-field description-field standalone-description">Job description <em>*</em>
+        <label class="simple-field description-field standalone-description"><span class="visually-hidden">Job description</span>
           <span class="description-editor-toolbar" aria-label="Job description formatting tools">
             <span class="format-tools">
               <button type="button" data-format="bold" aria-label="Bold selected text"><b>B</b></button>
@@ -41,7 +41,7 @@
               <button type="button" data-format="number" aria-label="Create a numbered list">1. List</button>
             </span>
           </span>
-          <textarea id="description" name="description" maxlength="10000" rows="10" placeholder="Describe the responsibilities, working relationship, day-to-day work, and what success looks like." required></textarea>
+          <textarea id="description" name="description" maxlength="10000" rows="10" placeholder="Enter job description" required></textarea>
           <small><span id="descriptionCount">0</span> / 10,000 characters</small>
         </label>
 

@@ -1397,3 +1397,28 @@
   font-size: 10px;
   font-weight: 600;
 }
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  clip-path: inset(50%) !important;
+  white-space: nowrap !important;
+}
+
+.flow-card-heading h1 em {
+  color: #d75c65;
+  font-size: .55em;
+  font-style: normal;
+  vertical-align: top;
+}
+
+.standalone-questions .question-number {
+  display: none;
+}
+
+.standalone-questions .job-question-row {
+  grid-template-columns: minmax(0, 1fr);
+}
