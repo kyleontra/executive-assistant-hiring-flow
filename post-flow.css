@@ -1509,17 +1509,20 @@
 
 /* Center the short title step as one compact, balanced form block. */
 .title-step-shell {
-  display: flex;
+  display: grid;
   min-height: calc(100vh - 62px);
   min-height: calc(100svh - 62px);
-  flex-direction: column;
-  justify-content: center;
-  padding-top: 40px;
+  grid-template-rows: auto minmax(0, 1fr);
+  padding-top: 32px;
   padding-bottom: 40px;
 }
 
 .title-step-shell .five-step-progress {
-  margin-bottom: 30px;
+  margin-bottom: 0;
+}
+
+.title-step-shell .job-flow-card {
+  align-self: center;
 }
 
 .title-step-shell .flow-card-heading {
