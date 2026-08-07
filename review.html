@@ -17,11 +17,13 @@
       <a class="simple-brand" href="./index.html">HIRE FROM <span>SA</span></a>
       <nav><a href="./applicants.html">Hiring inbox</a><a href="./jobs.html">View jobs</a></nav>
     </header>
-    <main class="review-shell">
+    <main class="review-shell modern-review-shell">
+      <nav class="flow-progress" aria-label="Job posting progress">
+        <span class="done"><b>✓</b> Details</span><i></i><span class="done"><b>✓</b> Pay</span><i></i><span class="active"><b>3</b> Review</span>
+      </nav>
       <section class="review-intro">
-        <p class="simple-kicker">FINAL CHECK</p>
+        <p class="simple-kicker">POST A JOB</p>
         <h1>Review your job.</h1>
-        <p>Make sure the role is clear, the commitment is right, and the hourly range is accurate.</p>
       </section>
 
       <article class="simple-review-card">
@@ -30,22 +32,19 @@
           <h2 data-review="title">Executive Assistant</h2>
           <div class="review-pills"><span data-review="commitment">Full-time (40 hours per week)</span><span data-review="rate">$3 – $5 / hour</span></div>
         </section>
-        <section class="simple-review-section"><div><h3>About the role</h3><a href="./index.html">Edit</a></div><p data-review="description">No description added.</p></section>
-        <section class="simple-review-section"><div><h3>Applicant questions</h3><a href="./index.html">Edit</a></div><ol id="reviewQuestions" class="review-questions"></ol></section>
-        <section class="simple-review-section"><div><h3>Commitment and pay</h3><a href="./compensation.html">Edit</a></div><div class="review-pills review-pay-pills"><span data-review="commitment">Full-time (40 hours per week)</span><span data-review="rate">$3 – $5 / hour</span></div></section>
+        <div class="review-content-grid">
+          <section class="simple-review-section"><div><h3>About the role</h3><a href="./index.html">Edit</a></div><p data-review="description">No description added.</p></section>
+          <section class="simple-review-section"><div><h3>Applicant questions</h3><a href="./index.html">Edit</a></div><ol id="reviewQuestions" class="review-questions"></ol></section>
+        </div>
       </article>
 
-      <fieldset class="promotion-card">
-        <legend>Promote this job</legend>
-        <p>Choose whether you want to increase the reach of this post.</p>
-        <label><input type="radio" name="promotion" value="true" checked /><span><b>Promote this job</b><small>Set a daily promotion budget</small></span></label>
-        <label><input type="radio" name="promotion" value="false" /><span><b>Do not promote my post</b><small>Publish without promotion</small></span></label>
+      <section class="promotion-card modern-promotion-card">
+        <label class="promotion-switch"><input id="promoteJob" type="checkbox" checked /><span aria-hidden="true"></span><div><b>Promote this job</b><small>Increase the reach of your post</small></div></label>
         <div id="promotionBudgetPanel" class="promotion-budget">
-          <label for="promotionBudget">Money per day</label>
-          <div class="budget-input"><span>$</span><input id="promotionBudget" type="number" min="5" step="1" value="8" inputmode="numeric" /><small>USD / day</small></div>
-          <p>Minimum $5 per day.</p>
+          <label for="promotionBudget">Daily budget</label>
+          <div class="budget-input"><span>$</span><input id="promotionBudget" type="number" min="5" step="1" value="8" inputmode="numeric" /><small>/ day</small></div>
         </div>
-      </fieldset>
+      </section>
 
       <div id="postFormResult" class="simple-form-result" aria-live="polite"></div>
       <footer class="review-footer"><a href="./compensation.html">← Back to edit</a><button id="publishJob" class="primary-button" type="button">Publish role <span>→</span></button></footer>

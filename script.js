@@ -115,18 +115,11 @@ function bindPostJob() {
     });
   });
 
-  $('#draftDescription').addEventListener('click', () => {
-    if (text(description.value) && !window.confirm('Replace the current description with a structured starting point?')) return;
-    const roleTitle = text(title.value) || 'this role';
-    description.value = `About the role\n\nWe are looking for a ${roleTitle} to help our team stay organised, move priorities forward, and communicate clearly.\n\nWhat you will manage\n• Add the core responsibilities for this role\n• Add the recurring tasks and relationships they will own\n• Explain what success looks like after 30, 60, and 90 days\n\nWhat makes someone a strong fit\n• Add the experience that matters most\n• Add the tools or working style they should know\n• Add any must-have availability or communication expectations`;
-    description.dispatchEvent(new Event('input', { bubbles: true }));
-    description.focus();
-  });
-
   function refreshQuestionRows() {
     const rows = [...questionList.querySelectorAll('.job-question-row')];
     rows.forEach((row, index) => {
-      row.querySelector('.question-label-text').textContent = `Question ${index + 1}`;
+      row.querySelector('.question-number').textContent = String(index + 1).padStart(2, '0');
+      row.querySelector('.question-label-text').textContent = 'Question';
       row.querySelector('.remove-question').hidden = rows.length === 1;
     });
   }
@@ -163,7 +156,7 @@ function bindPostJob() {
     const question = normalizeQuestion(value);
     const row = document.createElement('div');
     row.className = 'job-question-row';
-    row.innerHTML = `<div class="job-question-main"><label class="simple-field"><span><span class="question-label-text">Question</span> <em>*</em></span><input class="job-question-input" maxlength="240" placeholder="e.g. Tell us about relevant experience for this role." required /></label><label class="simple-field question-type-field"><span>Answer type <em>*</em></span><select class="job-question-type"><option value="text">Written response</option><option value="multiple-choice">Multiple choice</option></select></label><button class="remove-question" type="button" aria-label="Remove question">×</button></div><section class="multiple-choice-builder" hidden><div class="option-builder-heading"><div><b>Answer options</b><small>Add at least two choices.</small></div><button class="add-option" type="button"><span>+</span> Add option</button></div><div class="question-option-list"></div></section>`;
+    row.innerHTML = `<span class="question-number" aria-hidden="true">01</span><div class="question-content"><div class="job-question-main"><label class="simple-field"><span><span class="question-label-text">Question</span> <em>*</em></span><input class="job-question-input" maxlength="240" placeholder="e.g. Tell us about relevant experience for this role." required /></label><label class="simple-field question-type-field"><span>Answer type <em>*</em></span><select class="job-question-type"><option value="text">Written response</option><option value="multiple-choice">Multiple choice</option></select></label><button class="remove-question" type="button" aria-label="Remove question">×</button></div><section class="multiple-choice-builder" hidden><div class="option-builder-heading"><div><b>Answer options</b><small>Add at least two choices.</small></div><button class="add-option" type="button"><span>+</span> Add option</button></div><div class="question-option-list"></div></section></div>`;
     row.querySelector('.job-question-input').value = question.text;
     row.querySelector('.job-question-type').value = question.type;
     questionList.appendChild(row);
@@ -272,23 +265,22 @@ function bindPublish() {
   const button = $('#publishJob');
   if (!button) return;
   const role = read();
-  const promotionOptions = [...document.querySelectorAll('input[name="promotion"]')];
+  const promoteInput = $('#promoteJob');
   const budgetPanel = $('#promotionBudgetPanel');
   const budgetInput = $('#promotionBudget');
-  const selected = promotionOptions.find((input) => input.value === String(role.promote)) || promotionOptions[0];
-  selected.checked = true;
+  promoteInput.checked = role.promote !== false;
   budgetInput.value = role.promotionBudget || '8';
 
   function updatePromotion() {
-    const promote = document.querySelector('input[name="promotion"]:checked')?.value === 'true';
+    const promote = promoteInput.checked;
     budgetPanel.hidden = !promote;
     budgetInput.required = promote;
   }
 
-  promotionOptions.forEach((input) => input.addEventListener('change', updatePromotion));
+  promoteInput.addEventListener('change', updatePromotion);
   updatePromotion();
   button.addEventListener('click', () => {
-    const promote = document.querySelector('input[name="promotion"]:checked')?.value === 'true';
+    const promote = promoteInput.checked;
     const promotionBudget = Number(budgetInput.value);
     if (promote && (!budgetInput.reportValidity() || promotionBudget < 5)) {
       budgetInput.focus();

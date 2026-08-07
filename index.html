@@ -19,9 +19,9 @@
 
     <main class="job-flow-shell">
       <nav class="flow-progress" aria-label="Job posting progress">
-        <span class="active"><b>1</b> Job details</span>
+        <span class="active"><b>1</b> Details</span>
         <i></i>
-        <span><b>2</b> Commitment &amp; pay</span>
+        <span><b>2</b> Pay</span>
         <i></i>
         <span><b>3</b> Review</span>
       </nav>
@@ -30,13 +30,11 @@
         <header class="flow-card-heading">
           <p class="simple-kicker">POST A JOB</p>
           <h1>Build a clear job post.</h1>
-          <p>Start with the title, shape the description, and add the questions every applicant must answer.</p>
         </header>
 
         <section class="wide-fields">
           <div class="job-title-editor">
             <label class="simple-field">Job title <em>*</em><input id="title" name="title" maxlength="100" placeholder="e.g. Executive Assistant to the Founder" required /></label>
-            <span class="job-location-preview">Remote · South Africa</span>
           </div>
           <label class="simple-field description-field">Job description <em>*</em>
             <span class="description-editor-toolbar" aria-label="Job description formatting tools">
@@ -46,7 +44,6 @@
                 <button type="button" data-format="bullet" aria-label="Create a bulleted list">• List</button>
                 <button type="button" data-format="number" aria-label="Create a numbered list">1. List</button>
               </span>
-              <button id="draftDescription" class="draft-description-button" type="button"><span>✦</span> Draft a structure</button>
             </span>
             <textarea id="description" name="description" maxlength="10000" rows="16" placeholder="Describe the responsibilities, working relationship, day-to-day work, and what success looks like." required></textarea>
             <small><span id="descriptionCount">0</span> / 10,000 characters</small>
@@ -55,7 +52,7 @@
 
         <section class="question-builder">
           <div class="question-builder-heading">
-            <div><h2>Applicant questions</h2><p>Add at least one question, then choose a written response or multiple choice answer.</p></div>
+            <div><h2>Applicant questions</h2><p>At least one required</p></div>
             <button id="addQuestion" class="add-question-button" type="button"><span>+</span> Add question</button>
           </div>
           <div id="jobQuestionList" class="job-question-list"></div>
@@ -64,7 +61,7 @@
         <div id="postFormResult" class="simple-form-result" aria-live="polite"></div>
         <footer class="flow-card-footer">
           <p>Step 1 of 3</p>
-          <button class="primary-button" type="submit">Continue to commitment &amp; pay <span>→</span></button>
+          <button class="primary-button" type="submit">Continue <span>→</span></button>
         </footer>
       </form>
     </main>
