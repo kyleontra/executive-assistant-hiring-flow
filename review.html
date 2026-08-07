@@ -21,32 +21,34 @@
       <nav class="flow-progress" aria-label="Job posting progress">
         <span class="done"><b>✓</b> Details</span><i></i><span class="done"><b>✓</b> Pay</span><i></i><span class="active"><b>3</b> Review</span>
       </nav>
-      <section class="review-intro">
-        <p class="simple-kicker">POST A JOB</p>
-        <h1>Review your job.</h1>
-      </section>
-
-      <article class="simple-review-card">
-        <section class="review-summary">
-          <div><h2 data-review="title">Executive Assistant</h2><a href="./index.html">Edit</a></div>
-          <div class="review-pills"><span data-review="commitment">Full-time (40 hours per week)</span><span data-review="rate">$3 – $5 / hour</span></div>
+      <section class="review-flow-card">
+        <section class="review-intro">
+          <p class="simple-kicker">POST A JOB</p>
+          <h1>Review your job.</h1>
         </section>
-        <div class="review-content-grid">
-          <section class="simple-review-section"><div><h3>About the role</h3><a href="./index.html">Edit</a></div><p data-review="description">No description added.</p></section>
-          <section class="simple-review-section"><div><h3>Applicant questions</h3><a href="./index.html">Edit</a></div><ol id="reviewQuestions" class="review-questions"></ol></section>
-        </div>
-      </article>
 
-      <section class="promotion-card modern-promotion-card">
-        <label class="promotion-switch"><input id="promoteJob" type="checkbox" checked /><span aria-hidden="true"></span><div><b>Promote this job</b></div></label>
-        <div id="promotionBudgetPanel" class="promotion-budget">
-          <label for="promotionBudget">Daily budget</label>
-          <div class="budget-input"><span>$</span><input id="promotionBudget" type="number" min="5" step="1" value="8" inputmode="numeric" /><small>/ day</small></div>
-        </div>
+        <article class="simple-review-card">
+          <section class="review-summary">
+            <div><h2 data-review="title">Executive Assistant</h2><a href="./index.html">Edit</a></div>
+            <div class="review-pills"><span data-review="commitment">Full-time (40 hours per week)</span><span data-review="rate">$3 – $5 / hour</span></div>
+          </section>
+          <div class="review-content-grid">
+            <section class="simple-review-section"><div><h3>About the role</h3><a href="./index.html">Edit</a></div><p data-review="description">No description added.</p></section>
+            <section class="simple-review-section"><div><h3>Applicant questions</h3><a href="./index.html">Edit</a></div><ol id="reviewQuestions" class="review-questions"></ol></section>
+          </div>
+        </article>
+
+        <section class="promotion-card modern-promotion-card">
+          <label class="promotion-switch"><input id="promoteJob" type="checkbox" checked /><span aria-hidden="true"></span><div><b>Promote this job</b></div></label>
+          <div id="promotionBudgetPanel" class="promotion-budget">
+            <label for="promotionBudget">Daily budget</label>
+            <div class="budget-input"><span>$</span><input id="promotionBudget" type="number" min="5" step="1" value="8" inputmode="numeric" /><small>/ day</small></div>
+          </div>
+        </section>
+
+        <div id="postFormResult" class="simple-form-result" aria-live="polite"></div>
+        <footer class="review-footer"><a href="./compensation.html">← Back to edit</a><button id="publishJob" class="primary-button" type="button">Publish role <span>→</span></button></footer>
       </section>
-
-      <div id="postFormResult" class="simple-form-result" aria-live="polite"></div>
-      <footer class="review-footer"><a href="./compensation.html">← Back to edit</a><button id="publishJob" class="primary-button" type="button">Publish role <span>→</span></button></footer>
     </main>
     <div class="toast" id="toast"></div>
     <script src="./script.js"></script>
