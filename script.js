@@ -400,6 +400,11 @@ function bindApplicants() {
   const candidates = [...document.querySelectorAll('.simple-candidate')];
   if (!candidates.length) return;
   const filter = $('#jobFilter');
+  const jobCombobox = $('#jobCombobox');
+  const jobDropdown = $('#jobDropdown');
+  const jobDropdownButton = $('#jobDropdownButton');
+  const selectedJobLabel = $('#selectedJobLabel');
+  const jobOptions = [...document.querySelectorAll('#jobOptions [data-job]')];
   const candidateList = $('#candidateList');
   const pipelineButtons = [...document.querySelectorAll('.simple-pipeline [data-status]')];
   const applicantSort = $('#applicantSort');
@@ -412,6 +417,7 @@ function bindApplicants() {
   const messageBody = $('#messageBody');
   const messageStatus = $('#messageStatus');
   let selectedCandidate = null;
+  let selectedJob = 'all';
   let activeStatus = 'all';
   let pendingInterviewCandidate = null;
   const questionScores = {
@@ -421,8 +427,8 @@ function bindApplicants() {
     'Thandi Jacobs': [84, 89, 93],
   };
   const currentJobTitle = read().published ? read().title : 'Your newest role';
-  const newestOption = document.querySelector('#activeJobs option[data-job="current"]');
-  newestOption.value = currentJobTitle;
+  const newestOption = document.querySelector('#jobOptions [data-job="current"]');
+  newestOption.textContent = currentJobTitle;
   candidates.forEach((candidate) => {
     const roleName = candidate.dataset.job === 'current' ? currentJobTitle : candidate.dataset.role;
     const years = candidate.dataset.experience.match(/\d+/)?.[0] || candidate.dataset.experience;
@@ -438,19 +444,36 @@ function bindApplicants() {
     return localStorage.getItem(candidateStatusKey(candidate)) || candidate.dataset.status || 'new';
   }
 
-  function candidateJobLabel(candidate) {
-    return candidate.dataset.job === 'current' ? currentJobTitle : candidate.dataset.role;
-  }
-
   function matchesJobSearch(candidate) {
-    const query = filter.value.trim().toLowerCase();
-    return !query || query === 'all active jobs' || candidateJobLabel(candidate).toLowerCase().includes(query);
+    return selectedJob === 'all' || candidate.dataset.job === selectedJob;
   }
 
   function selectedJobKey() {
-    const query = filter.value.trim().toLowerCase();
-    if (!query || query === 'all active jobs') return 'all';
-    return candidates.find((candidate) => candidateJobLabel(candidate).toLowerCase() === query)?.dataset.job || null;
+    return selectedJob;
+  }
+
+  function setJobDropdown(open) {
+    jobDropdown.hidden = !open;
+    jobDropdownButton.setAttribute('aria-expanded', String(open));
+    if (open) {
+      filter.value = '';
+      jobOptions.forEach((option) => { option.hidden = false; });
+      $('#jobSearchEmpty').hidden = true;
+      filter.focus();
+    }
+  }
+
+  function chooseJob(option) {
+    selectedJob = option.dataset.job;
+    selectedJobLabel.textContent = option.textContent;
+    jobOptions.forEach((item) => {
+      const selected = item === option;
+      item.classList.toggle('selected', selected);
+      item.setAttribute('aria-selected', String(selected));
+    });
+    setJobDropdown(false);
+    refreshQuestionPicker();
+    applyFilter();
   }
 
   function refreshQuestionPicker() {
@@ -678,9 +701,26 @@ function bindApplicants() {
   }
 
   candidates.forEach((candidate) => candidate.addEventListener('click', () => openProfile(candidate)));
+  jobDropdownButton.addEventListener('click', () => setJobDropdown(jobDropdown.hidden));
   filter.addEventListener('input', () => {
-    refreshQuestionPicker();
-    applyFilter();
+    const query = filter.value.trim().toLowerCase();
+    let visibleCount = 0;
+    jobOptions.forEach((option) => {
+      const visible = option.textContent.toLowerCase().includes(query);
+      option.hidden = !visible;
+      if (visible) visibleCount += 1;
+    });
+    $('#jobSearchEmpty').hidden = visibleCount > 0;
+  });
+  jobOptions.forEach((option) => option.addEventListener('click', () => chooseJob(option)));
+  document.addEventListener('click', (event) => {
+    if (!jobCombobox.contains(event.target)) setJobDropdown(false);
+  });
+  jobCombobox.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && !jobDropdown.hidden) {
+      setJobDropdown(false);
+      jobDropdownButton.focus();
+    }
   });
   applicantSort.addEventListener('change', () => {
     refreshQuestionPicker();
