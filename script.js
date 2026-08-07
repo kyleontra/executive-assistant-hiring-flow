@@ -88,32 +88,61 @@ function bindPostJob() {
   const form = $('#postJobForm');
   if (!form) return;
   const role = read();
-  const title = $('#title');
-  const description = $('#description');
+  const step = form.dataset.step;
+
+  if (step === 'title') {
+    const title = $('#title');
+    title.value = role.title === defaults.title && !role.description ? '' : role.title;
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      if (!form.reportValidity()) {
+        showPostError('Add the job title to continue.');
+        return;
+      }
+      write({ title: text(title.value), published: false });
+      window.location.href = './job-description.html';
+    });
+    return;
+  }
+
+  if (step === 'description') {
+    const description = $('#description');
+    description.value = role.description;
+    $('#descriptionCount').textContent = description.value.length.toLocaleString();
+    description.addEventListener('input', () => { $('#descriptionCount').textContent = description.value.length.toLocaleString(); });
+
+    document.querySelectorAll('[data-format]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const start = description.selectionStart;
+        const end = description.selectionEnd;
+        const selected = description.value.slice(start, end);
+        const format = button.dataset.format;
+        const replacements = {
+          bold: `**${selected || 'bold text'}**`,
+          italic: `_${selected || 'italic text'}_`,
+          bullet: selected ? selected.split('\n').map((line) => `• ${line.replace(/^[•\-]\s*/, '')}`).join('\n') : '• ',
+          number: selected ? selected.split('\n').map((line, index) => `${index + 1}. ${line.replace(/^\d+\.\s*/, '')}`).join('\n') : '1. ',
+        };
+        description.setRangeText(replacements[format], start, end, 'end');
+        description.dispatchEvent(new Event('input', { bubbles: true }));
+        description.focus();
+      });
+    });
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      if (!form.reportValidity()) {
+        showPostError('Add the job description to continue.');
+        return;
+      }
+      write({ description: text(description.value), published: false });
+      window.location.href = './applicant-questions.html';
+    });
+    return;
+  }
+
   const questionList = $('#jobQuestionList');
   const addButton = $('#addQuestion');
-  title.value = role.title === defaults.title && !role.description ? '' : role.title;
-  description.value = role.description;
-  $('#descriptionCount').textContent = description.value.length.toLocaleString();
-  description.addEventListener('input', () => { $('#descriptionCount').textContent = description.value.length.toLocaleString(); });
-
-  document.querySelectorAll('[data-format]').forEach((button) => {
-    button.addEventListener('click', () => {
-      const start = description.selectionStart;
-      const end = description.selectionEnd;
-      const selected = description.value.slice(start, end);
-      const format = button.dataset.format;
-      const replacements = {
-        bold: `**${selected || 'bold text'}**`,
-        italic: `_${selected || 'italic text'}_`,
-        bullet: selected ? selected.split('\n').map((line) => `• ${line.replace(/^[•\-]\s*/, '')}`).join('\n') : '• ',
-        number: selected ? selected.split('\n').map((line, index) => `${index + 1}. ${line.replace(/^\d+\.\s*/, '')}`).join('\n') : '1. ',
-      };
-      description.setRangeText(replacements[format], start, end, 'end');
-      description.dispatchEvent(new Event('input', { bubbles: true }));
-      description.focus();
-    });
-  });
 
   function refreshQuestionRows() {
     const rows = [...questionList.querySelectorAll('.job-question-row')];
@@ -197,7 +226,7 @@ function bindPostJob() {
   form.addEventListener('submit', (event) => {
     event.preventDefault();
     if (!form.reportValidity()) {
-      showPostError('Add the job title, description, and at least one applicant question.');
+      showPostError('Add at least one complete applicant question.');
       return;
     }
     const questions = [...questionList.querySelectorAll('.job-question-row')].map((row) => {
@@ -209,8 +238,6 @@ function bindPostJob() {
       };
     });
     write({
-      title: text(title.value),
-      description: text(description.value),
       questions,
       promote: true,
       promotionBudget: '8',

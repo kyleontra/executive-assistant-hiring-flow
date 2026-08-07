@@ -1303,3 +1303,83 @@
     align-items: stretch;
   }
 }
+
+/* Separate job-posting pages */
+.five-step-progress {
+  width: min(620px, 100%);
+}
+
+.five-step-progress span {
+  white-space: nowrap;
+}
+
+.single-step-shell {
+  width: min(760px, calc(100% - 40px));
+}
+
+.title-step-shell .flow-card-heading,
+.description-step-shell .flow-card-heading,
+.questions-step-shell .flow-card-heading {
+  margin-bottom: 56px;
+}
+
+.title-step-shell .job-title-editor {
+  padding-bottom: 44px;
+}
+
+.title-step-shell .flow-card-footer {
+  margin-top: 38px;
+}
+
+.standalone-description {
+  margin-top: 0;
+}
+
+.standalone-description textarea {
+  height: 330px;
+  min-height: 330px !important;
+  max-height: 520px;
+}
+
+.standalone-questions {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.standalone-questions .job-question-list {
+  margin-top: 24px;
+}
+
+.description-step-shell .flow-card-footer,
+.questions-step-shell .flow-card-footer {
+  margin-top: 42px;
+}
+
+@media (max-width: 720px) {
+  .five-step-progress {
+    width: 100%;
+    gap: 7px;
+  }
+
+  .five-step-progress span {
+    font-size: 0;
+  }
+
+  .five-step-progress b {
+    width: 22px;
+    height: 22px;
+    font-size: 8px;
+  }
+
+  .title-step-shell .flow-card-heading,
+  .description-step-shell .flow-card-heading,
+  .questions-step-shell .flow-card-heading {
+    margin-bottom: 42px;
+  }
+
+  .standalone-description textarea {
+    height: 280px;
+    min-height: 280px !important;
+  }
+}

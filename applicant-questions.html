@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Post a Job | Hire From SA</title>
+    <title>Applicant Questions | Hire From SA</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
@@ -17,30 +17,32 @@
       <nav><a href="./applicants.html">Hiring inbox</a><a href="./scheduler-settings.html">Interview scheduler</a><a href="./jobs.html">View jobs</a></nav>
     </header>
 
-    <main class="job-flow-shell single-step-shell title-step-shell">
+    <main class="job-flow-shell questions-step-shell">
       <nav class="flow-progress five-step-progress" aria-label="Job posting progress">
-        <span class="active"><b>1</b> Title</span><i></i>
-        <span><b>2</b> Description</span><i></i>
-        <span><b>3</b> Questions</span><i></i>
+        <span class="done"><b>✓</b> Title</span><i></i>
+        <span class="done"><b>✓</b> Description</span><i></i>
+        <span class="active"><b>3</b> Questions</span><i></i>
         <span><b>4</b> Pay</span><i></i>
         <span><b>5</b> Review</span>
       </nav>
 
-      <form id="postJobForm" class="job-flow-card" data-step="title" novalidate>
+      <form id="postJobForm" class="job-flow-card" data-step="questions" novalidate>
         <header class="flow-card-heading">
           <p class="simple-kicker">POST A JOB</p>
-          <h1>What’s the job title?</h1>
+          <h1>Add applicant questions.</h1>
         </header>
 
-        <section class="wide-fields">
-          <div class="job-title-editor" data-section-number="01">
-            <label class="simple-field">Job title <em>*</em><input id="title" name="title" maxlength="100" placeholder="e.g. Executive Assistant to the Founder" required /></label>
+        <section class="question-builder standalone-questions" data-section-number="03">
+          <div class="question-builder-heading">
+            <div><h2>Applicant questions</h2><p>At least 1 required</p></div>
+            <button id="addQuestion" class="add-question-button" type="button"><span>+</span> Add question</button>
           </div>
+          <div id="jobQuestionList" class="job-question-list"></div>
         </section>
 
         <div id="postFormResult" class="simple-form-result" aria-live="polite"></div>
         <footer class="flow-card-footer">
-          <span></span>
+          <a href="./job-description.html">← Back</a>
           <button class="primary-button" type="submit">Continue <span>→</span></button>
         </footer>
       </form>

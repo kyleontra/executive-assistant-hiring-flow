@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Post a Job | Hire From SA</title>
+    <title>Job Description | Hire From SA</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
@@ -17,30 +17,37 @@
       <nav><a href="./applicants.html">Hiring inbox</a><a href="./scheduler-settings.html">Interview scheduler</a><a href="./jobs.html">View jobs</a></nav>
     </header>
 
-    <main class="job-flow-shell single-step-shell title-step-shell">
+    <main class="job-flow-shell description-step-shell">
       <nav class="flow-progress five-step-progress" aria-label="Job posting progress">
-        <span class="active"><b>1</b> Title</span><i></i>
-        <span><b>2</b> Description</span><i></i>
+        <span class="done"><b>✓</b> Title</span><i></i>
+        <span class="active"><b>2</b> Description</span><i></i>
         <span><b>3</b> Questions</span><i></i>
         <span><b>4</b> Pay</span><i></i>
         <span><b>5</b> Review</span>
       </nav>
 
-      <form id="postJobForm" class="job-flow-card" data-step="title" novalidate>
+      <form id="postJobForm" class="job-flow-card" data-step="description" novalidate>
         <header class="flow-card-heading">
           <p class="simple-kicker">POST A JOB</p>
-          <h1>What’s the job title?</h1>
+          <h1>Describe the role.</h1>
         </header>
 
-        <section class="wide-fields">
-          <div class="job-title-editor" data-section-number="01">
-            <label class="simple-field">Job title <em>*</em><input id="title" name="title" maxlength="100" placeholder="e.g. Executive Assistant to the Founder" required /></label>
-          </div>
-        </section>
+        <label class="simple-field description-field standalone-description" data-section-number="02">Job description <em>*</em>
+          <span class="description-editor-toolbar" aria-label="Job description formatting tools">
+            <span class="format-tools">
+              <button type="button" data-format="bold" aria-label="Bold selected text"><b>B</b></button>
+              <button type="button" data-format="italic" aria-label="Italicize selected text"><i>I</i></button>
+              <button type="button" data-format="bullet" aria-label="Create a bulleted list">• List</button>
+              <button type="button" data-format="number" aria-label="Create a numbered list">1. List</button>
+            </span>
+          </span>
+          <textarea id="description" name="description" maxlength="10000" rows="10" placeholder="Describe the responsibilities, working relationship, day-to-day work, and what success looks like." required></textarea>
+          <small><span id="descriptionCount">0</span> / 10,000 characters</small>
+        </label>
 
         <div id="postFormResult" class="simple-form-result" aria-live="polite"></div>
         <footer class="flow-card-footer">
-          <span></span>
+          <a href="./index.html">← Back</a>
           <button class="primary-button" type="submit">Continue <span>→</span></button>
         </footer>
       </form>

@@ -8,6 +8,8 @@ const pages = {
   jobs: 'jobs.html',
   jobDetail: 'job-detail.html',
   responsibilities: 'responsibilities.html',
+  jobDescription: 'job-description.html',
+  applicantQuestions: 'applicant-questions.html',
   compensation: 'compensation.html',
   review: 'review.html',
   published: 'published.html',
