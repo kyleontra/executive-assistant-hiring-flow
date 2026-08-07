@@ -92,7 +92,10 @@ function bindPostJob() {
 
   if (step === 'title') {
     const title = $('#title');
-    title.value = role.title === defaults.title && !role.description ? '' : role.title;
+    const savedTitle = text(role.title);
+    const clearSavedTitle = savedTitle.toLowerCase() === 'sad';
+    title.value = clearSavedTitle || (role.title === defaults.title && !role.description) ? '' : role.title;
+    if (clearSavedTitle) write({ title: '' });
     form.addEventListener('submit', (event) => {
       event.preventDefault();
       if (!form.reportValidity()) {
