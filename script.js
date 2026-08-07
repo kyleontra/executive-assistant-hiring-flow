@@ -400,21 +400,28 @@ function bindApplicants() {
   const candidates = [...document.querySelectorAll('.simple-candidate')];
   if (!candidates.length) return;
   const filter = $('#jobFilter');
-  const rankSelect = $('#candidateRank');
+  const pipelineButtons = [...document.querySelectorAll('.simple-pipeline [data-status]')];
+  const profilePanel = $('#profilePanel');
   const messagePanel = $('#messagePanel');
   const messageThread = $('#messageThread');
   const messageForm = $('#messageForm');
   const messageBody = $('#messageBody');
   const messageStatus = $('#messageStatus');
   let selectedCandidate = null;
+  let activeStatus = 'all';
+  let pendingInterviewCandidate = null;
   const newestOption = filter.querySelector('option[value="current"]');
   newestOption.textContent = read().published ? read().title : 'Your newest role';
   candidates.filter((candidate) => candidate.dataset.job === 'current').forEach((candidate) => {
     candidate.querySelector('.candidate-role').textContent = read().published ? read().title : candidate.dataset.role;
   });
 
-  function candidateRankKey(candidate) {
-    return `sava-candidate-rank:${candidate.dataset.job}:${candidate.dataset.name}`;
+  function candidateStatusKey(candidate) {
+    return `sava-candidate-status:${candidate.dataset.job}:${candidate.dataset.name}`;
+  }
+
+  function candidateStatus(candidate) {
+    return localStorage.getItem(candidateStatusKey(candidate)) || candidate.dataset.status || 'new';
   }
 
   function messagingIdentity() {
@@ -485,6 +492,7 @@ function bindApplicants() {
     messagePanel.hidden = true;
     document.body.classList.remove('messages-open');
     messageStatus.textContent = '';
+    pendingInterviewCandidate = null;
   }
 
   function schedulerLink(candidate) {
@@ -523,9 +531,20 @@ function bindApplicants() {
     }
   }
 
-  function selectCandidate(candidate) {
+  function updateProfileActions(candidate) {
+    const status = candidateStatus(candidate);
+    const shortlistButton = $('#shortlist');
+    const inviteButton = $('#inviteInterview');
+    shortlistButton.hidden = status === 'interviewing';
+    shortlistButton.disabled = status === 'shortlisted';
+    shortlistButton.textContent = status === 'shortlisted' ? 'Shortlisted ✓' : 'Shortlist candidate';
+    inviteButton.hidden = status === 'new';
+    inviteButton.disabled = status === 'interviewing';
+    inviteButton.textContent = status === 'interviewing' ? 'Interview invited ✓' : 'Invite to interview';
+  }
+
+  function openProfile(candidate) {
     selectedCandidate = candidate;
-    candidates.forEach((item) => item.classList.toggle('active', item === candidate));
     const roleName = candidate.dataset.job === 'current' && read().published ? read().title : candidate.dataset.role;
     const questions = questionsForCandidate(candidate.dataset.job);
     $('#profilePhoto').src = candidate.dataset.photo;
@@ -535,7 +554,6 @@ function bindApplicants() {
     $('#profileExperience').textContent = candidate.dataset.experience;
     $('#profileMatch').textContent = `${candidate.dataset.match}% match`;
     $('#profileSummary').textContent = candidate.dataset.summary;
-    rankSelect.value = localStorage.getItem(candidateRankKey(candidate)) || '';
     [1, 2, 3].forEach((number) => {
       const questionElement = $(`#profileQuestion${number}`);
       const card = questionElement.closest('.answer-card');
@@ -546,44 +564,60 @@ function bindApplicants() {
         $(`#profileAnswer${number}`).textContent = candidate.dataset[`answer${number}`];
       }
     });
-    $('#shortlist').textContent = 'Shortlist candidate';
+    updateProfileActions(candidate);
+    profilePanel.hidden = false;
+    document.body.classList.add('profile-open');
+    profilePanel.querySelector('[data-close-profile]').focus();
+  }
+
+  function closeProfile() {
+    profilePanel.hidden = true;
+    document.body.classList.remove('profile-open');
+  }
+
+  function updateCounts() {
+    const statuses = candidates
+      .filter((candidate) => filter.value === 'all' || candidate.dataset.job === filter.value)
+      .map(candidateStatus);
+    $('#allCandidateCount').textContent = statuses.filter((status) => status !== 'rejected').length;
+    $('#newCandidateCount').textContent = statuses.filter((status) => status === 'new').length;
+    $('#shortlistedCandidateCount').textContent = statuses.filter((status) => status === 'shortlisted').length;
+    $('#interviewingCandidateCount').textContent = statuses.filter((status) => status === 'interviewing').length;
   }
 
   function applyFilter() {
-    const value = filter.value;
-    let firstVisible = null;
+    const job = filter.value;
     let visibleCount = 0;
     candidates.forEach((candidate) => {
-      const visible = value === 'all' || candidate.dataset.job === value;
+      const status = candidateStatus(candidate);
+      const matchesJob = job === 'all' || candidate.dataset.job === job;
+      const matchesStatus = activeStatus === 'all' ? status !== 'rejected' : status === activeStatus;
+      const visible = matchesJob && matchesStatus;
       candidate.hidden = !visible;
-      if (visible) { visibleCount += 1; if (!firstVisible) firstVisible = candidate; }
+      if (visible) visibleCount += 1;
     });
-    $('#newCandidateCount').textContent = visibleCount;
-    if (firstVisible) selectCandidate(firstVisible);
+    $('#candidateEmpty').hidden = visibleCount > 0;
+    updateCounts();
   }
 
-  candidates.forEach((candidate) => candidate.addEventListener('click', () => selectCandidate(candidate)));
+  candidates.forEach((candidate) => candidate.addEventListener('click', () => openProfile(candidate)));
   filter.addEventListener('change', applyFilter);
-  rankSelect.addEventListener('change', () => {
-    if (!selectedCandidate) return;
-    const key = candidateRankKey(selectedCandidate);
-    if (rankSelect.value) {
-      localStorage.setItem(key, rankSelect.value);
-      toast(`${selectedCandidate.dataset.name} ranked ${rankSelect.value} out of 10`);
-    } else {
-      localStorage.removeItem(key);
-      toast(`Ranking removed for ${selectedCandidate.dataset.name}`);
-    }
-  });
+  pipelineButtons.forEach((button) => button.addEventListener('click', () => {
+    activeStatus = button.dataset.status;
+    pipelineButtons.forEach((item) => item.classList.toggle('selected', item === button));
+    closeProfile();
+    applyFilter();
+  }));
   $('#messageCandidate').addEventListener('click', () => openMessages(selectedCandidate));
   $('#inviteInterview').addEventListener('click', () => {
-    if (!selectedCandidate) return;
+    if (!selectedCandidate || candidateStatus(selectedCandidate) !== 'shortlisted') return;
     const link = schedulerLink(selectedCandidate);
     if (!link) {
       window.location.href = './scheduler-settings.html';
       return;
     }
     const isCalendly = /^https:\/\/(?:www\.)?calendly\.com\//i.test(link);
+    pendingInterviewCandidate = selectedCandidate;
     openMessages(selectedCandidate, `Hi ${selectedCandidate.dataset.name.split(' ')[0]},\n\nWe'd like to invite you to an interview for the ${selectedCandidate.dataset.role} role. Please choose a time here:\n${link}\n\nLooking forward to speaking with you.`);
     toast(`${isCalendly ? 'Calendly' : 'Booking'} invitation ready to send`);
   });
@@ -600,6 +634,13 @@ function bindApplicants() {
       renderMessages(messages || []);
       messageBody.value = '';
       messageStatus.textContent = 'Sent just now.';
+      if (pendingInterviewCandidate === selectedCandidate) {
+        localStorage.setItem(candidateStatusKey(selectedCandidate), 'interviewing');
+        pendingInterviewCandidate = null;
+        updateProfileActions(selectedCandidate);
+        applyFilter();
+        toast('Interview invitation sent');
+      }
     } catch (error) {
       messageStatus.textContent = error.message;
     } finally {
@@ -607,8 +648,26 @@ function bindApplicants() {
     }
   });
   messagePanel.querySelectorAll('[data-close-messages]').forEach((button) => button.addEventListener('click', closeMessages));
-  document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !messagePanel.hidden) closeMessages(); });
-  $('#shortlist').addEventListener('click', () => { $('#shortlist').textContent = 'Shortlisted ✓'; toast('Candidate moved to Shortlisted'); });
+  profilePanel.querySelectorAll('[data-close-profile]').forEach((button) => button.addEventListener('click', closeProfile));
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') return;
+    if (!messagePanel.hidden) closeMessages();
+    else if (!profilePanel.hidden) closeProfile();
+  });
+  $('#shortlist').addEventListener('click', () => {
+    if (!selectedCandidate || candidateStatus(selectedCandidate) !== 'new') return;
+    localStorage.setItem(candidateStatusKey(selectedCandidate), 'shortlisted');
+    updateProfileActions(selectedCandidate);
+    applyFilter();
+    toast('Candidate moved to Shortlisted');
+  });
+  $('#rejectCandidate').addEventListener('click', () => {
+    if (!selectedCandidate) return;
+    localStorage.setItem(candidateStatusKey(selectedCandidate), 'rejected');
+    closeProfile();
+    applyFilter();
+    toast('Candidate removed from the inbox');
+  });
   applyFilter();
 }
 
