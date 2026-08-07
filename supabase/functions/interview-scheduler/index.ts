@@ -61,10 +61,12 @@ function normalizeConfig(body: Record<string, unknown>) {
   const duration = Number(body.duration);
   const timezone = clean(body.timezone, 80);
   const location = clean(body.location, 180);
+  const calendlyUrl = clean(body.calendlyUrl, 300);
   const availability = normalizeAvailability(body.availability);
   try { new Intl.DateTimeFormat('en-US', { timeZone: timezone }).format(); } catch { return null; }
+  if (calendlyUrl && !/^https:\/\/(?:www\.)?calendly\.com\/[A-Za-z0-9_\-/]+(?:\?.*)?$/i.test(calendlyUrl)) return null;
   if (!eventName || !DURATIONS.has(duration) || !timezone || !location || !availability) return null;
-  return { eventName, duration, timezone, location, availability };
+  return { eventName, duration, timezone, location, calendlyUrl, availability };
 }
 
 function schedulerResponse(row: Record<string, unknown>) {
@@ -73,6 +75,7 @@ function schedulerResponse(row: Record<string, unknown>) {
     duration: row.duration_minutes,
     timezone: row.timezone,
     location: row.meeting_location,
+    calendlyUrl: row.calendly_url || '',
     availability: row.availability,
   };
 }
@@ -120,6 +123,7 @@ Deno.serve(async (request) => {
         duration_minutes: config.duration,
         timezone: config.timezone,
         meeting_location: config.location,
+        calendly_url: config.calendlyUrl,
         availability: config.availability,
         updated_at: new Date().toISOString(),
       };
@@ -132,7 +136,7 @@ Deno.serve(async (request) => {
     }
 
     if (action === 'get') {
-      const { data: scheduler, error } = await admin.from('interview_schedulers').select('event_name, duration_minutes, timezone, meeting_location, availability').eq('id', schedulerId).maybeSingle();
+      const { data: scheduler, error } = await admin.from('interview_schedulers').select('event_name, duration_minutes, timezone, meeting_location, calendly_url, availability').eq('id', schedulerId).maybeSingle();
       if (error) throw error;
       if (!scheduler) return reply(request, { error: 'This scheduler is not available.' }, 404);
       const { data: bookings, error: bookingsError } = await admin.from('interview_bookings').select('start_at').eq('scheduler_id', schedulerId).gte('start_at', new Date().toISOString());

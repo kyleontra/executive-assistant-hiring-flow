@@ -113,6 +113,8 @@ textarea { font-family: "DM Sans", sans-serif; }
 }
 .scheduler-field input:focus,
 .scheduler-field select:focus { border-color: var(--blue); box-shadow: 0 0 0 3px #246fe516; }
+.scheduler-field > span { margin-left: 5px; color: #8b97a8; font-size: 8px; font-weight: 600; }
+.scheduler-field > small { display: block; margin-top: 6px; color: #8794a5; font-size: 8px; font-weight: 500; line-height: 1.45; }
 
 .availability-rows { display: grid; gap: 8px; margin-top: 20px; }
 .availability-row {

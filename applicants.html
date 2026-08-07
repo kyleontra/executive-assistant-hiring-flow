@@ -19,10 +19,10 @@
     </header>
     <main class="inbox-shell">
       <section class="inbox-heading">
-        <div><p class="simple-kicker">HIRING INBOX</p><h1>Applicants</h1><p>Filter by job, open a candidate, and review their answers.</p></div>
+        <div><p class="simple-kicker">HIRING INBOX</p><h1>Applicants</h1><p>Review candidates, continue conversations, and schedule interviews from one focused workspace.</p></div>
         <div class="inbox-controls">
           <label class="job-filter">Showing applicants for<select id="jobFilter"><option value="all">All active jobs</option><option value="current">Your newest role</option><option value="operations">Operations Executive Assistant</option><option value="customer">Customer Success Assistant</option></select></label>
-          <a class="scheduler-quick-card" href="./scheduler-settings.html"><span><b>Interview scheduler</b><small>Set availability and copy your booking link</small></span><strong>Open →</strong></a>
+          <a class="scheduler-quick-card" href="./scheduler-settings.html"><span><b>Interview setup</b><small>Add Calendly or use the built-in scheduler</small></span><strong>Manage →</strong></a>
         </div>
       </section>
       <nav class="simple-pipeline"><button class="selected">New <b id="newCandidateCount">5</b></button><button>Shortlisted <b>2</b></button><button>Interviewing <b>1</b></button><button>Hired</button></nav>
@@ -49,6 +49,21 @@
         </section>
       </div>
     </main>
+    <aside id="messagePanel" class="message-panel" hidden aria-label="Candidate messages">
+      <div class="message-panel-backdrop" data-close-messages></div>
+      <section class="message-panel-dialog" role="dialog" aria-modal="true" aria-labelledby="messagePanelTitle">
+        <header class="message-panel-header">
+          <div><p class="simple-kicker">MESSAGES</p><h2 id="messagePanelTitle">Candidate conversation</h2><span id="messagePanelRole"></span></div>
+          <button type="button" data-close-messages aria-label="Close messages">×</button>
+        </header>
+        <div id="messageThread" class="message-thread" aria-live="polite"><p class="message-empty">Loading conversation…</p></div>
+        <form id="messageForm" class="message-composer">
+          <label for="messageBody">Message</label>
+          <textarea id="messageBody" maxlength="2000" rows="4" placeholder="Write a message…" required></textarea>
+          <div><span id="messageStatus" aria-live="polite"></span><button class="primary-button" type="submit">Send message <span>→</span></button></div>
+        </form>
+      </section>
+    </aside>
     <div class="toast" id="toast"></div>
     <script src="./script.js"></script>
   </body>

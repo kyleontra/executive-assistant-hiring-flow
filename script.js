@@ -1,5 +1,7 @@
 const $ = (selector) => document.querySelector(selector);
 const storageKey = 'ea-hiring-role';
+const candidateMessagesEndpoint = 'https://jyxamdvvnoylaxolhlht.supabase.co/functions/v1/candidate-messages';
+const messagingIdentityKey = 'sava-employer-messaging-identity';
 const sampleQuestions = [
   { text: 'Tell us about the most complex executive calendar you have managed.', type: 'text', options: [] },
   { text: 'How do you keep an executive’s priorities and follow-ups on track?', type: 'text', options: [] },
@@ -89,6 +91,7 @@ function bindPostJob() {
   if (!form) return;
   const role = read();
   const step = form.dataset.step;
+  let roleDescription = null;
 
   if (step === 'title') {
     const title = $('#title');
@@ -108,8 +111,9 @@ function bindPostJob() {
     return;
   }
 
-  if (step === 'description') {
+  if (step === 'description' || step === 'details') {
     const description = $('#description');
+    roleDescription = description;
     description.value = role.description;
     $('#descriptionCount').textContent = description.value.length.toLocaleString();
     description.addEventListener('input', () => { $('#descriptionCount').textContent = description.value.length.toLocaleString(); });
@@ -132,16 +136,18 @@ function bindPostJob() {
       });
     });
 
-    form.addEventListener('submit', (event) => {
-      event.preventDefault();
-      if (!form.reportValidity()) {
-        showPostError('Add the job description to continue.');
-        return;
-      }
-      write({ description: text(description.value), published: false });
-      window.location.href = './applicant-questions.html';
-    });
-    return;
+    if (step === 'description') {
+      form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        if (!form.reportValidity()) {
+          showPostError('Add the job description to continue.');
+          return;
+        }
+        write({ description: text(description.value), published: false });
+        window.location.href = './job-description.html';
+      });
+      return;
+    }
   }
 
   const questionList = $('#jobQuestionList');
@@ -229,7 +235,7 @@ function bindPostJob() {
   form.addEventListener('submit', (event) => {
     event.preventDefault();
     if (!form.reportValidity()) {
-      showPostError('Add at least one complete applicant question.');
+      showPostError(step === 'details' ? 'Complete the job description and every applicant question.' : 'Add at least one complete applicant question.');
       return;
     }
     const questions = [...questionList.querySelectorAll('.job-question-row')].map((row) => {
@@ -241,6 +247,7 @@ function bindPostJob() {
       };
     });
     write({
+      ...(step === 'details' ? { description: text(roleDescription.value) } : {}),
       questions,
       promote: true,
       promotionBudget: '8',
@@ -394,6 +401,11 @@ function bindApplicants() {
   if (!candidates.length) return;
   const filter = $('#jobFilter');
   const rankSelect = $('#candidateRank');
+  const messagePanel = $('#messagePanel');
+  const messageThread = $('#messageThread');
+  const messageForm = $('#messageForm');
+  const messageBody = $('#messageBody');
+  const messageStatus = $('#messageStatus');
   let selectedCandidate = null;
   const newestOption = filter.querySelector('option[value="current"]');
   newestOption.textContent = read().published ? read().title : 'Your newest role';
@@ -405,12 +417,83 @@ function bindApplicants() {
     return `sava-candidate-rank:${candidate.dataset.job}:${candidate.dataset.name}`;
   }
 
+  function messagingIdentity() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(messagingIdentityKey) || 'null');
+      if (saved?.employerId && saved?.editToken) return saved;
+    } catch { /* Create a fresh identity below. */ }
+    const randomId = () => crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const identity = { employerId: randomId(), editToken: `${randomId()}${randomId()}` };
+    localStorage.setItem(messagingIdentityKey, JSON.stringify(identity));
+    return identity;
+  }
+
+  const employerIdentity = messagingIdentity();
+
+  function candidateMessageKey(candidate) {
+    return `${candidate.dataset.job}:${candidate.dataset.name}`.toLowerCase().replace(/[^a-z0-9:_-]/g, '-');
+  }
+
+  async function messageRequest(action, candidate, extra = {}) {
+    const response = await fetch(candidateMessagesEndpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action,
+        employerId: employerIdentity.employerId,
+        editToken: employerIdentity.editToken,
+        candidateKey: candidateMessageKey(candidate),
+        candidateName: candidate.dataset.name,
+        roleName: candidate.dataset.role,
+        ...extra,
+      }),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(payload.error || 'Messages could not connect.');
+    return payload;
+  }
+
+  function renderMessages(messages) {
+    if (!messages.length) {
+      messageThread.innerHTML = '<p class="message-empty">No messages yet. Start the conversation below.</p>';
+      return;
+    }
+    messageThread.innerHTML = messages.map((message) => `<article class="message-bubble ${message.sender === 'candidate' ? 'candidate' : 'employer'}"><p>${escapeHtml(message.body)}</p><time>${new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(message.createdAt))}</time></article>`).join('');
+    messageThread.scrollTop = messageThread.scrollHeight;
+  }
+
+  async function openMessages(candidate, draft = '') {
+    if (!candidate) return;
+    selectedCandidate = candidate;
+    $('#messagePanelTitle').textContent = candidate.dataset.name;
+    $('#messagePanelRole').textContent = candidate.dataset.role;
+    messagePanel.hidden = false;
+    document.body.classList.add('messages-open');
+    messageThread.innerHTML = '<p class="message-empty">Loading conversation…</p>';
+    messageStatus.textContent = '';
+    if (draft) messageBody.value = draft;
+    try {
+      const { messages } = await messageRequest('list', candidate);
+      renderMessages(messages || []);
+      messageBody.focus();
+    } catch (error) {
+      messageThread.innerHTML = `<p class="message-empty error">${escapeHtml(error.message)}</p>`;
+    }
+  }
+
+  function closeMessages() {
+    messagePanel.hidden = true;
+    document.body.classList.remove('messages-open');
+    messageStatus.textContent = '';
+  }
+
   function schedulerLink(candidate) {
-    const defaults = { eventName: 'Intro interview', duration: '30', timezone: 'America/New_York', location: 'Google Meet link sent after booking', availability: [{ day: 1, start: '09:00', end: '17:00' }, { day: 2, start: '09:00', end: '17:00' }, { day: 3, start: '09:00', end: '17:00' }, { day: 4, start: '09:00', end: '17:00' }, { day: 5, start: '09:00', end: '15:00' }] };
+    const defaults = { eventName: 'Intro interview', duration: '30', timezone: 'America/New_York', location: 'Google Meet link sent after booking', calendlyUrl: '', availability: [{ day: 1, start: '09:00', end: '17:00' }, { day: 2, start: '09:00', end: '17:00' }, { day: 3, start: '09:00', end: '17:00' }, { day: 4, start: '09:00', end: '17:00' }, { day: 5, start: '09:00', end: '15:00' }] };
     let config = defaults;
     let identity = null;
     try { config = { ...defaults, ...JSON.parse(localStorage.getItem('sava-scheduler-config') || '{}') }; } catch { /* Use defaults. */ }
     try { identity = JSON.parse(localStorage.getItem('sava-scheduler-identity') || 'null'); } catch { /* The settings page will create an identity. */ }
+    if (/^https:\/\/(?:www\.)?calendly\.com\//i.test(config.calendlyUrl || '')) return config.calendlyUrl;
     if (!identity?.schedulerId || !identity.saved) return '';
     const origin = window.location.protocol === 'file:' ? 'https://www.hirefromsa.com' : window.location.origin;
     const url = new URL('/schedule-interview.html', origin);
@@ -492,19 +575,39 @@ function bindApplicants() {
       toast(`Ranking removed for ${selectedCandidate.dataset.name}`);
     }
   });
-  $('#messageCandidate').addEventListener('click', () => {
-    if (selectedCandidate) toast(`Message thread opened for ${selectedCandidate.dataset.name}`);
-  });
-  $('#inviteInterview').addEventListener('click', async () => {
+  $('#messageCandidate').addEventListener('click', () => openMessages(selectedCandidate));
+  $('#inviteInterview').addEventListener('click', () => {
     if (!selectedCandidate) return;
     const link = schedulerLink(selectedCandidate);
     if (!link) {
       window.location.href = './scheduler-settings.html';
       return;
     }
-    await copyText(link);
-    toast(`Booking link copied for ${selectedCandidate.dataset.name}`);
+    const isCalendly = /^https:\/\/(?:www\.)?calendly\.com\//i.test(link);
+    openMessages(selectedCandidate, `Hi ${selectedCandidate.dataset.name.split(' ')[0]},\n\nWe'd like to invite you to an interview for the ${selectedCandidate.dataset.role} role. Please choose a time here:\n${link}\n\nLooking forward to speaking with you.`);
+    toast(`${isCalendly ? 'Calendly' : 'Booking'} invitation ready to send`);
   });
+  messageForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!selectedCandidate || !messageForm.reportValidity()) return;
+    const body = messageBody.value.trim();
+    if (!body) return;
+    const button = messageForm.querySelector('button[type="submit"]');
+    button.disabled = true;
+    messageStatus.textContent = 'Sending…';
+    try {
+      const { messages } = await messageRequest('send', selectedCandidate, { body });
+      renderMessages(messages || []);
+      messageBody.value = '';
+      messageStatus.textContent = 'Sent just now.';
+    } catch (error) {
+      messageStatus.textContent = error.message;
+    } finally {
+      button.disabled = false;
+    }
+  });
+  messagePanel.querySelectorAll('[data-close-messages]').forEach((button) => button.addEventListener('click', closeMessages));
+  document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !messagePanel.hidden) closeMessages(); });
   $('#shortlist').addEventListener('click', () => { $('#shortlist').textContent = 'Shortlisted ✓'; toast('Candidate moved to Shortlisted'); });
   applyFilter();
 }

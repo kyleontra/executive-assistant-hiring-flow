@@ -14,6 +14,7 @@ const schedulerDefaults = {
   duration: '30',
   timezone: 'America/New_York',
   location: 'Google Meet link sent after booking',
+  calendlyUrl: '',
   availability: [
     { day: 1, start: '09:00', end: '17:00' },
     { day: 2, start: '09:00', end: '17:00' },
@@ -29,6 +30,7 @@ const eventNameInput = document.querySelector('#eventName');
 const durationInput = document.querySelector('#eventDuration');
 const timezoneInput = document.querySelector('#eventTimezone');
 const locationInput = document.querySelector('#meetingLocation');
+const calendlyInput = document.querySelector('#calendlyUrl');
 const bookingLinkInput = document.querySelector('#bookingLink');
 const previewSchedule = document.querySelector('#previewSchedule');
 
@@ -86,11 +88,13 @@ function collectAvailability() {
 }
 
 function collectConfig() {
+  const calendlyUrl = calendlyInput.value.trim();
   return {
     eventName: eventNameInput.value.trim() || schedulerDefaults.eventName,
     duration: durationInput.value,
     timezone: timezoneInput.value,
     location: locationInput.value.trim() || schedulerDefaults.location,
+    calendlyUrl,
     availability: collectAvailability(),
   };
 }
@@ -101,6 +105,7 @@ function applyConfig(config) {
   durationInput.value = String(saved.duration);
   timezoneInput.value = saved.timezone;
   locationInput.value = saved.location;
+  calendlyInput.value = saved.calendlyUrl || '';
   availabilityRows.forEach((row) => {
     const day = Number(row.querySelector('input[type="checkbox"]').value);
     const savedDay = saved.availability.find((item) => Number(item.day) === day);
@@ -113,6 +118,7 @@ function applyConfig(config) {
 }
 
 function schedulerUrl(config = collectConfig()) {
+  if (config.calendlyUrl) return config.calendlyUrl;
   const origin = window.location.protocol === 'file:' ? 'https://www.hirefromsa.com' : window.location.origin;
   const url = new URL('/schedule-interview.html', origin);
   if (identity.saved) url.searchParams.set('scheduler', identity.schedulerId);
@@ -131,6 +137,7 @@ function refreshPreview() {
   previewSchedule.href = url;
   document.querySelector('#linkEventName').textContent = config.eventName;
   document.querySelector('#linkEventMeta').textContent = `${config.duration} minutes · ${timezoneLabels[config.timezone] || config.timezone}`;
+  document.querySelector('.booking-link-card > .simple-kicker').textContent = config.calendlyUrl ? 'YOUR CALENDLY LINK' : 'YOUR BOOKING LINK';
 }
 
 function escapeHtml(value) {
@@ -169,6 +176,7 @@ async function hydrateSettings() {
     if (error.status === 404) {
       identity.saved = false;
       localStorage.setItem(schedulerIdentityKey, JSON.stringify(identity));
+      document.querySelector('#saveStatus').textContent = 'Ready to save your interview setup.';
     } else {
       document.querySelector('#saveStatus').textContent = 'Using saved settings. Backend sync will retry when you save.';
     }
@@ -197,6 +205,11 @@ schedulerForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   if (!schedulerForm.reportValidity()) return;
   const config = collectConfig();
+  if (config.calendlyUrl && !/^https:\/\/(?:www\.)?calendly\.com\/[A-Za-z0-9_\-/]+(?:\?.*)?$/i.test(config.calendlyUrl)) {
+    calendlyInput.focus();
+    showToast('Enter a valid calendly.com link');
+    return;
+  }
   if (!config.availability.length) {
     showToast('Choose at least one available day');
     return;

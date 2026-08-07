@@ -1570,3 +1570,82 @@
     padding-bottom: 28px;
   }
 }
+
+/* Unified role-details step */
+.description-step-shell .five-step-progress {
+  width: min(560px, 100%);
+}
+
+.combined-role-section,
+.combined-question-section {
+  width: min(760px, 100%);
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.combined-section-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.combined-section-heading > span {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  place-items: center;
+  border-radius: 50%;
+  background: #edf4ff;
+  color: #246fe5;
+  font: 800 9px Manrope, sans-serif;
+}
+
+.combined-section-heading h2 {
+  margin: 1px 0 4px;
+  font: 800 18px Manrope, sans-serif;
+  letter-spacing: -.55px;
+}
+
+.combined-section-heading h2 em {
+  color: #d75c65;
+  font-style: normal;
+}
+
+.combined-section-heading p {
+  margin: 0;
+  color: #7d899a;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.combined-role-section .standalone-description {
+  margin-top: 20px;
+}
+
+.combined-role-section .standalone-description textarea {
+  height: 250px;
+  min-height: 250px !important;
+}
+
+.combined-question-section {
+  margin-top: 44px;
+  padding-top: 38px;
+  border-top: 1px solid #e1e6ec;
+}
+
+.combined-question-section .job-question-list {
+  margin-top: 20px;
+}
+
+@media (max-width: 720px) {
+  .combined-role-section .standalone-description textarea {
+    height: 220px;
+    min-height: 220px !important;
+  }
+
+  .combined-question-section {
+    margin-top: 36px;
+    padding-top: 30px;
+  }
+}

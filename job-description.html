@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Job Description | Hire From SA</title>
+    <title>Role Details | Hire From SA</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
@@ -20,18 +20,19 @@
     <main class="job-flow-shell description-step-shell">
       <nav class="flow-progress five-step-progress" aria-label="Job posting progress">
         <span class="done"><b>✓</b> Title</span><i></i>
-        <span class="active"><b>2</b> Description</span><i></i>
-        <span><b>3</b> Questions</span><i></i>
-        <span><b>4</b> Pay</span><i></i>
-        <span><b>5</b> Review</span>
+        <span class="active"><b>2</b> Role details</span><i></i>
+        <span><b>3</b> Pay</span><i></i>
+        <span><b>4</b> Review</span>
       </nav>
 
-      <form id="postJobForm" class="job-flow-card" data-step="description" novalidate>
+      <form id="postJobForm" class="job-flow-card" data-step="details" novalidate>
         <header class="flow-card-heading">
           <p class="simple-kicker">POST A JOB</p>
-          <h1>Job description <em>*</em></h1>
+          <h1>Role details</h1>
         </header>
 
+        <section class="combined-role-section">
+          <div class="combined-section-heading"><span>01</span><div><h2>Job description <em>*</em></h2><p>Explain the role, outcomes, and what great performance looks like.</p></div></div>
         <label class="simple-field description-field standalone-description"><span class="visually-hidden">Job description</span>
           <span class="description-editor-toolbar" aria-label="Job description formatting tools">
             <span class="format-tools">
@@ -44,6 +45,15 @@
           <textarea id="description" name="description" maxlength="10000" rows="10" placeholder="Enter job description" required></textarea>
           <small><span id="descriptionCount">0</span> / 10,000 characters</small>
         </label>
+        </section>
+
+        <section class="question-builder standalone-questions combined-question-section">
+          <div class="combined-section-heading"><span>02</span><div><h2>Applicant questions</h2><p>Add at least one question to help you screen candidates.</p></div></div>
+          <div id="jobQuestionList" class="job-question-list"></div>
+          <div class="question-builder-actions">
+            <button id="addQuestion" class="add-question-button" type="button"><span>+</span> Add question</button>
+          </div>
+        </section>
 
         <div id="postFormResult" class="simple-form-result" aria-live="polite"></div>
         <footer class="flow-card-footer">

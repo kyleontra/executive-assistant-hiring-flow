@@ -218,3 +218,288 @@
     margin-left: 18px;
   }
 }
+
+/* Focused open-canvas applicant workspace */
+.inbox-shell {
+  width: min(1180px, calc(100% - 40px));
+  padding-top: 48px;
+}
+
+.inbox-heading {
+  align-items: end;
+}
+
+.inbox-heading h1 {
+  margin-top: 9px;
+  font-size: 44px;
+}
+
+.inbox-heading > div:first-child {
+  max-width: 560px;
+}
+
+.inbox-controls {
+  grid-template-columns: 230px 260px;
+}
+
+.simple-pipeline {
+  margin-top: 30px;
+}
+
+.simple-applicant-layout {
+  grid-template-columns: 310px minmax(0, 1fr);
+  gap: 0;
+  border-top: 1px solid #dce5f1;
+}
+
+.simple-candidate-list,
+.simple-candidate-profile.redesigned-candidate-profile {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.simple-candidate-list {
+  padding: 14px 18px 14px 0;
+  border-right: 1px solid #dce5f1;
+}
+
+.simple-candidate {
+  margin-bottom: 5px;
+  padding: 14px;
+  border: 0;
+  border-radius: 10px;
+}
+
+.simple-candidate.active {
+  background: #f2f6fc;
+  box-shadow: inset 3px 0 0 #246fe5;
+}
+
+.simple-candidate .match-badge {
+  color: #246fe5;
+  font-size: 9px;
+}
+
+.simple-candidate-profile.redesigned-candidate-profile {
+  padding-left: 26px;
+}
+
+.candidate-top-row {
+  padding: 24px 0;
+}
+
+.candidate-insights {
+  padding: 24px 0 0;
+}
+
+.redesigned-candidate-profile .answers-section {
+  padding: 28px 0 4px;
+}
+
+.redesigned-candidate-profile .answer-card {
+  margin-top: 8px;
+  border-color: #e2e7ee;
+  background: #fbfcfe;
+}
+
+.redesigned-candidate-profile .candidate-actions {
+  margin: 20px 0 0;
+}
+
+body.messages-open {
+  overflow: hidden;
+}
+
+.message-panel[hidden] {
+  display: none;
+}
+
+.message-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.message-panel-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(17, 30, 49, .28);
+  backdrop-filter: blur(2px);
+}
+
+.message-panel-dialog {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: min(440px, 100%);
+  height: 100%;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  background: #fff;
+  box-shadow: -20px 0 50px rgba(20, 34, 56, .14);
+}
+
+.message-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 26px;
+  border-bottom: 1px solid #e0e6ee;
+}
+
+.message-panel-header h2 {
+  margin: 7px 0 3px;
+  font: 800 23px Manrope, sans-serif;
+  letter-spacing: -.7px;
+}
+
+.message-panel-header span {
+  color: #7d899a;
+  font-size: 10px;
+}
+
+.message-panel-header button {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid #d8e0ea;
+  border-radius: 50%;
+  background: #fff;
+  color: #66758a;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.message-thread {
+  display: flex;
+  overflow-y: auto;
+  flex-direction: column;
+  gap: 10px;
+  padding: 24px;
+  background: #f7f9fc;
+}
+
+.message-empty {
+  margin: auto;
+  color: #8491a2;
+  font-size: 11px;
+  text-align: center;
+}
+
+.message-empty.error {
+  color: #a64d54;
+}
+
+.message-bubble {
+  max-width: 82%;
+  align-self: flex-start;
+  padding: 11px 13px;
+  border: 1px solid #dce4ee;
+  border-radius: 12px 12px 12px 4px;
+  background: #fff;
+}
+
+.message-bubble.employer {
+  align-self: flex-end;
+  border-color: #246fe5;
+  border-radius: 12px 12px 4px;
+  background: #246fe5;
+  color: #fff;
+}
+
+.message-bubble p {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.message-bubble time {
+  display: block;
+  margin-top: 6px;
+  color: #8b97a7;
+  font-size: 7px;
+}
+
+.message-bubble.employer time {
+  color: rgba(255, 255, 255, .72);
+}
+
+.message-composer {
+  padding: 20px 24px 24px;
+  border-top: 1px solid #e0e6ee;
+  background: #fff;
+}
+
+.message-composer > label {
+  color: #435269;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.message-composer textarea {
+  width: 100%;
+  min-height: 105px;
+  margin-top: 7px;
+  padding: 11px 12px;
+  border: 1px solid #ccd8e7;
+  border-radius: 9px;
+  resize: vertical;
+  font: 11px/1.55 "DM Sans", sans-serif;
+  outline: none;
+}
+
+.message-composer textarea:focus {
+  border-color: #246fe5;
+  box-shadow: 0 0 0 3px rgba(36, 111, 229, .1);
+}
+
+.message-composer > div {
+  display: flex;
+  min-height: 43px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 10px;
+}
+
+.message-composer > div > span {
+  color: #7d899a;
+  font-size: 9px;
+}
+
+@media (max-width: 1050px) {
+  .inbox-heading {
+    align-items: flex-start;
+  }
+
+  .simple-applicant-layout {
+    grid-template-columns: 280px minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 780px) {
+  .inbox-shell {
+    width: calc(100% - 24px);
+  }
+
+  .inbox-controls,
+  .simple-applicant-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .simple-candidate-list {
+    padding-right: 0;
+    border-right: 0;
+    border-bottom: 1px solid #dce5f1;
+  }
+
+  .simple-candidate-profile.redesigned-candidate-profile {
+    padding-left: 0;
+  }
+}
