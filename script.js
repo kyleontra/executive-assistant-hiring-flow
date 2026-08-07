@@ -402,7 +402,9 @@ function bindApplicants() {
   const filter = $('#jobFilter');
   const candidateList = $('#candidateList');
   const pipelineButtons = [...document.querySelectorAll('.simple-pipeline [data-status]')];
-  const previewButtons = [...document.querySelectorAll('.preview-switch [data-preview]')];
+  const applicantSort = $('#applicantSort');
+  const questionSort = $('#questionSort');
+  const questionSortControl = $('#questionSortControl');
   const profilePanel = $('#profilePanel');
   const messagePanel = $('#messagePanel');
   const messageThread = $('#messageThread');
@@ -411,8 +413,13 @@ function bindApplicants() {
   const messageStatus = $('#messageStatus');
   let selectedCandidate = null;
   let activeStatus = 'all';
-  let activePreview = 'match';
   let pendingInterviewCandidate = null;
+  const questionScores = {
+    'Lerato Mokoena': [96, 91, 78],
+    'Ayanda Khumalo': [90, 94, 85],
+    'Zinhle Ndlovu': [88, 92, 95],
+    'Thandi Jacobs': [84, 89, 93],
+  };
   const currentJobTitle = read().published ? read().title : 'Your newest role';
   const newestOption = document.querySelector('#activeJobs option[data-job="current"]');
   newestOption.value = currentJobTitle;
@@ -440,11 +447,54 @@ function bindApplicants() {
     return !query || query === 'all active jobs' || candidateJobLabel(candidate).toLowerCase().includes(query);
   }
 
-  function refreshRowPreviews() {
-    candidateList.dataset.preview = activePreview;
+  function selectedJobKey() {
+    const query = filter.value.trim().toLowerCase();
+    if (!query || query === 'all active jobs') return 'all';
+    return candidates.find((candidate) => candidateJobLabel(candidate).toLowerCase() === query)?.dataset.job || null;
+  }
+
+  function refreshQuestionPicker() {
+    const job = selectedJobKey();
+    const questions = job && job !== 'all' ? questionsForCandidate(job) : [];
+    const previous = questionSort.value;
+    questionSort.innerHTML = questions.length
+      ? questions.map((question, index) => `<option value="${index}">${escapeHtml(question)}</option>`).join('')
+      : '<option value="">Choose a specific job first</option>';
+    questionSort.disabled = !questions.length;
+    if (questions.some((_, index) => String(index) === previous)) questionSort.value = previous;
+    questionSortControl.hidden = applicantSort.value !== 'question';
+  }
+
+  function sortValue(candidate) {
+    if (applicantSort.value === 'experience') return Number(candidate.dataset.experience.match(/\d+/)?.[0] || 0);
+    if (applicantSort.value === 'question' && questionSort.value !== '') {
+      return questionScores[candidate.dataset.name]?.[Number(questionSort.value)] || 0;
+    }
+    return Number(candidate.dataset.match);
+  }
+
+  function sortAndPreviewCandidates() {
+    const sortMode = applicantSort.value;
+    const questionReady = sortMode === 'question' && questionSort.value !== '';
+    const questionNumber = Number(questionSort.value || 0) + 1;
+    candidateList.dataset.sort = questionReady ? 'question' : sortMode === 'question' ? 'match' : sortMode;
     candidates.forEach((candidate) => {
-      candidate.querySelector('.candidate-overview').textContent = activePreview === 'answers' ? candidate.dataset.answer1 : candidate.dataset.summary;
+      const overview = candidate.querySelector('.candidate-overview');
+      const badge = candidate.querySelector('.match-badge');
+      if (questionReady) {
+        overview.textContent = candidate.dataset[`answer${questionNumber}`] || 'No answer submitted.';
+        badge.textContent = `${sortValue(candidate)}% answer fit`;
+      } else if (sortMode === 'experience') {
+        overview.textContent = candidate.dataset.summary;
+        badge.textContent = `${sortValue(candidate)} yrs`;
+      } else {
+        overview.textContent = candidate.dataset.summary;
+        badge.textContent = `${candidate.dataset.match}% match`;
+      }
     });
+    [...candidates]
+      .sort((a, b) => sortValue(b) - sortValue(a) || Number(b.dataset.match) - Number(a.dataset.match))
+      .forEach((candidate) => candidateList.insertBefore(candidate, $('#candidateEmpty')));
   }
 
   function messagingIdentity() {
@@ -609,6 +659,7 @@ function bindApplicants() {
   }
 
   function applyFilter() {
+    sortAndPreviewCandidates();
     let visibleCount = 0;
     candidates.forEach((candidate) => {
       const status = candidateStatus(candidate);
@@ -618,17 +669,24 @@ function bindApplicants() {
       if (visible) visibleCount += 1;
     });
     $('#candidateEmpty').hidden = visibleCount > 0;
-    $('#applicantResultSummary').textContent = `${visibleCount} applicant${visibleCount === 1 ? '' : 's'}`;
+    const needsQuestion = applicantSort.value === 'question' && questionSort.value === '';
+    const sortLabel = applicantSort.value === 'experience' ? 'most experience' : applicantSort.value === 'question' ? 'strongest answer' : 'best match';
+    $('#applicantResultSummary').textContent = needsQuestion
+      ? `${visibleCount} applicant${visibleCount === 1 ? '' : 's'} · choose a specific job`
+      : `${visibleCount} applicant${visibleCount === 1 ? '' : 's'} · ${sortLabel} first`;
     updateCounts();
   }
 
   candidates.forEach((candidate) => candidate.addEventListener('click', () => openProfile(candidate)));
-  filter.addEventListener('input', applyFilter);
-  previewButtons.forEach((button) => button.addEventListener('click', () => {
-    activePreview = button.dataset.preview;
-    previewButtons.forEach((item) => item.classList.toggle('selected', item === button));
-    refreshRowPreviews();
-  }));
+  filter.addEventListener('input', () => {
+    refreshQuestionPicker();
+    applyFilter();
+  });
+  applicantSort.addEventListener('change', () => {
+    refreshQuestionPicker();
+    applyFilter();
+  });
+  questionSort.addEventListener('change', applyFilter);
   pipelineButtons.forEach((button) => button.addEventListener('click', () => {
     activeStatus = button.dataset.status;
     pipelineButtons.forEach((item) => item.classList.toggle('selected', item === button));
@@ -695,7 +753,7 @@ function bindApplicants() {
     applyFilter();
     toast('Candidate removed from the inbox');
   });
-  refreshRowPreviews();
+  refreshQuestionPicker();
   applyFilter();
 }
 

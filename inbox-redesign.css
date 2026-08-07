@@ -113,31 +113,44 @@
   font-weight: 700;
 }
 
-.preview-switch {
+.sort-controls {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
+  gap: 9px;
+}
+
+.sort-control {
+  display: flex;
+  min-width: 145px;
+  flex-direction: column;
   gap: 4px;
+  color: #8a96a6;
+  font-size: 8px;
+  font-weight: 800;
 }
 
-.preview-switch > span {
-  margin-right: 5px;
-  color: #929dac;
-}
-
-.preview-switch button {
-  height: 26px;
-  padding: 0 9px;
-  border: 0;
+.sort-control select {
+  height: 32px;
+  padding: 0 28px 0 9px;
+  border: 1px solid #d7e0eb;
   border-radius: 5px;
-  background: transparent;
-  color: #7c899a;
+  background: #fff;
+  color: #33455e;
   font: 700 9px "DM Sans", sans-serif;
-  cursor: pointer;
+  outline: none;
 }
 
-.preview-switch button.selected {
-  background: #edf4ff;
-  color: #246fe5;
+.sort-control select:focus {
+  border-color: #246fe5;
+  box-shadow: 0 0 0 3px rgba(36, 111, 229, .08);
+}
+
+.question-sort-control {
+  width: min(310px, 36vw);
+}
+
+.question-sort-control[hidden] {
+  display: none;
 }
 
 .simple-candidate-list {
@@ -224,7 +237,11 @@
   font-weight: 800;
 }
 
-#candidateList[data-preview="answers"] .candidate-overview::before {
+#candidateList[data-sort="experience"] .candidate-overview::before {
+  content: "Experience · ";
+}
+
+#candidateList[data-sort="question"] .candidate-overview::before {
   content: "Answer · ";
 }
 
@@ -596,6 +613,17 @@ body.messages-open {
     flex-direction: column;
     gap: 10px;
     padding: 13px 0;
+  }
+
+  .sort-controls {
+    width: 100%;
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .sort-control,
+  .question-sort-control {
+    width: 100%;
   }
 
   .simple-pipeline {
