@@ -1453,3 +1453,56 @@
 .question-builder-actions .add-question-button:hover {
   border: 1px solid #8eb2ed;
 }
+
+/* Center and unify the multi-page job creation flow. */
+.job-flow-shell,
+.compact-flow-shell,
+.modern-review-shell {
+  width: min(760px, calc(100% - 40px));
+  padding-top: 32px;
+}
+
+.five-step-progress {
+  width: min(620px, 100%);
+  margin: 0 auto 36px;
+}
+
+.title-step-shell .flow-card-heading,
+.description-step-shell .flow-card-heading,
+.questions-step-shell .flow-card-heading,
+.job-flow-card .flow-card-heading,
+.modern-review-shell .review-intro {
+  margin-bottom: 36px;
+}
+
+.title-step-shell .job-title-editor {
+  padding-bottom: 24px;
+}
+
+.title-step-shell .flow-card-footer,
+.description-step-shell .flow-card-footer,
+.questions-step-shell .flow-card-footer,
+.job-flow-card .flow-card-footer {
+  margin-top: 28px;
+}
+
+@media (max-width: 720px) {
+  .job-flow-shell,
+  .compact-flow-shell,
+  .modern-review-shell {
+    width: calc(100% - 28px);
+    padding-top: 20px;
+  }
+
+  .five-step-progress {
+    margin-bottom: 28px;
+  }
+
+  .title-step-shell .flow-card-heading,
+  .description-step-shell .flow-card-heading,
+  .questions-step-shell .flow-card-heading,
+  .job-flow-card .flow-card-heading,
+  .modern-review-shell .review-intro {
+    margin-bottom: 28px;
+  }
+}
