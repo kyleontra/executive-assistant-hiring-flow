@@ -779,3 +779,438 @@
     font-size: 9px;
   }
 }
+
+/* Polished open-canvas job-posting flow */
+.simple-employer-page {
+  background: #fff;
+}
+
+.job-flow-shell,
+.compact-flow-shell,
+.modern-review-shell {
+  width: min(900px, calc(100% - 40px));
+  padding-top: 28px;
+}
+
+.flow-progress {
+  width: min(360px, 100%);
+  gap: 9px;
+  margin: 0 0 24px auto;
+  color: #929cab;
+  font-size: 9px;
+}
+
+.flow-progress b {
+  width: 20px;
+  height: 20px;
+  border: 1px solid #d9dfe7;
+  background: #fff;
+  color: #7e8897;
+  font-size: 8px;
+}
+
+.flow-progress .active b,
+.flow-progress .done b {
+  border-color: #142238;
+  background: #142238;
+  color: #fff;
+}
+
+.flow-progress i {
+  background: #e2e6ec;
+}
+
+.job-flow-card,
+.review-flow-card,
+.simple-review-card,
+.modern-promotion-card {
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.flow-card-heading,
+.review-intro,
+.modern-review-shell .review-intro {
+  margin: 0 auto 38px;
+  text-align: center;
+}
+
+.flow-card-heading .simple-kicker,
+.review-intro .simple-kicker {
+  color: #246fe5;
+  font-size: 10px;
+  letter-spacing: 2.1px;
+}
+
+.flow-card-heading h1,
+.review-intro h1 {
+  margin-top: 9px;
+  font-size: clamp(34px, 4vw, 43px);
+  letter-spacing: -2px;
+}
+
+.job-title-editor {
+  max-width: none;
+  margin: 0;
+  padding: 0 0 24px;
+  border: 0;
+  border-bottom: 1px solid #e1e6ec;
+  border-radius: 0;
+  background: transparent;
+  transition: border-color .18s ease;
+}
+
+.job-title-editor:focus-within {
+  border-color: #8bb2ef;
+}
+
+.job-title-editor .simple-field,
+.description-field {
+  max-width: none;
+}
+
+.job-title-editor .simple-field input {
+  height: 56px;
+  margin-top: 7px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  font: 700 21px Manrope, sans-serif;
+  letter-spacing: -.45px;
+}
+
+.job-title-editor .simple-field input:focus {
+  border: 0;
+  box-shadow: none;
+}
+
+.job-title-editor input::placeholder {
+  color: #8b929c;
+  opacity: 1;
+}
+
+.description-field {
+  margin-top: 26px;
+}
+
+.description-editor-toolbar {
+  min-height: 40px;
+  margin-top: 8px;
+  padding: 5px 8px;
+  border-color: #cbd7e5;
+  border-radius: 10px 10px 0 0;
+  background: #fbfcfe;
+}
+
+.description-editor-toolbar button {
+  height: 28px;
+  min-width: 33px;
+  color: #4e5e74;
+}
+
+.description-editor-toolbar button:hover {
+  border-color: #d2deec;
+  background: #eef5ff;
+  color: #246fe5;
+}
+
+.description-field textarea {
+  height: 190px;
+  min-height: 190px !important;
+  max-height: 300px;
+  border-color: #cbd7e5;
+  border-radius: 0 0 10px 10px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(20, 34, 56, .035);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.description-field textarea:focus {
+  border-color: #5e97ed;
+  box-shadow: 0 0 0 3px rgba(36, 111, 229, .1), 0 8px 24px rgba(20, 34, 56, .035);
+}
+
+.question-builder,
+.pay-section {
+  margin-top: 30px;
+  padding-top: 28px;
+  border-top: 1px solid #e1e6ec;
+}
+
+.question-builder h2,
+.pay-section h2 {
+  font-size: 18px;
+  letter-spacing: -.55px;
+}
+
+.question-builder-heading p,
+.pay-section > div:first-child p {
+  margin-top: 2px;
+  font-size: 9px;
+}
+
+.add-question-button {
+  height: 32px;
+  padding: 0 3px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  font-size: 10px;
+}
+
+.add-question-button:hover {
+  border: 0;
+  background: #f2f7ff;
+  color: #174fa8;
+}
+
+.job-question-list {
+  gap: 0;
+  margin-top: 12px;
+}
+
+.job-question-row {
+  grid-template-columns: 30px minmax(0, 1fr);
+  gap: 14px;
+  padding: 15px 0 18px;
+  border: 0;
+  border-bottom: 1px solid #e5e9ef;
+  border-radius: 0;
+  background: transparent;
+}
+
+.question-number {
+  display: block;
+  width: auto;
+  height: auto;
+  padding-top: 27px;
+  border-radius: 0;
+  background: transparent;
+  color: #246fe5;
+  font-size: 9px;
+}
+
+.job-question-main {
+  grid-template-columns: minmax(0, 1fr) 185px 34px;
+  gap: 10px;
+}
+
+.job-question-main input,
+.job-question-main select {
+  height: 42px;
+  border-color: #ccd7e4;
+  border-radius: 9px;
+  background: #fff;
+}
+
+.job-question-main input:focus,
+.job-question-main select:focus,
+.question-option-row input:focus {
+  border-color: #5e97ed;
+  box-shadow: 0 0 0 3px rgba(36, 111, 229, .1);
+  outline: 0;
+}
+
+.remove-question,
+.remove-option {
+  width: 34px;
+  height: 42px;
+  border: 0;
+  background: transparent;
+  color: #9aa3af;
+}
+
+.remove-question:hover,
+.remove-option:hover {
+  background: #fff1f2;
+  color: #a84d58;
+}
+
+.multiple-choice-builder {
+  margin: 14px 0 0;
+  padding: 5px 0 5px 16px;
+  border: 0;
+  border-left: 2px solid #d6e4fa;
+  border-radius: 0;
+  background: transparent;
+}
+
+.flow-card-footer {
+  margin-top: 28px;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.flow-card-footer .primary-button,
+.review-footer .primary-button {
+  min-width: 132px;
+  height: 44px;
+  border-radius: 9px;
+  box-shadow: 0 9px 22px rgba(20, 34, 56, .15);
+  transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+}
+
+.flow-card-footer .primary-button:hover,
+.review-footer .primary-button:hover {
+  background: #1b2f4d;
+  box-shadow: 0 12px 28px rgba(20, 34, 56, .2);
+  transform: translateY(-1px);
+}
+
+/* Open-canvas pay step */
+.commitment-page-options {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.commitment-page-options label > span {
+  min-height: 68px;
+  padding: 12px 14px;
+  border-color: #d7dee7;
+  border-radius: 9px;
+  background: #fff;
+  text-align: left;
+}
+
+.commitment-page-options label:hover > span {
+  border-color: #aabed8;
+  background: #fbfdff;
+  transform: translateY(-1px);
+}
+
+.commitment-page-options label:has(input:checked) > span {
+  border-color: #246fe5;
+  background: #f3f7ff;
+  box-shadow: inset 0 0 0 1px #246fe5;
+}
+
+.pay-section {
+  padding: 26px 0 0;
+  border-right: 0;
+  border-bottom: 0;
+  border-left: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.pay-section .rate-row {
+  gap: 18px;
+  margin-top: 14px;
+}
+
+/* Open-canvas review step */
+.review-summary {
+  padding: 0 0 22px;
+  border-bottom: 1px solid #e1e6ec;
+}
+
+.review-pills span {
+  padding: 5px 8px;
+  background: #f2f5f9;
+  color: #647187;
+}
+
+.review-content-grid {
+  border-top: 0;
+  border-bottom: 1px solid #e1e6ec;
+}
+
+.review-content-grid .simple-review-section {
+  padding: 24px 26px 24px 0;
+}
+
+.review-content-grid .simple-review-section + .simple-review-section {
+  padding-right: 0;
+  padding-left: 26px;
+  border-left-color: #e1e6ec;
+}
+
+.modern-promotion-card {
+  gap: 24px;
+  margin-top: 0;
+  padding: 20px 0;
+  border-bottom: 1px solid #e1e6ec;
+}
+
+.modern-promotion-card .promotion-switch > span {
+  min-height: 0;
+}
+
+.review-footer {
+  margin-top: 20px;
+}
+
+@media (max-width: 720px) {
+  .job-flow-shell,
+  .compact-flow-shell,
+  .modern-review-shell {
+    width: calc(100% - 28px);
+    padding-top: 20px;
+  }
+
+  .flow-progress {
+    width: min(310px, 100%);
+    margin-right: auto;
+  }
+
+  .flow-card-heading,
+  .review-intro,
+  .modern-review-shell .review-intro {
+    margin-bottom: 30px;
+  }
+
+  .flow-card-heading h1,
+  .review-intro h1 {
+    font-size: 32px;
+  }
+
+  .job-title-editor .simple-field input {
+    font-size: 17px;
+  }
+
+  .description-field textarea {
+    height: 190px;
+  }
+
+  .job-question-row {
+    grid-template-columns: 22px minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .job-question-main {
+    grid-template-columns: 1fr;
+  }
+
+  .question-number {
+    padding-top: 27px;
+  }
+
+  .remove-question {
+    width: auto;
+    justify-self: start;
+  }
+
+  .commitment-page-options,
+  .rate-row,
+  .review-content-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .review-content-grid .simple-review-section,
+  .review-content-grid .simple-review-section + .simple-review-section {
+    padding: 20px 0;
+    border-left: 0;
+  }
+
+  .review-content-grid .simple-review-section + .simple-review-section {
+    border-top: 1px solid #e1e6ec;
+  }
+}
