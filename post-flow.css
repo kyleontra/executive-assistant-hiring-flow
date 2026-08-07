@@ -1383,3 +1383,17 @@
     min-height: 280px !important;
   }
 }
+
+/* Dedicated pages already communicate their step in the headline. */
+.title-step-shell .job-title-editor::before,
+.standalone-description::before,
+.standalone-questions::before {
+  display: none;
+  content: none;
+}
+
+.standalone-questions .question-builder-heading p {
+  color: #68758a;
+  font-size: 10px;
+  font-weight: 600;
+}
