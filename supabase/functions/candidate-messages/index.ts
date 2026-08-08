@@ -7,6 +7,8 @@ const ALLOWED_ORIGINS = new Set([
   'https://executive-assistant-hiring-flow.vercel.app',
   'http://localhost:5173',
   'http://127.0.0.1:5173',
+  // Browsers serialize requests from a directly opened local HTML file as Origin: null.
+  'null',
 ]);
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
