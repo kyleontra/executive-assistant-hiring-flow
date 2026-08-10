@@ -737,14 +737,13 @@ function bindApplicants() {
   $('#inviteInterview').addEventListener('click', () => {
     if (!selectedCandidate || candidateStatus(selectedCandidate) !== 'shortlisted') return;
     const link = schedulerLink(selectedCandidate);
-    if (!link) {
-      window.location.href = './scheduler-settings.html';
-      return;
-    }
     const isCalendly = /^https:\/\/(?:www\.)?calendly\.com\//i.test(link);
+    const schedulingPrompt = link
+      ? `Please choose a time here:\n${link}`
+      : 'Please reply with a few times that work well for you, and we will confirm the interview time.';
     pendingInterviewCandidate = selectedCandidate;
-    openMessages(selectedCandidate, `Hi ${selectedCandidate.dataset.name.split(' ')[0]},\n\nWe'd like to invite you to an interview for the ${selectedCandidate.dataset.role} role. Please choose a time here:\n${link}\n\nLooking forward to speaking with you.`);
-    toast(`${isCalendly ? 'Calendly' : 'Booking'} invitation ready to send`);
+    openMessages(selectedCandidate, `Hi ${selectedCandidate.dataset.name.split(' ')[0]},\n\nWe'd like to invite you to an interview for the ${selectedCandidate.dataset.role} role. ${schedulingPrompt}\n\nLooking forward to speaking with you.`);
+    toast(`${link ? (isCalendly ? 'Calendly' : 'Booking') : 'Interview'} invitation ready to send`);
   });
   messageForm.addEventListener('submit', async (event) => {
     event.preventDefault();
