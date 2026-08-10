@@ -2,6 +2,21 @@
   background: #fff;
 }
 
+.simple-header nav .header-nav-button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #647187;
+  font: 700 11px "DM Sans", sans-serif;
+  cursor: pointer;
+}
+
+.simple-header nav .header-nav-button:hover,
+.simple-header nav .header-nav-button:focus-visible {
+  color: #246fe5;
+  outline: none;
+}
+
 .inbox-shell {
   width: min(1080px, calc(100% - 40px));
   padding: 48px 0 80px;

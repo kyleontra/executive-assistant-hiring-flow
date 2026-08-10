@@ -733,6 +733,7 @@ function bindApplicants() {
     closeProfile();
     applyFilter();
   }));
+  $('#headerMessages').addEventListener('click', () => openMessages(selectedCandidate || candidates.find((candidate) => !candidate.hidden) || candidates[0]));
   $('#messageCandidate').addEventListener('click', () => openMessages(selectedCandidate));
   $('#inviteInterview').addEventListener('click', () => {
     if (!selectedCandidate || candidateStatus(selectedCandidate) !== 'shortlisted') return;
