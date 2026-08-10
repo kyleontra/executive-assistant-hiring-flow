@@ -412,6 +412,8 @@ function bindApplicants() {
   const questionSortControl = $('#questionSortControl');
   const profilePanel = $('#profilePanel');
   const messagePanel = $('#messagePanel');
+  const conversationList = $('#conversationList');
+  const conversationSearch = $('#conversationSearch');
   const messageThread = $('#messageThread');
   const messageForm = $('#messageForm');
   const messageBody = $('#messageBody');
@@ -565,16 +567,28 @@ function bindApplicants() {
     messageThread.scrollTop = messageThread.scrollHeight;
   }
 
+  function renderConversationList() {
+    const query = conversationSearch.value.trim().toLowerCase();
+    const visibleCandidates = candidates.filter((candidate) => `${candidate.dataset.name} ${candidate.dataset.role}`.toLowerCase().includes(query));
+    conversationList.innerHTML = visibleCandidates.map((candidate) => {
+      const index = candidates.indexOf(candidate);
+      const roleName = candidate.dataset.job === 'current' ? currentJobTitle : candidate.dataset.role;
+      return `<button class="conversation-item${candidate === selectedCandidate ? ' active' : ''}" type="button" data-candidate-index="${index}"><img src="${escapeHtml(candidate.dataset.photo)}" alt="" /><span><b>${escapeHtml(candidate.dataset.name)}</b><small>${escapeHtml(roleName)}</small></span></button>`;
+    }).join('');
+    $('#conversationEmpty').hidden = visibleCandidates.length > 0;
+  }
+
   async function openMessages(candidate, draft = '') {
     if (!candidate) return;
     selectedCandidate = candidate;
+    renderConversationList();
     $('#messagePanelTitle').textContent = candidate.dataset.name;
-    $('#messagePanelRole').textContent = candidate.dataset.role;
+    $('#messagePanelRole').textContent = candidate.dataset.job === 'current' ? currentJobTitle : candidate.dataset.role;
     messagePanel.hidden = false;
     document.body.classList.add('messages-open');
     messageThread.innerHTML = '<p class="message-empty">Loading conversation…</p>';
     messageStatus.textContent = '';
-    if (draft) messageBody.value = draft;
+    messageBody.value = draft;
     try {
       const { messages } = await messageRequest('list', candidate);
       renderMessages(messages || []);
@@ -701,6 +715,12 @@ function bindApplicants() {
   }
 
   candidates.forEach((candidate) => candidate.addEventListener('click', () => openProfile(candidate)));
+  conversationSearch.addEventListener('input', renderConversationList);
+  conversationList.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-candidate-index]');
+    if (!button) return;
+    openMessages(candidates[Number(button.dataset.candidateIndex)]);
+  });
   jobDropdownButton.addEventListener('click', () => setJobDropdown(jobDropdown.hidden));
   filter.addEventListener('input', () => {
     const query = filter.value.trim().toLowerCase();

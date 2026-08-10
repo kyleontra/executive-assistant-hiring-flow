@@ -50,17 +50,20 @@
     </aside>
     <aside id="messagePanel" class="message-panel" hidden aria-label="Candidate messages">
       <div class="message-panel-backdrop" data-close-messages></div>
-      <section class="message-panel-dialog" role="dialog" aria-modal="true" aria-labelledby="messagePanelTitle">
-        <header class="message-panel-header">
-          <div><p class="simple-kicker">MESSAGES</p><h2 id="messagePanelTitle">Candidate conversation</h2><span id="messagePanelRole"></span></div>
-          <button type="button" data-close-messages aria-label="Close messages">×</button>
-        </header>
-        <div id="messageThread" class="message-thread" aria-live="polite"><p class="message-empty">Loading conversation…</p></div>
-        <form id="messageForm" class="message-composer">
-          <label for="messageBody">Message</label>
-          <textarea id="messageBody" maxlength="2000" rows="4" placeholder="Write a message…" required></textarea>
-          <div><span id="messageStatus" aria-live="polite"></span><button class="primary-button" type="submit">Send message <span>→</span></button></div>
-        </form>
+      <section class="message-panel-dialog" role="dialog" aria-modal="true" aria-labelledby="messageInboxTitle">
+        <aside class="message-inbox-sidebar"><header><p class="simple-kicker">HIRING INBOX</p><h2 id="messageInboxTitle">Messages</h2></header><input id="conversationSearch" type="search" placeholder="Search conversations" aria-label="Search conversations" autocomplete="off" /><div id="conversationList" class="conversation-list" aria-label="Conversations"></div><p id="conversationEmpty" class="conversation-empty" hidden>No conversations found.</p></aside>
+        <section class="message-conversation">
+          <header class="message-panel-header">
+            <div><p class="simple-kicker">CONVERSATION</p><h2 id="messagePanelTitle">Candidate conversation</h2><span id="messagePanelRole"></span></div>
+            <button type="button" data-close-messages aria-label="Close messages">×</button>
+          </header>
+          <div id="messageThread" class="message-thread" aria-live="polite"><p class="message-empty">Loading conversation…</p></div>
+          <form id="messageForm" class="message-composer">
+            <label for="messageBody">Message</label>
+            <textarea id="messageBody" maxlength="2000" rows="4" placeholder="Write a message…" required></textarea>
+            <div><span id="messageStatus" aria-live="polite"></span><button class="primary-button" type="submit">Send message <span>→</span></button></div>
+          </form>
+        </section>
       </section>
     </aside>
     <div class="toast" id="toast"></div>
