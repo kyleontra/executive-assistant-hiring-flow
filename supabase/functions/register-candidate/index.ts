@@ -5,6 +5,10 @@ const ALLOWED_ORIGINS = new Set([
   PRIMARY_ORIGIN,
   'https://hirefromsa.com',
   'https://executive-assistant-hiring-flow.vercel.app',
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  // Browsers serialize requests from a directly opened local HTML file as Origin: null.
+  'null',
 ]);
 
 function headers(request: Request) {
