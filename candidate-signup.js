@@ -5,7 +5,11 @@ const confirmedEmail = document.querySelector('#confirmedEmail');
 const REGISTER_ENDPOINT = 'https://jyxamdvvnoylaxolhlht.supabase.co/functions/v1/register-candidate';
 
 const requestedJob = new URLSearchParams(window.location.search).get('job');
-if (requestedJob) sessionStorage.setItem('sava-applying-job', requestedJob);
+if (requestedJob) {
+  sessionStorage.setItem('sava-applying-job', requestedJob);
+  const signInLink = document.querySelector('.account-switch a');
+  if (signInLink) signInLink.href = `./candidate-login.html?next=${encodeURIComponent(`./application-questions.html?job=${requestedJob}`)}`;
+}
 
 function showResult(message, type) {
   formResult.textContent = message;

@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Candidate sign in — Hire From SA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./candidate-portal.css" />
+  </head>
+  <body class="portal-auth-page">
+    <header class="portal-header"><a href="./jobs.html">HIRE FROM <span>SA</span></a><nav><a href="./jobs.html">Find jobs</a><a href="./index.html">For hirers</a></nav></header>
+    <main class="portal-auth-shell">
+      <section class="portal-auth-card">
+        <p class="portal-kicker">CANDIDATE PORTAL</p>
+        <h1>Welcome back.</h1>
+        <p>Sign in to track applications and message hirers.</p>
+        <form id="candidateLoginForm">
+          <label>Email address<input id="loginEmail" type="email" autocomplete="email" required /></label>
+          <label>Password<input id="loginPassword" type="password" autocomplete="current-password" minlength="10" required /></label>
+          <p id="loginResult" class="portal-result" aria-live="polite" hidden></p>
+          <button id="candidateLoginButton" type="submit">Sign in <span>→</span></button>
+        </form>
+        <p class="portal-switch">New to Hire From SA? <a href="./candidate-signup.html">Create an account</a></p>
+      </section>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./auth-client.js"></script>
+    <script src="./candidate-login.js"></script>
+  </body>
+</html>

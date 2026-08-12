@@ -14,7 +14,7 @@
   <body class="simple-employer-page">
     <header class="simple-header">
       <a class="simple-brand" href="./index.html">HIRE FROM <span>SA</span></a>
-      <nav><a href="./applicants.html">Hiring inbox</a><a href="./scheduler-settings.html">Interview scheduler</a><a href="./jobs.html">View jobs</a></nav>
+      <nav><a href="./applicants.html">Hiring inbox</a><a href="./applicants.html?view=messages">Messages</a><a href="./jobs.html">View jobs</a></nav>
     </header>
 
     <main class="job-flow-shell single-step-shell title-step-shell">
@@ -32,6 +32,7 @@
         </header>
 
         <section class="wide-fields">
+          <label class="simple-field"><span>Company name <em>*</em></span><input id="companyName" name="companyName" maxlength="120" placeholder="Enter company name" required /></label>
           <div class="job-title-editor">
             <label class="simple-field"><span class="visually-hidden">Job title</span><input id="title" name="title" maxlength="100" placeholder="Enter job title" required /></label>
           </div>

@@ -2,6 +2,10 @@ const $ = (selector) => document.querySelector(selector);
 const storageKey = 'ea-hiring-role';
 const candidateMessagesEndpoint = 'https://jyxamdvvnoylaxolhlht.supabase.co/functions/v1/candidate-messages';
 const messagingIdentityKey = 'sava-employer-messaging-identity';
+let serverJobs = [];
+let serverJobsPromise = null;
+let serverJobsLoaded = false;
+let applicantJobsById = new Map();
 const sampleQuestions = [
   { text: 'Tell us about the most complex executive calendar you have managed.', type: 'text', options: [] },
   { text: 'How do you keep an executive’s priorities and follow-ups on track?', type: 'text', options: [] },
@@ -9,6 +13,7 @@ const sampleQuestions = [
 ];
 const defaults = {
   title: 'Executive Assistant',
+  company: 'Your company',
   description: '',
   commitment: 'Full-time (40 hours per week)',
   minRate: '3',
@@ -95,17 +100,19 @@ function bindPostJob() {
 
   if (step === 'title') {
     const title = $('#title');
+    const companyName = $('#companyName');
     const savedTitle = text(role.title);
     const clearSavedTitle = savedTitle.toLowerCase() === 'sad';
     title.value = clearSavedTitle || (role.title === defaults.title && !role.description) ? '' : role.title;
+    companyName.value = role.company === defaults.company ? '' : role.company;
     if (clearSavedTitle) write({ title: '' });
     form.addEventListener('submit', (event) => {
       event.preventDefault();
       if (!form.reportValidity()) {
-        showPostError('Add the job title to continue.');
+        showPostError('Add the company name and job title to continue.');
         return;
       }
-      write({ title: text(title.value), published: false });
+      write({ title: text(title.value), company: text(companyName.value), published: false, ...(role.published ? { serverJobId: '' } : {}) });
       window.location.href = './job-description.html';
     });
     return;
@@ -316,7 +323,7 @@ function bindPublish() {
 
   promoteInput.addEventListener('change', updatePromotion);
   updatePromotion();
-  button.addEventListener('click', () => {
+  button.addEventListener('click', async () => {
     const promote = promoteInput.checked;
     const promotionBudget = Number(budgetInput.value);
     if (promote && (!budgetInput.reportValidity() || promotionBudget < 5)) {
@@ -324,27 +331,86 @@ function bindPublish() {
       showPostError('Promotion requires a budget of at least $5 per day.');
       return;
     }
-    write({ published: true, promote, promotionBudget: promote ? budgetInput.value : '' });
-    window.location.href = './published.html';
+    const publishedRole = write({ published: true, promote, promotionBudget: promote ? budgetInput.value : '' });
+    button.disabled = true;
+    button.textContent = 'Publishing role…';
+    try {
+      if (!window.savaPlatform) throw new Error('The publishing service did not load. Refresh and try again.');
+      const { job } = await window.savaPlatform.employerRequest('createJob', {
+        jobId: publishedRole.serverJobId || '',
+        companyName: publishedRole.company || 'Your company',
+        title: publishedRole.title,
+        description: publishedRole.description,
+        arrangement: publishedRole.arrangement,
+        employmentType: publishedRole.commitment.split(' (')[0],
+        location: publishedRole.location,
+        payMin: Number(publishedRole.minRate),
+        payMax: Number(publishedRole.maxRate),
+        questions: publishedRole.questions,
+        responsibilities: publishedRole.responsibilities || [],
+        skills: publishedRole.skills || [],
+        promoted: promote,
+        promotionBudget: promote ? promotionBudget : 0,
+      });
+      write({ serverJobId: job.id, published: true });
+      window.location.href = './published.html';
+    } catch (error) {
+      button.disabled = false;
+      button.innerHTML = 'Publish role <span>→</span>';
+      showPostError(error.message || 'The role could not be published. Please try again.');
+    }
   });
 }
-
-const sampleJobs = [
-  { id:'aster', company:'Aster & Co.', initial:'A', title:'Executive Assistant to CEO', arrangement:'Remote', type:'Full-time', location:'South Africa', pay:'$10–$14 / hour', posted:'2 days ago', description:'Aster & Co. is looking for an experienced Executive Assistant to keep the CEO organised and help the leadership team move quickly.', responsibilities:['Manage a complex CEO calendar and protect focus time','Prepare meeting briefs, notes, and follow-up actions','Coordinate domestic and international travel','Handle professional communication with clients and partners'], skills:['Calendar management','Executive support','Travel coordination','Google Workspace'], questions:sampleQuestions },
-  { id:'bright', company:'BrightHouse', initial:'B', title:'Senior Executive Assistant', arrangement:'Hybrid', type:'Full-time', location:'Cape Town', pay:'$12–$16 / hour', posted:'3 days ago', description:'Support two founders at a growing professional-services company. Keep decisions, meetings, and key relationships moving forward.', responsibilities:['Coordinate leadership schedules and off-sites','Own travel, expenses, and meeting logistics','Track company priorities and follow-ups','Support internal communications'], skills:['Microsoft Office','Project coordination','Expense management','Written communication'], questions:sampleQuestions },
-  { id:'harbor', company:'Harbor Health', initial:'H', title:'Executive Assistant — Operations', arrangement:'Remote', type:'Contract', location:'South Africa', pay:'$11–$15 / hour', posted:'5 days ago', description:'Support an operations lead during a period of growth with structured, varied work focused on making the team more efficient.', responsibilities:['Maintain operational calendars and reporting deadlines','Schedule stakeholder meetings','Create simple process documents','Manage the shared inbox'], skills:['Inbox management','Notion','Meeting coordination','Process documentation'], questions:sampleQuestions },
-  { id:'mosaic', company:'Mosaic Studio', initial:'M', title:'Part-time Executive Assistant', arrangement:'Remote', type:'Part-time', location:'South Africa', pay:'$9–$12 / hour', posted:'1 week ago', description:'Support a creative director with administrative organisation, client follow-up, and weekly planning.', responsibilities:['Organise the weekly schedule','Prepare client meeting notes','Follow up on actions and invoices','Keep files and contacts current'], skills:['Calendar management','Client communication','Attention to detail','Asana'], questions:sampleQuestions },
-];
 
 function currentPostedJob() {
   const role = read();
   if (!role.published) return null;
-  return { id:'current', company:'Your company', initial:'Y', title:role.title, arrangement:'Remote', type:role.commitment.split(' (')[0], location:'South Africa', pay:rate(role), posted:'Just now', description:role.description, responsibilities:[], skills:[], questions:role.questions };
+  return { id:role.serverJobId || 'current', company:role.company || 'Your company', initial:'Y', title:role.title, arrangement:'Remote', type:role.commitment.split(' (')[0], location:'South Africa', pay:rate(role), posted:'Just now', description:role.description, responsibilities:role.responsibilities || [], skills:role.skills || [], questions:role.questions };
 }
 
 function jobBoard() {
+  if (serverJobsLoaded) return serverJobs;
   const current = currentPostedJob();
-  return current ? [current, ...sampleJobs] : sampleJobs;
+  return current ? [current] : [];
+}
+
+function postedLabel(createdAt) {
+  if (!createdAt) return 'Recently';
+  const days = Math.max(0, Math.floor((Date.now() - new Date(createdAt).getTime()) / 86400000));
+  if (days === 0) return 'Today';
+  if (days === 1) return '1 day ago';
+  if (days < 14) return `${days} days ago`;
+  return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(new Date(createdAt));
+}
+
+async function loadServerJobs(force = false) {
+  if (!window.savaPlatform) return jobBoard();
+  if (force) serverJobsPromise = null;
+  if (!serverJobsPromise) {
+    serverJobsPromise = (async () => {
+      const localRole = read();
+      if (localRole.published && !localRole.serverJobId && localRole.description && localRole.questions.some(questionText)) {
+        const { job } = await window.savaPlatform.employerRequest('createJob', {
+          companyName: localRole.company || 'Your company', title: localRole.title, description: localRole.description,
+          arrangement: localRole.arrangement, employmentType: localRole.commitment.split(' (')[0], location: localRole.location,
+          payMin: Number(localRole.minRate), payMax: Number(localRole.maxRate), questions: localRole.questions,
+          responsibilities: localRole.responsibilities || [], skills: localRole.skills || [], promoted: localRole.promote,
+          promotionBudget: Number(localRole.promotionBudget || 0),
+        });
+        write({ serverJobId: job.id });
+      }
+      const { jobs } = await window.savaPlatform.publicRequest('listJobs');
+      serverJobs = (jobs || []).map((job) => ({ ...job, posted: postedLabel(job.createdAt) }));
+      serverJobsLoaded = true;
+      return serverJobs;
+    })().catch((error) => {
+      console.warn('Live jobs unavailable.', error);
+      serverJobs = [];
+      serverJobsLoaded = true;
+      return serverJobs;
+    });
+  }
+  return serverJobsPromise;
 }
 
 function renderJobs(filter = '') {
@@ -355,17 +421,24 @@ function renderJobs(filter = '') {
   root.innerHTML = matches.map((job) => `<a class="job-card" href="./job-detail.html?job=${encodeURIComponent(job.id)}"><div class="job-card-top"><div class="job-company">${escapeHtml(job.initial)}</div><div><h2>${escapeHtml(job.title)}</h2><p class="company-name">${escapeHtml(job.company)}</p></div><span class="posted">${escapeHtml(job.posted)}</span></div><div class="job-tags"><span>${escapeHtml(job.arrangement)}</span><span>${escapeHtml(job.type)}</span><span>${escapeHtml(job.location)}</span></div><p>${escapeHtml(job.description)}</p><div class="job-card-footer"><b>${escapeHtml(job.pay)}</b><span>View job →</span></div></a>`).join('') || '<p class="no-results">No roles match that search.</p>';
 }
 
-function bindJobs() {
+async function bindJobs() {
   if (!$('#jobResults')) return;
+  await loadServerJobs();
   renderJobs();
   $('#searchJobs').addEventListener('click', () => renderJobs($('#jobSearch').value));
   $('#jobSearch').addEventListener('input', (event) => renderJobs(event.target.value));
 }
 
-function bindJobDetail() {
+async function bindJobDetail() {
   if (!$('#detailTitle')) return;
   const id = new URLSearchParams(window.location.search).get('job');
+  await loadServerJobs();
   const job = jobBoard().find((item) => item.id === id) || jobBoard()[0];
+  if (!job) {
+    $('#detailTitle').textContent = 'This role is no longer available';
+    $('#showApplication').disabled = true;
+    return;
+  }
   $('#detailInitial').textContent = job.initial;
   $('#detailCompany').textContent = job.company;
   $('#detailTitle').textContent = job.title;
@@ -388,6 +461,8 @@ function bindJobDetail() {
 }
 
 function questionsForCandidate(job) {
+  const liveJob = applicantJobsById.get(job);
+  if (liveJob) return (liveJob.questions || []).map(questionText).filter(Boolean);
   if (job === 'current') {
     const savedQuestions = read().questions.map(questionText).filter(Boolean);
     return savedQuestions.length ? savedQuestions : sampleQuestions.map(questionText);
@@ -396,16 +471,82 @@ function questionsForCandidate(job) {
   return ['How have you supported a customer-facing leader?', 'How do you track customer commitments and risks?', 'Describe a customer process you improved proactively.'];
 }
 
-function bindApplicants() {
+async function bindApplicants() {
+  const candidateList = $('#candidateList');
+  if (!candidateList) return;
+  let dashboard = null;
+  let dashboardError = '';
+  try {
+    if (!window.savaPlatform) throw new Error('The hiring service did not load.');
+    const savedRole = read();
+    if (savedRole.published && !savedRole.serverJobId && window.savaPlatform) {
+      const { job } = await window.savaPlatform.employerRequest('createJob', {
+        companyName: savedRole.company || 'Your company',
+        title: savedRole.title,
+        description: savedRole.description,
+        arrangement: savedRole.arrangement,
+        employmentType: savedRole.commitment.split(' (')[0],
+        location: savedRole.location,
+        payMin: Number(savedRole.minRate),
+        payMax: Number(savedRole.maxRate),
+        questions: savedRole.questions,
+        responsibilities: savedRole.responsibilities || [],
+        skills: savedRole.skills || [],
+        promoted: savedRole.promote,
+        promotionBudget: Number(savedRole.promotionBudget || 0),
+      });
+      write({ serverJobId: job.id });
+    }
+    dashboard = await window.savaPlatform?.employerRequest('employerDashboard', { companyName: read().company || 'Your company' });
+    applicantJobsById = new Map((dashboard?.jobs || []).map((job) => [String(job.id), job]));
+    if (dashboard) {
+      $('#jobOptions').innerHTML = `<button class="selected" type="button" role="option" aria-selected="true" data-job="all">All active jobs</button>${(dashboard.jobs || []).map((job) => `<button type="button" role="option" aria-selected="false" data-job="${escapeHtml(job.id)}">${escapeHtml(job.title)}</button>`).join('')}`;
+    }
+    if (dashboard) {
+      candidateList.querySelectorAll('.simple-candidate').forEach((candidate) => candidate.remove());
+      const rows = (dashboard.applications || []).map((application) => {
+        const candidate = application.candidate;
+        const answers = application.answers || [];
+        const photo = candidate.photoUrl || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=240&h=240&q=75';
+        const years = Number(candidate.relevantYears || 0);
+        return `<button class="simple-candidate" data-application-id="${escapeHtml(application.id)}" data-job="${escapeHtml(application.jobId)}" data-status="${escapeHtml(application.status)}" data-name="${escapeHtml(candidate.name)}" data-role="${escapeHtml(application.job.title)}" data-experience="${years} years experience" data-match="${Number(application.match || 0)}" data-summary="${escapeHtml(candidate.summary)}" data-photo="${escapeHtml(photo)}" data-answers="${escapeHtml(JSON.stringify(answers))}" data-answer1="${escapeHtml(answers[0]?.answer || '')}" data-answer2="${escapeHtml(answers[1]?.answer || '')}" data-answer3="${escapeHtml(answers[2]?.answer || '')}"><img src="${escapeHtml(photo)}" alt="" /><span class="candidate-identity"><b>${escapeHtml(candidate.name)}</b><small>${escapeHtml(application.job.title)} · ${years} years</small></span><span class="candidate-overview">${escapeHtml(candidate.summary)}</span><strong class="match-badge">${Number(application.match || 0)}% match</strong><span class="candidate-arrow" aria-hidden="true">→</span></button>`;
+      }).join('');
+      candidateList.insertAdjacentHTML('afterbegin', rows);
+    }
+  } catch (error) {
+    console.warn('Live hiring inbox unavailable.', error);
+    dashboardError = error.message || 'The hiring inbox could not connect.';
+    dashboard = { jobs: [], applications: [] };
+    candidateList.querySelectorAll('.simple-candidate').forEach((candidate) => candidate.remove());
+  }
+  candidateList.classList.remove('server-loading');
   const candidates = [...document.querySelectorAll('.simple-candidate')];
-  if (!candidates.length) return;
+  if (!candidates.length) {
+    ['allCandidateCount', 'newCandidateCount', 'shortlistedCandidateCount', 'interviewingCandidateCount'].forEach((id) => { $(`#${id}`).textContent = '0'; });
+    $('#applicantResultSummary').textContent = '0 applicants';
+    $('#candidateEmpty').textContent = dashboardError || 'No applications yet. New applications will appear here as soon as candidates submit them.';
+    $('#candidateEmpty').hidden = false;
+    $('#headerMessages').addEventListener('click', () => {
+      $('#messagePanel').hidden = false;
+      document.body.classList.add('messages-open');
+      $('#conversationList').innerHTML = '';
+      $('#conversationEmpty').hidden = false;
+      $('#messageThread').innerHTML = '<p class="message-empty">No conversations yet. Candidate messages will appear here.</p>';
+      $('#messageForm').hidden = true;
+    });
+    $('#messagePanel').querySelectorAll('[data-close-messages]').forEach((button) => button.addEventListener('click', () => {
+      $('#messagePanel').hidden = true;
+      document.body.classList.remove('messages-open');
+    }));
+    if (new URLSearchParams(window.location.search).get('view') === 'messages') $('#headerMessages').click();
+    return;
+  }
   const filter = $('#jobFilter');
   const jobCombobox = $('#jobCombobox');
   const jobDropdown = $('#jobDropdown');
   const jobDropdownButton = $('#jobDropdownButton');
   const selectedJobLabel = $('#selectedJobLabel');
   const jobOptions = [...document.querySelectorAll('#jobOptions [data-job]')];
-  const candidateList = $('#candidateList');
   const pipelineButtons = [...document.querySelectorAll('.simple-pipeline [data-status]')];
   const applicantSort = $('#applicantSort');
   const questionSort = $('#questionSort');
@@ -430,7 +571,7 @@ function bindApplicants() {
   };
   const currentJobTitle = read().published ? read().title : 'Your newest role';
   const newestOption = document.querySelector('#jobOptions [data-job="current"]');
-  newestOption.textContent = currentJobTitle;
+  if (newestOption) newestOption.textContent = currentJobTitle;
   candidates.forEach((candidate) => {
     const roleName = candidate.dataset.job === 'current' ? currentJobTitle : candidate.dataset.role;
     const years = candidate.dataset.experience.match(/\d+/)?.[0] || candidate.dataset.experience;
@@ -443,7 +584,16 @@ function bindApplicants() {
   }
 
   function candidateStatus(candidate) {
-    return localStorage.getItem(candidateStatusKey(candidate)) || candidate.dataset.status || 'new';
+    return candidate.dataset.applicationId ? candidate.dataset.status || 'new' : localStorage.getItem(candidateStatusKey(candidate)) || candidate.dataset.status || 'new';
+  }
+
+  async function setCandidateStatus(candidate, status) {
+    if (candidate.dataset.applicationId && window.savaPlatform) {
+      await window.savaPlatform.employerRequest('updateApplication', { applicationId: candidate.dataset.applicationId, status });
+      candidate.dataset.status = status;
+      return;
+    }
+    localStorage.setItem(candidateStatusKey(candidate), status);
   }
 
   function matchesJobSearch(candidate) {
@@ -493,9 +643,17 @@ function bindApplicants() {
   function sortValue(candidate) {
     if (applicantSort.value === 'experience') return Number(candidate.dataset.experience.match(/\d+/)?.[0] || 0);
     if (applicantSort.value === 'question' && questionSort.value !== '') {
-      return questionScores[candidate.dataset.name]?.[Number(questionSort.value)] || 0;
+      return questionScores[candidate.dataset.name]?.[Number(questionSort.value)] || Number(candidate.dataset.match) || 0;
     }
     return Number(candidate.dataset.match);
+  }
+
+  function candidateAnswers(candidate) {
+    try {
+      const answers = JSON.parse(candidate.dataset.answers || '[]');
+      if (Array.isArray(answers) && answers.length) return answers;
+    } catch { /* Use the legacy preview answers below. */ }
+    return [1, 2, 3].map((number) => ({ question: questionsForCandidate(candidate.dataset.job)[number - 1] || `Question ${number}`, answer: candidate.dataset[`answer${number}`] || '' })).filter((answer) => answer.answer);
   }
 
   function sortAndPreviewCandidates() {
@@ -507,7 +665,7 @@ function bindApplicants() {
       const overview = candidate.querySelector('.candidate-overview');
       const badge = candidate.querySelector('.match-badge');
       if (questionReady) {
-        overview.textContent = candidate.dataset[`answer${questionNumber}`] || 'No answer submitted.';
+        overview.textContent = candidateAnswers(candidate)[questionNumber - 1]?.answer || 'No answer submitted.';
         badge.textContent = `${sortValue(candidate)}% answer fit`;
       } else if (sortMode === 'experience') {
         overview.textContent = candidate.dataset.summary;
@@ -536,6 +694,7 @@ function bindApplicants() {
   const employerIdentity = messagingIdentity();
 
   function candidateMessageKey(candidate) {
+    if (candidate.dataset.applicationId) return `application:${candidate.dataset.applicationId}`;
     return `${candidate.dataset.job}:${candidate.dataset.name}`.toLowerCase().replace(/[^a-z0-9:_-]/g, '-');
   }
 
@@ -664,16 +823,8 @@ function bindApplicants() {
     $('#profileExperience').textContent = candidate.dataset.experience;
     $('#profileMatch').textContent = `${candidate.dataset.match}% match`;
     $('#profileSummary').textContent = candidate.dataset.summary;
-    [1, 2, 3].forEach((number) => {
-      const questionElement = $(`#profileQuestion${number}`);
-      const card = questionElement.closest('.answer-card');
-      const question = questions[number - 1];
-      card.hidden = !question;
-      if (question) {
-        questionElement.textContent = question;
-        $(`#profileAnswer${number}`).textContent = candidate.dataset[`answer${number}`];
-      }
-    });
+    const answers = candidateAnswers(candidate);
+    $('#profileAnswers').innerHTML = questions.map((question, index) => `<article class="answer-card"><b>${escapeHtml(question)}</b><p>${escapeHtml(answers[index]?.answer || 'No answer submitted.')}</p></article>`).join('');
     updateProfileActions(candidate);
     profilePanel.hidden = false;
     document.body.classList.add('profile-open');
@@ -780,7 +931,7 @@ function bindApplicants() {
       messageBody.value = '';
       messageStatus.textContent = 'Sent just now.';
       if (pendingInterviewCandidate === selectedCandidate) {
-        localStorage.setItem(candidateStatusKey(selectedCandidate), 'interviewing');
+        await setCandidateStatus(selectedCandidate, 'interviewing');
         pendingInterviewCandidate = null;
         updateProfileActions(selectedCandidate);
         applyFilter();
@@ -799,22 +950,31 @@ function bindApplicants() {
     if (!messagePanel.hidden) closeMessages();
     else if (!profilePanel.hidden) closeProfile();
   });
-  $('#shortlist').addEventListener('click', () => {
+  $('#shortlist').addEventListener('click', async () => {
     if (!selectedCandidate || candidateStatus(selectedCandidate) !== 'new') return;
-    localStorage.setItem(candidateStatusKey(selectedCandidate), 'shortlisted');
-    updateProfileActions(selectedCandidate);
-    applyFilter();
-    toast('Candidate moved to Shortlisted');
+    try {
+      await setCandidateStatus(selectedCandidate, 'shortlisted');
+      updateProfileActions(selectedCandidate);
+      applyFilter();
+      toast('Candidate moved to Shortlisted');
+    } catch (error) {
+      toast(error.message || 'Candidate status could not be updated');
+    }
   });
-  $('#rejectCandidate').addEventListener('click', () => {
+  $('#rejectCandidate').addEventListener('click', async () => {
     if (!selectedCandidate) return;
-    localStorage.setItem(candidateStatusKey(selectedCandidate), 'rejected');
-    closeProfile();
-    applyFilter();
-    toast('Candidate removed from the inbox');
+    try {
+      await setCandidateStatus(selectedCandidate, 'rejected');
+      closeProfile();
+      applyFilter();
+      toast('Candidate removed from the inbox');
+    } catch (error) {
+      toast(error.message || 'Candidate status could not be updated');
+    }
   });
   refreshQuestionPicker();
   applyFilter();
+  if (new URLSearchParams(window.location.search).get('view') === 'messages') $('#headerMessages').click();
 }
 
 hydrateRoleContent();
@@ -826,5 +986,6 @@ bindJobs();
 bindJobDetail();
 
 window.savaJobBoard = jobBoard;
+window.savaLoadJobs = loadServerJobs;
 window.savaEscapeHtml = escapeHtml;
 window.savaNormalizeQuestion = normalizeQuestion;

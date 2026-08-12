@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="./candidate-signup.css" />
+    <link rel="stylesheet" href="./candidate-signup-overrides.css" />
     <link rel="stylesheet" href="./candidate-flow.css" />
   </head>
   <body>
@@ -36,7 +37,8 @@
             <label>Password<input id="password" name="password" type="password" autocomplete="new-password" required minlength="10" maxlength="128" placeholder="At least 10 characters" /></label>
             <p class="field-help">Your password is stored securely by Supabase. It is never added to your ID review files.</p>
             <div id="formResult" class="form-result" aria-live="polite"></div>
-            <button id="submitProfile" type="submit">Create account <span>→</span></button>
+          <button id="submitProfile" type="submit">Create account <span>→</span></button>
+          <p class="account-switch">Already have an account? <a href="./candidate-login.html">Sign in</a></p>
             <a id="confirmedEmail" class="confirmation-link" href="./email-confirmed.html" hidden>Enter verification code <span>→</span></a>
           </form>
         </div>

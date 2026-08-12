@@ -46,6 +46,17 @@ async function requireVerifiedAccount() {
   } catch {
     experiences = [];
   }
+  let savedProfile = null;
+  if (!experiences.length || !sessionStorage.getItem(`sava:profile-photo:${user.id}`)) {
+    try {
+      ({ profile: savedProfile } = await window.savaPlatform.candidateRequest('getProfile'));
+      if (savedProfile?.experience?.length) {
+        experiences = savedProfile.experience;
+        sessionStorage.setItem(`sava:experience:${user.id}`, JSON.stringify(experiences));
+      }
+      if (savedProfile?.photoPath) sessionStorage.setItem(`sava:profile-photo:${user.id}`, savedProfile.photoPath);
+    } catch { /* Existing redirects below explain which profile step is missing. */ }
+  }
   if (!Array.isArray(experiences) || experiences.length === 0) {
     window.location.replace('./candidate-experience.html');
     return;

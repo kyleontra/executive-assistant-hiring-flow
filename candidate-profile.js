@@ -69,6 +69,12 @@ form.addEventListener('submit', async (event) => {
       path = payload.path;
     }
     sessionStorage.setItem(`sava:profile-photo:${candidate.id}`, path);
+    await window.savaPlatform.candidateRequest('saveProfile', {
+      experience: JSON.parse(sessionStorage.getItem(`sava:experience:${candidate.id}`) || '[]'),
+      photoPath: path,
+      fullName: `${candidate.user_metadata?.first_name || ''} ${candidate.user_metadata?.last_name || ''}`.trim(),
+      calendarLink: candidate.user_metadata?.calendar_link || '',
+    });
     showResult('Profile photo saved. Continuing to your ID photos…', 'success');
     window.setTimeout(() => window.location.assign('./id-verification.html'), 650);
   } catch (error) {

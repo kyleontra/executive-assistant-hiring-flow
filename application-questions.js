@@ -19,11 +19,18 @@ async function initialize() {
     submitButton.disabled = true;
     return;
   }
+  let savedProfile = null;
+  try {
+    ({ profile: savedProfile } = await window.savaPlatform.candidateRequest('getProfile'));
+    if (savedProfile?.photoPath) sessionStorage.setItem(`sava:profile-photo:${candidate.id}`, savedProfile.photoPath);
+    if (savedProfile?.experience?.length) sessionStorage.setItem(`sava:experience:${candidate.id}`, JSON.stringify(savedProfile.experience));
+  } catch { /* The submit request below will show a server error if the profile cannot be loaded. */ }
   if (!sessionStorage.getItem(`sava:profile-photo:${candidate.id}`)) {
     window.location.replace('./candidate-profile.html');
     return;
   }
   const requestedJob = new URLSearchParams(window.location.search).get('job') || sessionStorage.getItem('sava-applying-job');
+  await window.savaLoadJobs?.();
   const jobs = window.savaJobBoard?.() || [];
   job = jobs.find((item) => item.id === requestedJob) || jobs[0];
   if (!job) {
@@ -46,7 +53,7 @@ async function initialize() {
   questionRoot.querySelectorAll('textarea').forEach((textarea) => textarea.addEventListener('input', () => { textarea.nextElementSibling.querySelector('span').textContent = textarea.value.length; }));
 }
 
-form.addEventListener('submit', (event) => {
+form.addEventListener('submit', async (event) => {
   event.preventDefault();
   if (!candidate || !job || !form.reportValidity()) {
     showResult('Answer every question before submitting your application.', 'error');
@@ -60,11 +67,26 @@ form.addEventListener('submit', (event) => {
       : form.elements[fieldName].value.trim();
     return { question: normalized.text, type: normalized.type, answer };
   });
-  const answers = answerDetails.map((detail) => detail.answer);
-  sessionStorage.setItem(`sava:application:${job.id}:${candidate.id}`, JSON.stringify({ jobId: job.id, answers, answerDetails, submittedAt: new Date().toISOString() }));
-  form.hidden = true;
-  document.querySelector('#authStatus').hidden = true;
-  document.querySelector('#applicationComplete').hidden = false;
+  submitButton.disabled = true;
+  submitButton.textContent = 'Submitting application…';
+  try {
+    const experience = JSON.parse(sessionStorage.getItem(`sava:experience:${candidate.id}`) || '[]');
+    await window.savaPlatform.candidateRequest('submitApplication', {
+      jobId: job.id,
+      answers: answerDetails,
+      experience,
+      photoPath: sessionStorage.getItem(`sava:profile-photo:${candidate.id}`) || '',
+      fullName: `${candidate.user_metadata?.first_name || ''} ${candidate.user_metadata?.last_name || ''}`.trim(),
+      calendarLink: candidate.user_metadata?.calendar_link || '',
+    });
+    form.hidden = true;
+    document.querySelector('#authStatus').hidden = true;
+    document.querySelector('#applicationComplete').hidden = false;
+  } catch (error) {
+    submitButton.disabled = false;
+    submitButton.innerHTML = 'Submit application <span>→</span>';
+    showResult(error.message || 'Your application could not be submitted.', 'error');
+  }
 });
 
 initialize();

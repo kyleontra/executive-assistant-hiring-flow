@@ -63,6 +63,7 @@ Deno.serve(async (request) => {
     const candidateKey = clean(body.candidateKey, 180);
     const candidateName = clean(body.candidateName, 120);
     const roleName = clean(body.roleName, 180);
+    const applicationId = candidateKey.startsWith('application:') ? candidateKey.slice('application:'.length) : '';
 
     if (!UUID_PATTERN.test(employerId) || editToken.length < 32 || !candidateKey || !candidateName) {
       return reply(request, { error: 'Message access is missing or invalid.' }, 400);
@@ -77,6 +78,18 @@ Deno.serve(async (request) => {
       .maybeSingle();
     if (threadError) throw threadError;
 
+    let linkedCandidateId = '';
+    if (applicationId) {
+      if (!UUID_PATTERN.test(applicationId)) return reply(request, { error: 'Invalid application conversation.' }, 400);
+      const { data: application, error: applicationError } = await admin.from('job_applications').select('candidate_id, job_id').eq('id', applicationId).maybeSingle();
+      if (applicationError) throw applicationError;
+      if (!application) return reply(request, { error: 'That application is no longer available.' }, 404);
+      const { data: job, error: jobError } = await admin.from('hiring_jobs').select('employer_id').eq('id', application.job_id).single();
+      if (jobError) throw jobError;
+      if (job.employer_id !== employerId) return reply(request, { error: 'That application belongs to a different hirer workspace.' }, 403);
+      linkedCandidateId = application.candidate_id;
+    }
+
     if (!thread) {
       const { data: created, error: createError } = await admin.from('candidate_message_threads').insert({
         employer_id: employerId,
@@ -84,6 +97,8 @@ Deno.serve(async (request) => {
         candidate_key: candidateKey,
         candidate_name: candidateName,
         role_name: roleName,
+        candidate_id: linkedCandidateId || null,
+        application_id: applicationId || null,
       }).select('id, edit_token_hash').single();
       if (createError) throw createError;
       thread = created;

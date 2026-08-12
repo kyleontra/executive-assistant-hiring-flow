@@ -201,6 +201,12 @@ async function initialize() {
 
   authStatus.textContent = `Email confirmed for ${candidate.email}.`;
   authStatus.className = 'status-message success';
+  if (!sessionStorage.getItem(storageKey('experience'))) {
+    try {
+      const { profile } = await window.savaPlatform.candidateRequest('getProfile');
+      if (profile?.experience?.length) sessionStorage.setItem(storageKey('experience'), JSON.stringify(profile.experience));
+    } catch { /* Start with an empty experience form if there is no saved server profile yet. */ }
+  }
   loadExperienceDraft();
 
   if (!INTRO_VIDEO_REQUIRED) {
@@ -258,7 +264,7 @@ addButton.addEventListener('click', () => {
   entry.querySelector('.job-title').focus();
 });
 
-experienceForm.addEventListener('submit', (event) => {
+experienceForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   if (!videoComplete) {
     showFormResult('Complete the introduction video before continuing.', 'error');
@@ -276,11 +282,23 @@ experienceForm.addEventListener('submit', (event) => {
     return;
   }
 
-  sessionStorage.setItem(storageKey('experience'), JSON.stringify(serializeEntries()));
+  const experience = serializeEntries();
+  sessionStorage.setItem(storageKey('experience'), JSON.stringify(experience));
   submitButton.disabled = true;
   submitButton.textContent = 'Saving experience…';
-  showFormResult('Experience complete. Continuing to your profile photo…', 'success');
-  window.setTimeout(() => window.location.assign('./candidate-profile.html'), 650);
+  try {
+    await window.savaPlatform.candidateRequest('saveProfile', {
+      experience,
+      fullName: `${candidate.user_metadata?.first_name || ''} ${candidate.user_metadata?.last_name || ''}`.trim(),
+      calendarLink: candidate.user_metadata?.calendar_link || '',
+    });
+    showFormResult('Experience saved. Continuing to your profile photo…', 'success');
+    window.setTimeout(() => window.location.assign('./candidate-profile.html'), 650);
+  } catch (error) {
+    submitButton.disabled = false;
+    submitButton.innerHTML = 'Save experience and continue <span>→</span>';
+    showFormResult(error.message || 'Your experience could not be saved.', 'error');
+  }
 });
 
 setFormLocked(true);

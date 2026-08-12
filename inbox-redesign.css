@@ -2,6 +2,12 @@
   background: #fff;
 }
 
+.simple-candidate-list.server-loading .simple-candidate { display: none; }
+
+.message-composer-actions { display: inline-flex; align-items: center; gap: 14px; }
+.message-composer-actions a { color: #627087; font-size: 11px; font-weight: 700; text-decoration: none; }
+.message-composer-actions a:hover { color: #1d6be8; }
+
 .simple-header nav .header-nav-button {
   padding: 0;
   border: 0;
