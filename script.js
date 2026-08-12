@@ -416,7 +416,15 @@ async function loadServerJobs(force = false) {
 function renderJobs(filter = '') {
   const root = $('#jobResults');
   if (!root) return;
-  const matches = jobBoard().filter((job) => `${job.title} ${job.company} ${job.description}`.toLowerCase().includes(filter.toLowerCase()));
+  const checkedValues = (name) => [...document.querySelectorAll(`.filter-group[data-filter="${name}"] input:checked`)].map((input) => input.value);
+  const arrangements = checkedValues('arrangement');
+  const types = checkedValues('type');
+  const matches = jobBoard().filter((job) => {
+    const matchesSearch = `${job.title} ${job.company} ${job.description} ${(job.skills || []).join(' ')}`.toLowerCase().includes(filter.toLowerCase());
+    const matchesArrangement = !arrangements.length || arrangements.includes(job.arrangement);
+    const matchesType = !types.length || types.includes(job.type);
+    return matchesSearch && matchesArrangement && matchesType;
+  });
   $('#resultCount').textContent = matches.length;
   root.innerHTML = matches.map((job) => `<a class="job-card" href="./job-detail.html?job=${encodeURIComponent(job.id)}"><div class="job-card-top"><div class="job-company">${escapeHtml(job.initial)}</div><div><h2>${escapeHtml(job.title)}</h2><p class="company-name">${escapeHtml(job.company)}</p></div><span class="posted">${escapeHtml(job.posted)}</span></div><div class="job-tags"><span>${escapeHtml(job.arrangement)}</span><span>${escapeHtml(job.type)}</span><span>${escapeHtml(job.location)}</span></div><p>${escapeHtml(job.description)}</p><div class="job-card-footer"><b>${escapeHtml(job.pay)}</b><span>View job →</span></div></a>`).join('') || '<p class="no-results">No roles match that search.</p>';
 }
@@ -427,6 +435,7 @@ async function bindJobs() {
   renderJobs();
   $('#searchJobs').addEventListener('click', () => renderJobs($('#jobSearch').value));
   $('#jobSearch').addEventListener('input', (event) => renderJobs(event.target.value));
+  document.querySelectorAll('.filters input[type="checkbox"]').forEach((input) => input.addEventListener('change', () => renderJobs($('#jobSearch').value)));
 }
 
 async function bindJobDetail() {
