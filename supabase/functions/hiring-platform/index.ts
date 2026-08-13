@@ -315,7 +315,6 @@ Deno.serve(async (request) => {
       const { data: job, error: jobError } = await admin.from('hiring_jobs').select('*').eq('id', jobId).eq('status', 'active').maybeSingle();
       if (jobError) throw jobError;
       if (!job) return reply(request, { error: 'This job is no longer accepting applications.' }, 404);
-      if (!photoPath) return reply(request, { error: 'Add your professional profile photo before applying.' }, 400);
       if (!['pending', 'verified'].includes(profile.verification_status)) return reply(request, { error: 'Complete the ID verification steps before applying.' }, 400);
       const requiredQuestions = Array.isArray(job.questions) ? job.questions.length : 0;
       if (!answers.length || answers.length < requiredQuestions) return reply(request, { error: 'Answer every employer question before submitting.' }, 400);
