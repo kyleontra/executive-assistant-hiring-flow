@@ -1,0 +1,71 @@
+.photo-source-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+  margin: 0 auto 18px;
+}
+
+.source-button {
+  display: flex;
+  height: 43px;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0 14px;
+  border: 1px solid #c9d5e4;
+  border-radius: 7px;
+  background: #fff;
+  color: #40536d;
+  font: 700 11px "DM Sans", sans-serif;
+  cursor: pointer;
+}
+
+.photo-source-actions button.source-button {
+  margin: 0;
+  background: #edf4ff;
+  color: var(--blue);
+}
+
+.camera-panel {
+  margin-top: 18px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #0f1d30;
+}
+
+.camera-panel[hidden] {
+  display: none;
+}
+
+.camera-panel video {
+  display: block;
+  width: 100%;
+  max-height: 360px;
+  border-radius: 8px;
+  object-fit: cover;
+  transform: scaleX(-1);
+}
+
+.camera-actions {
+  display: flex;
+  justify-content: center;
+  gap: 9px;
+  margin-top: 11px;
+}
+
+.camera-actions button {
+  margin: 0;
+}
+
+.camera-actions .secondary-camera-button {
+  border: 1px solid #6e7f96;
+  background: transparent;
+  color: #fff;
+}
+
+@media (max-width: 540px) {
+  .photo-source-actions {
+    grid-template-columns: 1fr;
+  }
+}

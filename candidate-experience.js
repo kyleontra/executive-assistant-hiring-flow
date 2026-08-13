@@ -292,8 +292,8 @@ experienceForm.addEventListener('submit', async (event) => {
       fullName: `${candidate.user_metadata?.first_name || ''} ${candidate.user_metadata?.last_name || ''}`.trim(),
       calendarLink: candidate.user_metadata?.calendar_link || '',
     });
-    showFormResult('Experience saved. Continuing to your ID photos…', 'success');
-    window.setTimeout(() => window.location.assign('./id-verification.html'), 650);
+    showFormResult('Experience saved. Continuing to your profile photo…', 'success');
+    window.setTimeout(() => window.location.assign('./candidate-profile.html'), 650);
   } catch (error) {
     submitButton.disabled = false;
     submitButton.innerHTML = 'Save experience and continue <span>→</span>';

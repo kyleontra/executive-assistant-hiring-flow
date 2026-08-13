@@ -315,9 +315,10 @@ Deno.serve(async (request) => {
       const { data: job, error: jobError } = await admin.from('hiring_jobs').select('*').eq('id', jobId).eq('status', 'active').maybeSingle();
       if (jobError) throw jobError;
       if (!job) return reply(request, { error: 'This job is no longer accepting applications.' }, 404);
+      if (!photoPath) return reply(request, { error: 'Add your professional profile photo before applying.' }, 400);
       if (!['pending', 'verified'].includes(profile.verification_status)) return reply(request, { error: 'Complete the ID verification steps before applying.' }, 400);
       const requiredQuestions = Array.isArray(job.questions) ? job.questions.length : 0;
-      if (!answers.length || answers.length < requiredQuestions) return reply(request, { error: 'Answer every employer question before submitting.' }, 400);
+      if (answers.length < requiredQuestions) return reply(request, { error: 'Answer every employer question before submitting.' }, 400);
       const matchScore = Math.min(100, Math.round(60 + Math.min(25, profile.relevant_years * 3) + Math.min(15, answers.length * 3)));
       const applicationValues = { job_id: jobId, candidate_id: user.id, answers, match_score: matchScore, updated_at: new Date().toISOString() };
       const { data: application, error: applicationError } = await admin.from('job_applications').upsert(applicationValues, { onConflict: 'job_id,candidate_id' }).select('id, status, match_score, submitted_at').single();

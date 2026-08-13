@@ -47,17 +47,23 @@ async function requireVerifiedAccount() {
     experiences = [];
   }
   let savedProfile = null;
-  if (!experiences.length) {
+  if (!experiences.length || !sessionStorage.getItem(`sava:profile-photo:${user.id}`)) {
     try {
       ({ profile: savedProfile } = await window.savaPlatform.candidateRequest('getProfile'));
       if (savedProfile?.experience?.length) {
         experiences = savedProfile.experience;
         sessionStorage.setItem(`sava:experience:${user.id}`, JSON.stringify(experiences));
       }
+      if (savedProfile?.photoPath) sessionStorage.setItem(`sava:profile-photo:${user.id}`, savedProfile.photoPath);
     } catch { /* Existing redirects below explain which profile step is missing. */ }
   }
   if (!Array.isArray(experiences) || experiences.length === 0) {
     window.location.replace('./candidate-experience.html');
+    return;
+  }
+  const profilePhotoPath = sessionStorage.getItem(`sava:profile-photo:${user.id}`);
+  if (!profilePhotoPath) {
+    window.location.replace('./candidate-profile.html');
     return;
   }
   verified = true;
@@ -78,6 +84,8 @@ form.addEventListener('submit', async (event) => {
   const formData = new FormData();
   formData.append('front', document.querySelector('#frontPhoto').files[0]);
   formData.append('back', document.querySelector('#backPhoto').files[0]);
+  const verifiedUser = await window.getVerifiedCandidate();
+  formData.append('profilePhotoPath', verifiedUser ? sessionStorage.getItem(`sava:profile-photo:${verifiedUser.id}`) || '' : '');
   submitButton.disabled = true;
   submitButton.textContent = 'Saving photos…';
   try {

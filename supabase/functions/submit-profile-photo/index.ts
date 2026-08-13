@@ -4,7 +4,14 @@ const BUCKET = 'sava-id-review-videos';
 const MAX_PHOTO_BYTES = 4 * 1024 * 1024;
 const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const PRIMARY_ORIGIN = 'https://www.hirefromsa.com';
-const ALLOWED_ORIGINS = new Set([PRIMARY_ORIGIN, 'https://hirefromsa.com', 'https://executive-assistant-hiring-flow.vercel.app']);
+const ALLOWED_ORIGINS = new Set([
+  PRIMARY_ORIGIN,
+  'https://hirefromsa.com',
+  'https://executive-assistant-hiring-flow.vercel.app',
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'null',
+]);
 
 function headers(request: Request) {
   const origin = request.headers.get('origin') || '';

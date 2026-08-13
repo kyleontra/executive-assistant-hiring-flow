@@ -25,6 +25,10 @@ async function initialize() {
     if (savedProfile?.photoPath) sessionStorage.setItem(`sava:profile-photo:${candidate.id}`, savedProfile.photoPath);
     if (savedProfile?.experience?.length) sessionStorage.setItem(`sava:experience:${candidate.id}`, JSON.stringify(savedProfile.experience));
   } catch { /* The submit request below will show a server error if the profile cannot be loaded. */ }
+  if (!sessionStorage.getItem(`sava:profile-photo:${candidate.id}`)) {
+    window.location.replace('./candidate-profile.html');
+    return;
+  }
   const requestedJob = new URLSearchParams(window.location.search).get('job') || sessionStorage.getItem('sava-applying-job');
   await window.savaLoadJobs?.();
   const jobs = window.savaJobBoard?.() || [];

@@ -463,9 +463,29 @@ async function bindJobDetail() {
     const normalized = normalizeQuestion(question);
     return `<li><span>${escapeHtml(normalized.text)}</span><small class="question-type-note">${normalized.type === 'multiple-choice' ? 'Multiple choice' : 'Written response'}</small></li>`;
   }).join('');
-  $('#showApplication').addEventListener('click', () => {
+  $('#showApplication').addEventListener('click', async () => {
     sessionStorage.setItem('sava-applying-job', job.id);
-    window.location.href = `./candidate-signup.html?job=${encodeURIComponent(job.id)}`;
+    const applyButton = $('#showApplication');
+    const applyHelp = applyButton.closest('.apply-card')?.querySelector('small');
+    applyButton.disabled = true;
+    applyButton.textContent = 'Checking profile…';
+    try {
+      const candidate = await window.getVerifiedCandidate?.();
+      if (!candidate) {
+        window.location.href = `./candidate-signup.html?job=${encodeURIComponent(job.id)}`;
+        return;
+      }
+      const { profile } = await window.savaPlatform.candidateRequest('getProfile');
+      let destination = `./application-questions.html?job=${encodeURIComponent(job.id)}`;
+      if (!profile?.experience?.length) destination = './candidate-experience.html';
+      else if (!profile.photoPath) destination = './candidate-profile.html';
+      else if (!['pending', 'verified'].includes(profile.verificationStatus)) destination = './id-verification.html';
+      window.location.href = destination;
+    } catch (error) {
+      applyButton.disabled = false;
+      applyButton.innerHTML = 'Apply now <span>→</span>';
+      if (applyHelp) applyHelp.textContent = error.message || 'Your candidate profile could not be checked. Try again.';
+    }
   });
 }
 
