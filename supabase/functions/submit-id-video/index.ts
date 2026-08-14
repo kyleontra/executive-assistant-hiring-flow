@@ -38,7 +38,7 @@ Deno.serve(async (request) => {
     const { data: files, error: listError } = await admin.storage.from(BUCKET).list(folder, { limit: 10 });
     if (listError || !files?.some((file) => file.name.startsWith('id-front.')) || !files.some((file) => file.name.startsWith('id-back.'))) return reply(request, { error: 'Both ID photos are required before the video can be submitted.' }, 400);
     const extension = videoType === 'video/mp4' ? 'mp4' : 'webm';
-    const { error: uploadError } = await admin.storage.from(BUCKET).upload(`${folder}/id-video.${extension}`, video, { cacheControl: '0', contentType: videoType, upsert: false });
+    const { error: uploadError } = await admin.storage.from(BUCKET).upload(`${folder}/id-video.${extension}`, video, { cacheControl: '0', contentType: videoType, upsert: true });
     if (uploadError) throw uploadError;
     const { error: profileUpdateError } = await admin.from('candidate_profiles').update({ verification_status: 'pending', updated_at: new Date().toISOString() }).eq('user_id', user.id);
     if (profileUpdateError) throw profileUpdateError;
