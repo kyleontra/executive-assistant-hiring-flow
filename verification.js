@@ -2,9 +2,9 @@ const REVIEW_ENDPOINT = 'https://jyxamdvvnoylaxolhlht.supabase.co/functions/v1/s
 const reviewReference = new URLSearchParams(window.location.search).get('review');
 const REFERENCE_PATTERN = /^SA-[A-Z0-9]{8}$/;
 let cameraStream;
-let captureStream;
 let recorder;
 let recordedVideo;
+let recordedObjectUrl;
 let recordTimer;
 let scriptTimer;
 let cameraFrame;
@@ -32,6 +32,47 @@ function stopCleanPreview() {
 
 function preferredRecorderType() {
   return ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm', 'video/mp4'].find((type) => MediaRecorder.isTypeSupported(type));
+}
+
+async function recordedVideoHasPicture(blob) {
+  if (!(blob instanceof Blob) || blob.size < 25000) return false;
+  const preview = document.createElement('video');
+  const sample = document.createElement('canvas');
+  const objectUrl = URL.createObjectURL(blob);
+  preview.muted = true;
+  preview.playsInline = true;
+  preview.preload = 'auto';
+  preview.src = objectUrl;
+  try {
+    await new Promise((resolve, reject) => {
+      const timeout = window.setTimeout(() => reject(new Error('Video preview timed out.')), 6000);
+      preview.addEventListener('loadeddata', () => { window.clearTimeout(timeout); resolve(); }, { once: true });
+      preview.addEventListener('error', () => { window.clearTimeout(timeout); reject(new Error('Video preview failed.')); }, { once: true });
+    });
+    if (!preview.videoWidth || !preview.videoHeight) return false;
+    if (Number.isFinite(preview.duration) && preview.duration > 0.5) {
+      preview.currentTime = Math.min(1, preview.duration / 2);
+      await new Promise((resolve) => preview.addEventListener('seeked', resolve, { once: true }));
+    }
+    sample.width = 64;
+    sample.height = 36;
+    const context = sample.getContext('2d', { willReadFrequently: true });
+    context.drawImage(preview, 0, 0, sample.width, sample.height);
+    const pixels = context.getImageData(0, 0, sample.width, sample.height).data;
+    let brightnessTotal = 0;
+    let brightest = 0;
+    for (let index = 0; index < pixels.length; index += 4) {
+      const brightness = (pixels[index] + pixels[index + 1] + pixels[index + 2]) / 3;
+      brightnessTotal += brightness;
+      brightest = Math.max(brightest, brightness);
+    }
+    return brightnessTotal / (pixels.length / 4) >= 8 || brightest >= 20;
+  } catch {
+    return false;
+  } finally {
+    preview.removeAttribute('src');
+    URL.revokeObjectURL(objectUrl);
+  }
 }
 
 function visibleCameraHeight(video) {
@@ -101,9 +142,10 @@ $('#startCamera').addEventListener('click', async () => {
   if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) { showResult('Video recording needs a modern browser over HTTPS.', 'error'); return; }
   button.textContent = 'Starting…'; button.disabled = true;
   try {
-    cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' }, width: { ideal: 720, max: 960 }, height: { ideal: 480, max: 720 }, frameRate: { ideal: 24, max: 30 } }, audio: { echoCancellation: true, noiseSuppression: true } });
+    cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'user' }, width: { ideal: 720, max: 1280 }, height: { ideal: 480, max: 720 }, frameRate: { ideal: 24, max: 30 } }, audio: { echoCancellation: true, noiseSuppression: true } });
     const video = $('#cameraPreview'); video.srcObject = cameraStream;
     await new Promise((resolve) => { if (video.readyState >= 2) resolve(); else video.addEventListener('loadeddata', resolve, { once: true }); });
+    await video.play();
     $('#recordedPreview').hidden = true; $('#recordedPreview').removeAttribute('src'); $('#recordingScript').hidden = true;
     startCleanPreview(video); $('.camera-stage').classList.add('live'); $('.camera-stage').classList.remove('recorded');
     button.textContent = 'Camera on'; $('#recordId').disabled = false;
@@ -119,16 +161,37 @@ $('#recordId').addEventListener('click', () => {
   const script = [['STEP 1 OF 5', 'Say clearly: “My name is [your full name].”'], ['STEP 2 OF 5', 'Say clearly: “I am from [your city and province].”'], ['STEP 3 OF 5', 'Hold the front of your South African ID in the frame.'], ['STEP 4 OF 5', 'Tilt the ID gently left, then right, to reduce glare.'], ['STEP 5 OF 5', 'Hold the ID steady while we finish recording.']];
   const setScript = (index) => { $('#scriptStep').textContent = script[index][0]; $('#scriptText').textContent = script[index][1]; $('#recordingScript').hidden = false; };
   const mimeType = preferredRecorderType();
-  captureStream = $('#cameraCanvas').captureStream(24); cameraStream.getAudioTracks().forEach((track) => captureStream.addTrack(track));
-  recorder = new MediaRecorder(captureStream, { ...(mimeType ? { mimeType } : {}), videoBitsPerSecond: 750000, audioBitsPerSecond: 96000 });
+  const videoTrack = cameraStream.getVideoTracks()[0];
+  if (!videoTrack || videoTrack.readyState !== 'live' || !videoTrack.enabled || videoTrack.muted) {
+    showResult('The camera is not sending a picture. Turn it off, check the preview, and try again.', 'error');
+    return;
+  }
+  recorder = new MediaRecorder(cameraStream, { ...(mimeType ? { mimeType } : {}), videoBitsPerSecond: 1100000, audioBitsPerSecond: 96000 });
   recorder.addEventListener('dataavailable', (event) => { if (event.data.size) chunks.push(event.data); });
-  recorder.addEventListener('stop', () => {
-    clearInterval(recordTimer); clearInterval(scriptTimer); stopCleanPreview(); captureStream?.getTracks().forEach((track) => track.stop());
-    recordedVideo = new Blob(chunks, { type: recorder.mimeType || 'video/webm' });
-    const preview = $('#recordedPreview'); preview.src = URL.createObjectURL(recordedVideo); preview.hidden = false; $('#recordingScript').hidden = true; $('#cameraPreview').srcObject = null;
-    $('.camera-stage').classList.remove('live'); $('.camera-stage').classList.add('recorded'); stopCamera();
-    $('#recordId').textContent = 'Record again'; $('#recordId').disabled = false; $('#startCamera').disabled = false; $('#submitReview').disabled = false;
-    showResult('Video ready. Watch the preview, then send it for private manual review.', 'success');
+  recorder.addEventListener('stop', async () => {
+    clearInterval(recordTimer); clearInterval(scriptTimer); stopCleanPreview();
+    const candidateVideo = new Blob(chunks, { type: recorder.mimeType || 'video/webm' });
+    $('#recordingScript').hidden = true;
+    $('#cameraPreview').srcObject = null;
+    stopCamera();
+    const hasPicture = await recordedVideoHasPicture(candidateVideo);
+    $('#startCamera').disabled = false;
+    $('#startCamera').textContent = 'Turn camera back on';
+    $('#recordId').disabled = true;
+    if (!hasPicture) {
+      recordedVideo = undefined;
+      $('#submitReview').disabled = true;
+      $('.camera-stage').classList.remove('live', 'recorded');
+      showResult('That recording did not contain a visible picture. Turn the camera back on and record again.', 'error');
+      return;
+    }
+    recordedVideo = candidateVideo;
+    if (recordedObjectUrl) URL.revokeObjectURL(recordedObjectUrl);
+    recordedObjectUrl = URL.createObjectURL(recordedVideo);
+    const preview = $('#recordedPreview'); preview.src = recordedObjectUrl; preview.hidden = false;
+    $('.camera-stage').classList.remove('live'); $('.camera-stage').classList.add('recorded');
+    $('#submitReview').disabled = false;
+    showResult('Video ready with picture and audio. Watch the preview, then send it for private manual review.', 'success');
   });
   let seconds = 10; let scriptIndex = 0; $('#recordId').disabled = true; $('#startCamera').disabled = true; $('#submitReview').disabled = true;
   recorder.start(); setScript(0); showResult(`Recording your ID video… ${seconds}s`, 'success');
@@ -156,6 +219,9 @@ $('#submitReview').addEventListener('click', async () => {
   } catch (error) { button.disabled = false; button.innerHTML = 'Send for review <span>→</span>'; showResult(error.message || 'The video could not be sent. Please try again.', 'error'); }
 });
 
-window.addEventListener('beforeunload', stopCamera);
+window.addEventListener('beforeunload', () => {
+  stopCamera();
+  if (recordedObjectUrl) URL.revokeObjectURL(recordedObjectUrl);
+});
 window.savaAuth.auth.onAuthStateChange(() => { window.setTimeout(requireVerifiedAccount, 0); });
 requireVerifiedAccount();

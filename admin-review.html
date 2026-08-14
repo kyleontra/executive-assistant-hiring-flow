@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>Application Review | Hire From SA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./admin-review.css" />
+  </head>
+  <body>
+    <header class="admin-header"><a href="./index.html">HIRE FROM <span>SA</span></a><nav><a href="./applicants.html">Hiring inbox</a><a class="active" href="./admin-review.html">Candidate approvals</a></nav></header>
+    <main class="admin-shell">
+      <section id="accessPanel" class="access-card">
+        <p class="eyebrow">PRIVATE REVIEW TEAM</p>
+        <h1>Candidate approvals</h1>
+        <p>Enter the private review key to inspect identity submissions and approve candidates.</p>
+        <form id="accessForm"><label for="adminKey">Review access key</label><div><input id="adminKey" type="password" autocomplete="current-password" required /><button type="submit">Open dashboard</button></div><p id="accessError" role="alert"></p></form>
+      </section>
+
+      <section id="reviewDashboard" hidden>
+        <header class="dashboard-heading"><div><p class="eyebrow">PRIVATE REVIEW TEAM</p><h1>Application review</h1><p id="reviewSummary">Loading submissions…</p></div><div class="dashboard-actions"><button id="refreshReviews" class="secondary" type="button">Refresh</button><button id="acceptAll" type="button" disabled>Accept all ready</button><button id="lockDashboard" class="text-button" type="button">Lock</button></div></header>
+        <nav class="review-filters" aria-label="Review status"><button class="active" type="button" data-filter="pending">Needs review</button><button type="button" data-filter="incomplete">Waiting for video</button><button type="button" data-filter="verified">Accepted</button><button type="button" data-filter="rejected">Rejected</button><button type="button" data-filter="all">All</button></nav>
+        <div id="reviewList" class="review-list" aria-live="polite"></div>
+        <p id="reviewEmpty" class="empty-state" hidden>No submissions in this view.</p>
+      </section>
+    </main>
+    <div id="reviewToast" class="toast" role="status"></div>
+    <script src="./admin-review.js"></script>
+  </body>
+</html>
