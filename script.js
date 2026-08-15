@@ -549,8 +549,18 @@ async function bindApplicants() {
     candidateList.querySelectorAll('.simple-candidate').forEach((candidate) => candidate.remove());
   }
   candidateList.classList.remove('server-loading');
+  const requestedJob = new URLSearchParams(window.location.search).get('job');
   const candidates = [...document.querySelectorAll('.simple-candidate')];
   if (!candidates.length) {
+    const requestedJobOption = requestedJob ? document.querySelector(`#jobOptions [data-job="${CSS.escape(requestedJob)}"]`) : null;
+    if (requestedJobOption) {
+      $('#selectedJobLabel').textContent = requestedJobOption.textContent;
+      document.querySelectorAll('#jobOptions [data-job]').forEach((option) => {
+        const selected = option === requestedJobOption;
+        option.classList.toggle('selected', selected);
+        option.setAttribute('aria-selected', String(selected));
+      });
+    }
     ['allCandidateCount', 'newCandidateCount', 'shortlistedCandidateCount', 'interviewingCandidateCount'].forEach((id) => { $(`#${id}`).textContent = '0'; });
     $('#applicantResultSummary').textContent = '0 applicants';
     $('#candidateEmpty').textContent = dashboardError || 'No applications yet. New applications will appear here as soon as candidates submit them.';
@@ -590,7 +600,6 @@ async function bindApplicants() {
   const messageStatus = $('#messageStatus');
   let selectedCandidate = null;
   let selectedJob = 'all';
-  const requestedJob = new URLSearchParams(window.location.search).get('job');
   let activeStatus = 'all';
   let pendingInterviewCandidate = null;
   const questionScores = {
