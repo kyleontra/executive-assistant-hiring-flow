@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Posted Jobs | Hire From SA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./employer-simple.css" />
+    <link rel="stylesheet" href="./posted-jobs.css" />
+  </head>
+  <body class="simple-employer-page posted-jobs-page">
+    <header class="simple-header">
+      <a class="simple-brand" href="./index.html">HIRE FROM <span>SA</span></a>
+      <nav><a href="./applicants.html">Hiring inbox</a><a href="./applicants.html?view=messages">Messages</a><a class="active" href="./posted-jobs.html">Posted jobs</a><a href="./index.html">Post a job</a></nav>
+    </header>
+
+    <main class="posted-jobs-shell">
+      <section class="posted-jobs-heading">
+        <div><p class="simple-kicker">HIRER WORKSPACE</p><h1>Posted jobs</h1><p>See every role you have posted and open its applicant list.</p></div>
+        <a class="posted-primary" href="./index.html">Post another job <span>→</span></a>
+      </section>
+
+      <section class="job-summary" aria-label="Job summary">
+        <article><strong id="totalJobs">—</strong><span>Total jobs</span></article>
+        <article><strong id="activeJobs">—</strong><span>Active</span></article>
+        <article><strong id="totalApplicants">—</strong><span>Applicants</span></article>
+      </section>
+
+      <section class="posted-jobs-toolbar" aria-label="Filter posted jobs">
+        <label><span>Search jobs</span><input id="postedJobSearch" type="search" placeholder="Search by title or company" autocomplete="off" /></label>
+        <label><span>Status</span><select id="postedJobStatus"><option value="all">All statuses</option><option value="active">Active</option><option value="closed">Closed</option><option value="draft">Draft</option></select></label>
+      </section>
+
+      <div id="postedJobsStatus" class="posted-jobs-status" role="status">Loading your posted jobs…</div>
+      <section id="postedJobsList" class="posted-jobs-list" aria-live="polite"></section>
+    </main>
+
+    <script src="./platform-client.js"></script>
+    <script src="./posted-jobs.js"></script>
+  </body>
+</html>

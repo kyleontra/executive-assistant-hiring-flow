@@ -590,6 +590,7 @@ async function bindApplicants() {
   const messageStatus = $('#messageStatus');
   let selectedCandidate = null;
   let selectedJob = 'all';
+  const requestedJob = new URLSearchParams(window.location.search).get('job');
   let activeStatus = 'all';
   let pendingInterviewCandidate = null;
   const questionScores = {
@@ -1001,8 +1002,12 @@ async function bindApplicants() {
       toast(error.message || 'Candidate status could not be updated');
     }
   });
-  refreshQuestionPicker();
-  applyFilter();
+  const requestedJobOption = requestedJob ? jobOptions.find((option) => option.dataset.job === requestedJob) : null;
+  if (requestedJobOption) chooseJob(requestedJobOption);
+  else {
+    refreshQuestionPicker();
+    applyFilter();
+  }
   if (new URLSearchParams(window.location.search).get('view') === 'messages') $('#headerMessages').click();
 }
 
