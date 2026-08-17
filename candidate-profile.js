@@ -14,8 +14,10 @@ const captureButton = document.querySelector('#capturePhoto');
 const cameraPanel = document.querySelector('#cameraPanel');
 const cameraPreview = document.querySelector('#cameraPreview');
 const cameraCanvas = document.querySelector('#cameraCanvas');
-const previewMode = ['localhost', '127.0.0.1'].includes(window.location.hostname)
-  && new URLSearchParams(window.location.search).get('preview') === '1';
+const pageParams = new URLSearchParams(window.location.search);
+const demoMode = pageParams.get('demo') === '1';
+const previewMode = demoMode || (['localhost', '127.0.0.1'].includes(window.location.hostname)
+  && pageParams.get('preview') === '1');
 
 let candidate = null;
 let selectedPhoto = null;
@@ -58,7 +60,7 @@ function selectPhoto(file) {
 }
 
 async function initialize() {
-  candidate = previewMode ? { id: 'local-preview', email: 'verified.candidate@example.com', user_metadata: {} } : await window.getVerifiedCandidate();
+  candidate = previewMode ? { id: demoMode ? 'demo-candidate' : 'local-preview', email: demoMode ? 'demo@hirefromsa.com' : 'verified.candidate@example.com', user_metadata: {} } : await window.getVerifiedCandidate();
   if (!candidate) {
     authStatus.textContent = 'Your verified session is missing or has expired. Verify your email again to continue.';
     authStatus.className = 'status-box error';
@@ -67,8 +69,12 @@ async function initialize() {
     return;
   }
 
-  authStatus.textContent = `Email confirmed for ${candidate.email}.`;
+  authStatus.textContent = demoMode ? 'Demo mode — your photo stays in this browser and will not be uploaded.' : `Email confirmed for ${candidate.email}.`;
   authStatus.className = 'status-box success';
+  if (demoMode) {
+    document.querySelector('.profile-aside h1').textContent = 'Test a profile photo.';
+    document.querySelector('.profile-aside > p:last-of-type').textContent = 'Preview an upload or webcam photo locally. Employers will not see demo photos.';
+  }
   if (previewMode) return;
 
   try {
@@ -160,7 +166,7 @@ form.addEventListener('submit', async (event) => {
   submitButton.disabled = true;
   submitButton.textContent = selectedPhoto ? 'Saving photo…' : 'Continuing…';
   try {
-    let path = existingPhotoPath || 'candidate-profiles/local-preview/profile';
+    let path = existingPhotoPath || `candidate-profiles/${demoMode ? 'demo' : 'local-preview'}/profile`;
     if (selectedPhoto && !previewMode) {
       const token = await window.getAccessToken();
       if (!token) throw new Error('Your sign-in expired. Verify your email again, then retry.');
@@ -184,8 +190,8 @@ form.addEventListener('submit', async (event) => {
         calendarLink: candidate.user_metadata?.calendar_link || '',
       });
     }
-    showResult('Profile photo saved. Continuing to your ID photos…', 'success');
-    window.setTimeout(() => window.location.assign('./id-verification.html'), 500);
+    showResult(demoMode ? 'Demo photo ready locally. Continuing…' : 'Profile photo saved. Continuing to your ID photos…', 'success');
+    window.setTimeout(() => window.location.assign(`./id-verification.html${demoMode ? '?demo=1' : ''}`), 500);
   } catch (error) {
     submitButton.disabled = false;
     submitButton.innerHTML = 'Save photo and continue <span>→</span>';

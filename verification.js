@@ -1,5 +1,7 @@
 const REVIEW_ENDPOINT = 'https://jyxamdvvnoylaxolhlht.supabase.co/functions/v1/submit-id-video';
-const reviewReference = new URLSearchParams(window.location.search).get('review');
+const pageParams = new URLSearchParams(window.location.search);
+const reviewReference = pageParams.get('review');
+const demoMode = pageParams.get('demo') === '1';
 const REFERENCE_PATTERN = /^SA-[A-Z0-9]{8}$/;
 let cameraStream;
 let recorder;
@@ -122,6 +124,17 @@ async function requireVerifiedAccount() {
   verified = false;
   $('#startCamera').disabled = false;
   $('#submitReview').disabled = true;
+  if (demoMode) {
+    verified = true;
+    document.querySelector('.video-aside h1').textContent = 'Finish the demo.';
+    document.querySelector('.video-aside > p').textContent = 'Record and preview a short test video locally. Demo recordings are never uploaded.';
+    document.querySelector('.help-text').textContent = 'This recording stays in your browser and is discarded when you leave or restart the demo.';
+    $('#authStatus').textContent = 'Demo mode — record and preview the full video locally. Nothing will be uploaded or added to the review queue.';
+    $('#authStatus').className = 'status-box success';
+    $('#startCamera').textContent = 'Turn on camera & microphone';
+    $('#submitReview').innerHTML = 'Complete demo <span>→</span>';
+    return;
+  }
   if (!REFERENCE_PATTERN.test(reviewReference || '')) {
     $('#authStatus').textContent = 'You can test the camera and record a preview now. Complete the ID photo step before sending the video for review.';
     $('#authStatus').className = 'status-box';
@@ -195,7 +208,9 @@ $('#recordId').addEventListener('click', () => {
     const preview = $('#recordedPreview'); preview.src = recordedObjectUrl; preview.hidden = false;
     $('.camera-stage').classList.remove('live'); $('.camera-stage').classList.add('recorded');
     $('#submitReview').disabled = !verified;
-    showResult(verified
+    showResult(demoMode
+      ? 'Demo video ready with picture and audio. Watch the preview, then complete the demo. Nothing will be uploaded.'
+      : verified
       ? 'Video ready with picture and audio. Watch the preview, then send it for private manual review.'
       : 'Camera and recording are working. Complete the ID photo step before sending this video for review.', 'success');
   });
@@ -208,6 +223,19 @@ $('#recordId').addEventListener('click', () => {
 
 $('#submitReview').addEventListener('click', async () => {
   if (!recordedVideo) { showResult('Record your ID video before sending it for review.', 'error'); return; }
+  if (demoMode) {
+    const summaryValues = [...document.querySelectorAll('.summary-card b')];
+    ['Demo session', 'Previewed locally', 'Previewed locally', 'Previewed locally', 'Not submitted'].forEach((value, index) => { if (summaryValues[index]) summaryValues[index].textContent = value; });
+    $('#completePanel').querySelector('.eyebrow').textContent = 'DEMO COMPLETE';
+    $('#completePanel').querySelector('h2').textContent = 'The full demo works.';
+    $('#completePanel').querySelector('.lead').textContent = 'Your photos and video stayed in this browser. No account, application, or review submission was created.';
+    $('#completeNextLink').href = './candidate-experience.html?demo=1&reset=1';
+    $('#completeNextLink').innerHTML = 'Restart demo <span>→</span>';
+    $('#recordPanel').hidden = true;
+    $('#completePanel').hidden = false;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return;
+  }
   const token = await window.getAccessToken();
   if (!token) { showResult('Your sign-in expired. Confirm your email again, then retry.', 'error'); return; }
   const button = $('#submitReview'); const extension = recordedVideo.type.includes('mp4') ? 'mp4' : 'webm'; const formData = new FormData();
@@ -229,5 +257,5 @@ window.addEventListener('beforeunload', () => {
   stopCamera();
   if (recordedObjectUrl) URL.revokeObjectURL(recordedObjectUrl);
 });
-window.savaAuth.auth.onAuthStateChange(() => { window.setTimeout(requireVerifiedAccount, 0); });
+if (!demoMode) window.savaAuth.auth.onAuthStateChange(() => { window.setTimeout(requireVerifiedAccount, 0); });
 requireVerifiedAccount();

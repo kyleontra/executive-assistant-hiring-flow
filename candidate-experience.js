@@ -17,9 +17,15 @@ let candidate = null;
 let furthestWatchedTime = 0;
 let videoComplete = false;
 let nextEntryId = 1;
-const INTRO_VIDEO_REQUIRED = true;
-const previewMode = ['localhost', '127.0.0.1'].includes(window.location.hostname)
-  && new URLSearchParams(window.location.search).get('preview') === '1';
+const pageParams = new URLSearchParams(window.location.search);
+const demoMode = pageParams.get('demo') === '1';
+const previewMode = demoMode || (['localhost', '127.0.0.1'].includes(window.location.hostname)
+  && pageParams.get('preview') === '1');
+
+if (demoMode && pageParams.get('reset') === '1') {
+  ['experience', 'intro-watched', 'profile-photo'].forEach((type) => sessionStorage.removeItem(`sava:${type}:demo-candidate`));
+  window.history.replaceState(null, '', './candidate-experience.html?demo=1');
+}
 
 function storageKey(type) {
   return candidate ? `sava:${type}:${candidate.id}` : '';
@@ -189,7 +195,7 @@ function loadExperienceDraft() {
 
 async function initialize() {
   candidate = previewMode
-    ? { id: 'local-preview', email: 'verified.candidate@example.com' }
+    ? { id: demoMode ? 'demo-candidate' : 'local-preview', email: demoMode ? 'demo@hirefromsa.com' : 'verified.candidate@example.com', user_metadata: { first_name: 'Demo', last_name: 'Candidate' } }
     : await window.getVerifiedCandidate();
   if (!candidate) {
     authStatus.textContent = 'Your verified session is missing or has expired. Verify your email again to continue.';
@@ -199,30 +205,15 @@ async function initialize() {
     return;
   }
 
-  authStatus.textContent = `Email confirmed for ${candidate.email}.`;
+  authStatus.textContent = demoMode ? 'Demo mode — no account is required and nothing will be saved to the server.' : `Email confirmed for ${candidate.email}.`;
   authStatus.className = 'status-message success';
-  if (!sessionStorage.getItem(storageKey('experience'))) {
+  if (!previewMode && !sessionStorage.getItem(storageKey('experience'))) {
     try {
       const { profile } = await window.savaPlatform.candidateRequest('getProfile');
       if (profile?.experience?.length) sessionStorage.setItem(storageKey('experience'), JSON.stringify(profile.experience));
     } catch { /* Start with an empty experience form if there is no saved server profile yet. */ }
   }
   loadExperienceDraft();
-
-  if (!INTRO_VIDEO_REQUIRED) {
-    videoComplete = true;
-    document.querySelector('#videoCard').classList.add('video-disabled');
-    document.querySelector('#videoKicker').textContent = 'INTRODUCTION VIDEO';
-    document.querySelector('#videoHeading').textContent = 'Video coming soon.';
-    document.querySelector('#videoHelp').textContent = 'The introduction video is temporarily disabled. You can continue with your experience now.';
-    video.controls = false;
-    watchIcon.textContent = '✓';
-    watchTitle.textContent = 'Video not required yet';
-    watchDetail.textContent = 'Continue to your experience form below.';
-    watchPercent.textContent = 'Skipped';
-    setFormLocked(false);
-    return;
-  }
 
   if (sessionStorage.getItem(storageKey('intro-watched')) === 'true') {
     videoComplete = true;
@@ -252,7 +243,6 @@ video.addEventListener('ratechange', () => {
 });
 video.addEventListener('ended', completeVideo);
 video.addEventListener('error', () => {
-  if (!INTRO_VIDEO_REQUIRED) return;
   watchTitle.textContent = 'Intro video unavailable';
   watchDetail.textContent = 'Add candidate-intro.mp4 to the site before publishing this step.';
   watchIcon.textContent = '!';
@@ -287,13 +277,15 @@ experienceForm.addEventListener('submit', async (event) => {
   submitButton.disabled = true;
   submitButton.textContent = 'Saving experience…';
   try {
-    await window.savaPlatform.candidateRequest('saveProfile', {
-      experience,
-      fullName: `${candidate.user_metadata?.first_name || ''} ${candidate.user_metadata?.last_name || ''}`.trim(),
-      calendarLink: candidate.user_metadata?.calendar_link || '',
-    });
-    showFormResult('Experience saved. Continuing to your profile photo…', 'success');
-    window.setTimeout(() => window.location.assign('./candidate-profile.html'), 650);
+    if (!previewMode) {
+      await window.savaPlatform.candidateRequest('saveProfile', {
+        experience,
+        fullName: `${candidate.user_metadata?.first_name || ''} ${candidate.user_metadata?.last_name || ''}`.trim(),
+        calendarLink: candidate.user_metadata?.calendar_link || '',
+      });
+    }
+    showFormResult(demoMode ? 'Demo experience saved in this browser. Continuing…' : 'Experience saved. Continuing to your profile photo…', 'success');
+    window.setTimeout(() => window.location.assign(`./candidate-profile.html${demoMode ? '?demo=1' : ''}`), 650);
   } catch (error) {
     submitButton.disabled = false;
     submitButton.innerHTML = 'Save experience and continue <span>→</span>';

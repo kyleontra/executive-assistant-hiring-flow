@@ -5,6 +5,7 @@ const form = document.querySelector('#photoForm');
 const submitButton = document.querySelector('#submitPhotos');
 const result = document.querySelector('#photoResult');
 const authStatus = document.querySelector('#authStatus');
+const demoMode = new URLSearchParams(window.location.search).get('demo') === '1';
 let verified = false;
 
 function showResult(message, type) {
@@ -32,6 +33,15 @@ function setPreview(input, preview) {
 }
 
 async function requireVerifiedAccount() {
+  if (demoMode) {
+    verified = true;
+    document.querySelector('.upload-aside h1').textContent = 'Test ID photo previews.';
+    document.querySelector('.upload-aside > p').textContent = 'Choose test images to check this step. Demo images remain in your browser.';
+    authStatus.textContent = 'Demo mode — these ID previews stay in your browser and are never uploaded.';
+    authStatus.className = 'status-box success';
+    updateSubmit();
+    return;
+  }
   const user = await window.getVerifiedCandidate();
   if (!user) {
     verified = false;
@@ -79,6 +89,12 @@ document.querySelector('#photoConsent').addEventListener('change', updateSubmit)
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
   if (!form.reportValidity() || submitButton.disabled) return;
+  if (demoMode) {
+    submitButton.disabled = true;
+    showResult('Demo ID photos checked locally. Nothing was uploaded. Continuing to the video test…', 'success');
+    window.setTimeout(() => window.location.assign('./verification.html?demo=1'), 500);
+    return;
+  }
   const token = await window.getAccessToken();
   if (!token) { showResult('Your sign-in expired. Confirm your email again, then retry.', 'error'); return; }
   const formData = new FormData();
@@ -101,5 +117,5 @@ form.addEventListener('submit', async (event) => {
   }
 });
 
-window.savaAuth.auth.onAuthStateChange(() => { window.setTimeout(requireVerifiedAccount, 0); });
+if (!demoMode) window.savaAuth.auth.onAuthStateChange(() => { window.setTimeout(requireVerifiedAccount, 0); });
 requireVerifiedAccount();
