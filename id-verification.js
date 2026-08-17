@@ -1,6 +1,7 @@
 const PHOTO_ENDPOINT = 'https://jyxamdvvnoylaxolhlht.supabase.co/functions/v1/submit-id-photos';
-const MAX_PHOTO_BYTES = 4 * 1024 * 1024;
-const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+const MAX_PHOTO_BYTES = 8 * 1024 * 1024;
+const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif']);
+const ALLOWED_EXTENSIONS = /\.(?:jpe?g|png|webp|heic|heif)$/i;
 const form = document.querySelector('#photoForm');
 const submitButton = document.querySelector('#submitPhotos');
 const result = document.querySelector('#photoResult');
@@ -16,7 +17,8 @@ function showResult(message, type) {
 
 function validPhoto(input) {
   const file = input.files?.[0];
-  return file && ALLOWED_TYPES.has(file.type) && file.size > 0 && file.size <= MAX_PHOTO_BYTES;
+  const type = file?.type?.split(';')[0].toLowerCase() || '';
+  return file && (ALLOWED_TYPES.has(type) || (!type && ALLOWED_EXTENSIONS.test(file.name))) && file.size > 0 && file.size <= MAX_PHOTO_BYTES;
 }
 
 function updateSubmit() {
@@ -26,7 +28,11 @@ function updateSubmit() {
 function setPreview(input, preview) {
   const file = input.files?.[0];
   if (!file) return;
-  if (!validPhoto(input)) { showResult('Use a JPG, PNG, or WebP photo no larger than 4 MB.', 'error'); input.value = ''; preview.hidden = true; updateSubmit(); return; }
+  if (!validPhoto(input)) { showResult('Use a JPG, PNG, WebP, HEIC, or HEIF photo no larger than 8 MB.', 'error'); input.value = ''; preview.hidden = true; updateSubmit(); return; }
+  preview.onerror = () => {
+    preview.hidden = true;
+    showResult(`${file.name} is selected. This browser cannot preview that photo format, but it can still be uploaded.`, 'success');
+  };
   preview.src = URL.createObjectURL(file);
   preview.hidden = false;
   updateSubmit();

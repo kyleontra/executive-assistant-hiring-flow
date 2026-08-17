@@ -1,8 +1,9 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
 const BUCKET = 'sava-id-review-videos';
-const MAX_PHOTO_BYTES = 4 * 1024 * 1024;
-const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+const MAX_PHOTO_BYTES = 8 * 1024 * 1024;
+const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif']);
+const ALLOWED_EXTENSIONS = /\.(?:jpe?g|png|webp|heic|heif)$/i;
 const PRIMARY_ORIGIN = 'https://www.hirefromsa.com';
 const ALLOWED_ORIGINS = new Set([
   PRIMARY_ORIGIN,
@@ -19,8 +20,19 @@ function headers(request: Request) {
 }
 function reply(request: Request, body: Record<string, string>, status: number) { return new Response(JSON.stringify(body), { status, headers: headers(request) }); }
 function tokenFrom(request: Request) { return request.headers.get('authorization')?.replace(/^Bearer\s+/i, '') || ''; }
-function imageType(file: FormDataEntryValue | null) { return file instanceof File ? file.type.split(';')[0].toLowerCase() : ''; }
-function extension(type: string) { return type === 'image/png' ? 'png' : type === 'image/webp' ? 'webp' : 'jpg'; }
+function imageType(file: FormDataEntryValue | null) {
+  if (!(file instanceof File)) return '';
+  const suppliedType = file.type.split(';')[0].toLowerCase();
+  if (ALLOWED_TYPES.has(suppliedType)) return suppliedType;
+  if (suppliedType || !ALLOWED_EXTENSIONS.test(file.name)) return '';
+  const fileExtension = file.name.toLowerCase().split('.').pop();
+  if (fileExtension === 'jpg' || fileExtension === 'jpeg') return 'image/jpeg';
+  return `image/${fileExtension}`;
+}
+function extension(type: string) {
+  if (type === 'image/jpeg') return 'jpg';
+  return type.replace('image/', '');
+}
 
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response('ok', { headers: headers(request) });
@@ -32,7 +44,7 @@ Deno.serve(async (request) => {
     const back = formData.get('back');
     const profilePhotoPath = typeof formData.get('profilePhotoPath') === 'string' ? String(formData.get('profilePhotoPath')) : '';
     const frontType = imageType(front); const backType = imageType(back);
-    if (!(front instanceof File) || !(back instanceof File) || !ALLOWED_TYPES.has(frontType) || !ALLOWED_TYPES.has(backType) || front.size === 0 || back.size === 0 || front.size > MAX_PHOTO_BYTES || back.size > MAX_PHOTO_BYTES) return reply(request, { error: 'Send front and back ID photos as JPG, PNG, or WebP files no larger than 4 MB each.' }, 400);
+    if (!(front instanceof File) || !(back instanceof File) || !ALLOWED_TYPES.has(frontType) || !ALLOWED_TYPES.has(backType) || front.size === 0 || back.size === 0 || front.size > MAX_PHOTO_BYTES || back.size > MAX_PHOTO_BYTES) return reply(request, { error: 'Send front and back ID photos as JPG, PNG, WebP, HEIC, or HEIF files no larger than 8 MB each.' }, 400);
 
     const secretKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const admin = createClient(Deno.env.get('SUPABASE_URL')!, secretKey);
