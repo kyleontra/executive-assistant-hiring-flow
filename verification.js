@@ -119,25 +119,29 @@ function startCleanPreview(video) {
 }
 
 async function requireVerifiedAccount() {
+  verified = false;
+  $('#startCamera').disabled = false;
+  $('#submitReview').disabled = true;
   if (!REFERENCE_PATTERN.test(reviewReference || '')) {
-    $('#authStatus').textContent = 'This video step needs the ID-photo reference. Return to the ID photo step and continue from there.';
-    $('#authStatus').className = 'status-box error';
+    $('#authStatus').textContent = 'You can test the camera and record a preview now. Complete the ID photo step before sending the video for review.';
+    $('#authStatus').className = 'status-box';
+    $('#startCamera').textContent = 'Test camera & microphone';
     return;
   }
   const user = await window.getVerifiedCandidate();
   if (!user) {
-    $('#authStatus').textContent = 'Confirm your email before recording your ID video.';
-    $('#authStatus').className = 'status-box error';
+    $('#authStatus').textContent = 'You can test the camera now. Confirm your email before sending the video for review.';
+    $('#authStatus').className = 'status-box';
+    $('#startCamera').textContent = 'Test camera & microphone';
     return;
   }
   verified = true;
   $('#authStatus').textContent = `Email confirmed for ${user.email}. Your ID photo reference is ready.`;
   $('#authStatus').className = 'status-box success';
-  $('#startCamera').disabled = false;
+  $('#startCamera').textContent = 'Turn on camera & microphone';
 }
 
 $('#startCamera').addEventListener('click', async () => {
-  if (!verified) return;
   const button = $('#startCamera');
   if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) { showResult('Video recording needs a modern browser over HTTPS.', 'error'); return; }
   button.textContent = 'Starting…'; button.disabled = true;
@@ -150,7 +154,7 @@ $('#startCamera').addEventListener('click', async () => {
     startCleanPreview(video); $('.camera-stage').classList.add('live'); $('.camera-stage').classList.remove('recorded');
     button.textContent = 'Camera on'; $('#recordId').disabled = false;
     showResult('When recording starts, follow the prompts and keep your ID in the frame.', 'success');
-  } catch (_) { button.textContent = 'Turn on camera & microphone'; button.disabled = false; showResult('Camera permission was not granted or no camera is available. Check browser permissions and try again.', 'error'); }
+  } catch (_) { button.textContent = verified ? 'Turn on camera & microphone' : 'Test camera & microphone'; button.disabled = false; showResult('Camera permission was not granted or no camera is available. Check browser permissions and try again.', 'error'); }
 });
 
 $('#recordId').addEventListener('click', () => {
@@ -190,8 +194,10 @@ $('#recordId').addEventListener('click', () => {
     recordedObjectUrl = URL.createObjectURL(recordedVideo);
     const preview = $('#recordedPreview'); preview.src = recordedObjectUrl; preview.hidden = false;
     $('.camera-stage').classList.remove('live'); $('.camera-stage').classList.add('recorded');
-    $('#submitReview').disabled = false;
-    showResult('Video ready with picture and audio. Watch the preview, then send it for private manual review.', 'success');
+    $('#submitReview').disabled = !verified;
+    showResult(verified
+      ? 'Video ready with picture and audio. Watch the preview, then send it for private manual review.'
+      : 'Camera and recording are working. Complete the ID photo step before sending this video for review.', 'success');
   });
   let seconds = 10; let scriptIndex = 0; $('#recordId').disabled = true; $('#startCamera').disabled = true; $('#submitReview').disabled = true;
   recorder.start(); setScript(0); showResult(`Recording your ID video… ${seconds}s`, 'success');
