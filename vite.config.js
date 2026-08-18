@@ -21,6 +21,7 @@ const pages = {
   candidateSignup: 'candidate-signup.html',
   emailConfirmed: 'email-confirmed.html',
   candidateExperience: 'candidate-experience.html',
+  candidateResume: 'candidate-resume.html',
   candidateProfile: 'candidate-profile.html',
   applicationQuestions: 'application-questions.html',
   candidateLogin: 'candidate-login.html',
@@ -38,7 +39,7 @@ module.exports = defineConfig({
   plugins: [{
     name: 'copy-classic-browser-scripts',
     writeBundle() {
-      ['script.js', 'auth-client.js', 'platform-client.js', 'verification.js', 'id-verification.js', 'candidate-signup.js', 'email-confirmed.js', 'candidate-experience.js', 'candidate-profile.js', 'application-questions.js', 'candidate-login.js', 'candidate-dashboard.js', 'scheduler-settings.js', 'schedule-interview.js', 'admin-review.js', 'posted-jobs.js'].forEach(file => {
+      ['script.js', 'auth-client.js', 'platform-client.js', 'verification.js', 'id-verification.js', 'candidate-signup.js', 'email-confirmed.js', 'candidate-resume.js', 'candidate-experience.js', 'candidate-profile.js', 'application-questions.js', 'candidate-login.js', 'candidate-dashboard.js', 'scheduler-settings.js', 'schedule-interview.js', 'admin-review.js', 'posted-jobs.js'].forEach(file => {
         copyFileSync(resolve(__dirname, file), resolve(__dirname, 'dist', file));
       });
     },

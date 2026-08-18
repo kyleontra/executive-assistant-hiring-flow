@@ -477,7 +477,7 @@ async function bindJobDetail() {
       }
       const { profile } = await window.savaPlatform.candidateRequest('getProfile');
       let destination = `./application-questions.html?job=${encodeURIComponent(job.id)}`;
-      if (!profile?.experience?.length) destination = './candidate-experience.html';
+      if (!profile?.experience?.length) destination = profile?.resumePath ? './candidate-experience.html' : './candidate-resume.html';
       else if (!profile.photoPath) destination = './candidate-profile.html';
       else if (!['pending', 'verified'].includes(profile.verificationStatus)) destination = './id-verification.html';
       window.location.href = destination;
@@ -538,7 +538,7 @@ async function bindApplicants() {
         const answers = application.answers || [];
         const photo = candidate.photoUrl || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=240&h=240&q=75';
         const years = Number(candidate.relevantYears || 0);
-        return `<button class="simple-candidate" data-application-id="${escapeHtml(application.id)}" data-job="${escapeHtml(application.jobId)}" data-status="${escapeHtml(application.status)}" data-name="${escapeHtml(candidate.name)}" data-role="${escapeHtml(application.job.title)}" data-experience="${years} years experience" data-match="${Number(application.match || 0)}" data-summary="${escapeHtml(candidate.summary)}" data-photo="${escapeHtml(photo)}" data-answers="${escapeHtml(JSON.stringify(answers))}" data-answer1="${escapeHtml(answers[0]?.answer || '')}" data-answer2="${escapeHtml(answers[1]?.answer || '')}" data-answer3="${escapeHtml(answers[2]?.answer || '')}"><img src="${escapeHtml(photo)}" alt="" /><span class="candidate-identity"><b>${escapeHtml(candidate.name)}</b><small>${escapeHtml(application.job.title)} · ${years} years</small></span><span class="candidate-overview">${escapeHtml(candidate.summary)}</span><strong class="match-badge">${Number(application.match || 0)}% match</strong><span class="candidate-arrow" aria-hidden="true">→</span></button>`;
+        return `<button class="simple-candidate" data-application-id="${escapeHtml(application.id)}" data-job="${escapeHtml(application.jobId)}" data-status="${escapeHtml(application.status)}" data-name="${escapeHtml(candidate.name)}" data-role="${escapeHtml(application.job.title)}" data-experience="${years} years experience" data-match="${Number(application.match || 0)}" data-summary="${escapeHtml(candidate.summary)}" data-photo="${escapeHtml(photo)}" data-resume="${escapeHtml(candidate.resumeUrl || '')}" data-resume-name="${escapeHtml(candidate.resumeFileName || '')}" data-answers="${escapeHtml(JSON.stringify(answers))}" data-answer1="${escapeHtml(answers[0]?.answer || '')}" data-answer2="${escapeHtml(answers[1]?.answer || '')}" data-answer3="${escapeHtml(answers[2]?.answer || '')}"><img src="${escapeHtml(photo)}" alt="" /><span class="candidate-identity"><b>${escapeHtml(candidate.name)}</b><small>${escapeHtml(application.job.title)} · ${years} years</small></span><span class="candidate-overview">${escapeHtml(candidate.summary)}</span><strong class="match-badge">${Number(application.match || 0)}% match</strong><span class="candidate-arrow" aria-hidden="true">→</span></button>`;
       }).join('');
       candidateList.insertAdjacentHTML('afterbegin', rows);
     }
@@ -862,6 +862,13 @@ async function bindApplicants() {
     $('#profileExperience').textContent = candidate.dataset.experience;
     $('#profileMatch').textContent = `${candidate.dataset.match}% match`;
     $('#profileSummary').textContent = candidate.dataset.summary;
+    const resumeSection = $('#profileResumeSection');
+    const hasResume = Boolean(candidate.dataset.resume);
+    resumeSection.hidden = !hasResume;
+    if (hasResume) {
+      $('#profileResume').href = candidate.dataset.resume;
+      $('#profileResumeName').textContent = candidate.dataset.resumeName || 'Candidate resume';
+    }
     const answers = candidateAnswers(candidate);
     $('#profileAnswers').innerHTML = questions.map((question, index) => `<article class="answer-card"><b>${escapeHtml(question)}</b><p>${escapeHtml(answers[index]?.answer || 'No answer submitted.')}</p></article>`).join('');
     updateProfileActions(candidate);

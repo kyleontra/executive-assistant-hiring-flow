@@ -229,7 +229,7 @@ $('#submitReview').addEventListener('click', async () => {
     $('#completePanel').querySelector('.eyebrow').textContent = 'DEMO COMPLETE';
     $('#completePanel').querySelector('h2').textContent = 'The full demo works.';
     $('#completePanel').querySelector('.lead').textContent = 'Your photos and video stayed in this browser. No account, application, or review submission was created.';
-    $('#completeNextLink').href = './candidate-experience.html?demo=1&reset=1';
+    $('#completeNextLink').href = './candidate-resume.html?demo=1&next=./candidate-experience.html%3Fdemo%3D1%26reset%3D1';
     $('#completeNextLink').innerHTML = 'Restart demo <span>→</span>';
     $('#recordPanel').hidden = true;
     $('#completePanel').hidden = false;

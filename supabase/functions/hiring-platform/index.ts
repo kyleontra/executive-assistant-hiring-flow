@@ -12,6 +12,7 @@ const ALLOWED_ORIGINS = new Set([
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const APPLICATION_STATUSES = new Set(['new', 'shortlisted', 'interviewing', 'rejected', 'hired']);
 const BUCKET = 'sava-id-review-videos';
+const RESUME_BUCKET = 'candidate-resumes';
 
 function headers(request: Request) {
   const origin = request.headers.get('origin') || '';
@@ -149,9 +150,9 @@ async function ensureEmployer(admin: ReturnType<typeof createClient>, body: Reco
   return { employer: existing };
 }
 
-async function signedPhoto(admin: ReturnType<typeof createClient>, path: string) {
+async function signedAsset(admin: ReturnType<typeof createClient>, bucket: string, path: string) {
   if (!path) return '';
-  const { data, error } = await admin.storage.from(BUCKET).createSignedUrl(path, 60 * 60);
+  const { data, error } = await admin.storage.from(bucket).createSignedUrl(path, 60 * 60);
   return error ? '' : data?.signedUrl || '';
 }
 
@@ -254,7 +255,9 @@ Deno.serve(async (request) => {
             relevantYears: Number(profile.relevant_years || 0),
             summary: profile.summary || 'Candidate profile submitted for review.',
             verificationStatus: profile.verification_status || 'draft',
-            photoUrl: await signedPhoto(admin, String(profile.profile_photo_path || '')),
+            photoUrl: await signedAsset(admin, BUCKET, String(profile.profile_photo_path || '')),
+            resumeFileName: profile.resume_file_name || '',
+            resumeUrl: await signedAsset(admin, RESUME_BUCKET, String(profile.resume_path || '')),
           },
           job: jobResponse(job),
         };
@@ -284,13 +287,15 @@ Deno.serve(async (request) => {
 
     if (action === 'saveProfile' || action === 'submitApplication') {
       const experience = normalizeExperience(body.experience);
-      const existingProfileResult = await admin.from('candidate_profiles').select('profile_photo_path, verification_status').eq('user_id', user.id).maybeSingle();
+      const existingProfileResult = await admin.from('candidate_profiles').select('profile_photo_path, resume_path, resume_file_name, verification_status').eq('user_id', user.id).maybeSingle();
       if (existingProfileResult.error) throw existingProfileResult.error;
       const existingProfile = existingProfileResult.data || {};
       const firstName = clean(user.user_metadata?.first_name, 80);
       const lastName = clean(user.user_metadata?.last_name, 80);
       const fullName = clean(body.fullName, 160) || `${firstName} ${lastName}`.trim() || clean(user.email, 160) || 'Candidate';
       const photoPath = clean(body.photoPath, 500) || existingProfile.profile_photo_path || '';
+      const resumePath = clean(body.resumePath, 500) || existingProfile.resume_path || '';
+      const resumeFileName = clean(body.resumeFileName, 255) || existingProfile.resume_file_name || '';
       const profile = {
         user_id: user.id,
         email: clean(user.email, 254).toLowerCase(),
@@ -300,6 +305,8 @@ Deno.serve(async (request) => {
         relevant_years: experienceYears(experience),
         summary: profileSummary(experience),
         profile_photo_path: photoPath,
+        resume_path: resumePath,
+        resume_file_name: resumeFileName,
         verification_status: existingProfile.verification_status || 'draft',
         updated_at: new Date().toISOString(),
       };
@@ -338,11 +345,16 @@ Deno.serve(async (request) => {
         relevantYears: Number(profile.relevant_years || 0),
         summary: profile.summary,
         photoPath: profile.profile_photo_path,
+        resumePath: profile.resume_path,
+        resumeFileName: profile.resume_file_name,
+        resumeUrl: await signedAsset(admin, RESUME_BUCKET, String(profile.resume_path || '')),
         verificationStatus: profile.verification_status,
       } : null });
     }
 
     if (action === 'candidateDashboard') {
+      const { data: profile, error: profileError } = await admin.from('candidate_profiles').select('resume_path, resume_file_name').eq('user_id', user.id).maybeSingle();
+      if (profileError) throw profileError;
       const { data: applications, error } = await admin.from('job_applications').select('*').eq('candidate_id', user.id).order('submitted_at', { ascending: false });
       if (error) throw error;
       const jobIds = (applications || []).map((application) => application.job_id);
@@ -363,7 +375,10 @@ Deno.serve(async (request) => {
       }
       const jobMap = new Map(jobs.map((job) => [job.id, job]));
       const threadMap = new Map((threads || []).map((thread) => [thread.application_id, thread]));
-      return reply(request, { applications: (applications || []).map((application) => {
+      return reply(request, { profile: {
+        resumeFileName: profile?.resume_file_name || '',
+        resumeUrl: await signedAsset(admin, RESUME_BUCKET, String(profile?.resume_path || '')),
+      }, applications: (applications || []).map((application) => {
         const thread = threadMap.get(application.id);
         return {
           id: application.id,

@@ -87,6 +87,7 @@ async function loadReview(admin: ReturnType<typeof createClient>, reference: str
     submittedAt: candidate.submittedAt || files?.[0]?.created_at || '',
     ready: Boolean(front && back && video),
     hasProfile: Boolean(profile),
+    hasSubmission: true,
     candidate: {
       name: profile?.full_name || `${candidate.firstName || ''} ${candidate.lastName || ''}`.trim() || 'Candidate',
       email: profile?.email || candidate.email || '',
@@ -95,16 +96,60 @@ async function loadReview(admin: ReturnType<typeof createClient>, reference: str
       experience: Array.isArray(profile?.experience) ? profile.experience : [],
       verificationStatus: profile?.verification_status || 'draft',
       profilePhotoUrl,
+      emailConfirmed: true,
     },
     files: { frontUrl, backUrl, videoUrl },
   };
 }
 
+async function accountReviews(admin: ReturnType<typeof createClient>, submittedUserIds: Set<string>) {
+  const [{ data: userPage, error: userError }, { data: profiles, error: profileError }] = await Promise.all([
+    admin.auth.admin.listUsers({ page: 1, perPage: 1000 }),
+    admin.from('candidate_profiles').select('*').order('created_at', { ascending: false }).limit(1000),
+  ]);
+  if (userError) throw userError;
+  if (profileError) throw profileError;
+  const profileMap = new Map((profiles || []).map((profile) => [String(profile.user_id), profile]));
+  const users = userPage?.users || [];
+  const reviews = await Promise.all(users.filter((user) => {
+    if (submittedUserIds.has(user.id)) return false;
+    const profile = profileMap.get(user.id);
+    return Boolean(profile || user.user_metadata?.first_name || user.user_metadata?.last_name);
+  }).map(async (user) => {
+    const profile = profileMap.get(user.id);
+    const firstName = typeof user.user_metadata?.first_name === 'string' ? user.user_metadata.first_name : '';
+    const lastName = typeof user.user_metadata?.last_name === 'string' ? user.user_metadata.last_name : '';
+    const profilePhotoUrl = await signedUrl(admin, String(profile?.profile_photo_path || ''));
+    return {
+      reference: `ACCOUNT-${user.id.slice(0, 8).toUpperCase()}`,
+      userId: user.id,
+      submittedAt: profile?.updated_at || user.created_at || '',
+      ready: false,
+      hasProfile: Boolean(profile),
+      hasSubmission: false,
+      candidate: {
+        name: profile?.full_name || `${firstName} ${lastName}`.trim() || 'New candidate',
+        email: profile?.email || user.email || '',
+        summary: profile?.summary || 'Account created. Candidate profile and identity documents are not complete yet.',
+        relevantYears: Number(profile?.relevant_years || 0),
+        experience: Array.isArray(profile?.experience) ? profile.experience : [],
+        verificationStatus: profile?.verification_status || 'draft',
+        profilePhotoUrl,
+        emailConfirmed: Boolean(user.email_confirmed_at),
+      },
+      files: { frontUrl: '', backUrl: '', videoUrl: '' },
+    };
+  }));
+  return reviews;
+}
+
 async function allReviews(admin: ReturnType<typeof createClient>) {
   const references = await reviewReferences(admin);
-  const reviews = await Promise.all(references.map((reference) => loadReview(admin, reference)));
-  return reviews
-    .filter((review): review is NonNullable<typeof review> => Boolean(review))
+  const storedReviews = (await Promise.all(references.map((reference) => loadReview(admin, reference))))
+    .filter((review): review is NonNullable<typeof review> => Boolean(review));
+  const submittedUserIds = new Set(storedReviews.map((review) => review.userId));
+  const signupReviews = await accountReviews(admin, submittedUserIds);
+  return [...storedReviews, ...signupReviews]
     .sort((left, right) => String(right.submittedAt || '').localeCompare(String(left.submittedAt || '')));
 }
 

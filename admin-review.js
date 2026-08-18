@@ -12,7 +12,7 @@ const reviewSummary = document.querySelector('#reviewSummary');
 const acceptAllButton = document.querySelector('#acceptAll');
 let adminKey = sessionStorage.getItem(ADMIN_SESSION_KEY) || '';
 let reviews = [];
-let activeFilter = 'pending';
+let activeFilter = 'all';
 
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[character]);
@@ -65,20 +65,27 @@ function renderReviews() {
     const candidate = review.candidate;
     const accepted = candidate.verificationStatus === 'verified';
     const rejected = candidate.verificationStatus === 'rejected';
-    const state = accepted ? 'Accepted' : rejected ? 'Rejected' : !review.hasProfile ? 'Profile unavailable' : review.ready ? 'Ready for review' : 'Waiting for video';
+    const state = accepted
+      ? 'Accepted'
+      : rejected
+        ? 'Rejected'
+        : !review.hasSubmission
+          ? review.hasProfile ? 'Profile started' : candidate.emailConfirmed ? 'Account created' : 'Email not confirmed'
+          : !review.hasProfile ? 'Profile unavailable' : review.ready ? 'Ready for review' : 'Waiting for video';
     return `<article class="review-card" data-reference="${escapeHtml(review.reference)}">
       <header><div class="candidate-heading">${candidate.profilePhotoUrl ? `<img src="${escapeHtml(candidate.profilePhotoUrl)}" alt="" />` : '<span class="profile-placeholder">?</span>'}<div><p>${escapeHtml(review.reference)} · ${escapeHtml(formattedDate(review.submittedAt))}</p><h2>${escapeHtml(candidate.name)}</h2><a href="mailto:${escapeHtml(candidate.email)}">${escapeHtml(candidate.email)}</a></div></div><span class="review-state ${accepted ? 'accepted' : rejected ? 'rejected' : review.ready && review.hasProfile ? 'ready' : 'waiting'}">${state}</span></header>
       <div class="candidate-summary"><div><span>Relevant experience</span><b>${Number(candidate.relevantYears || 0).toFixed(1)} years</b></div><p>${escapeHtml(candidate.summary)}</p></div>
       ${fileMarkup(review)}
       <details><summary>View full experience</summary><div class="experience-list">${experienceMarkup(candidate.experience)}</div></details>
-      <footer><button class="reject" type="button" data-action="reject" ${rejected || !review.hasProfile ? 'disabled' : ''}>Reject</button><button type="button" data-action="accept" ${!review.ready || !review.hasProfile || accepted ? 'disabled' : ''}>${accepted ? 'Accepted ✓' : !review.hasProfile ? 'Profile unavailable' : review.ready ? 'Accept candidate' : 'Video required'}</button></footer>
+      <footer><button class="reject" type="button" data-action="reject" ${rejected || !review.hasProfile || !review.hasSubmission ? 'disabled' : ''}>Reject</button><button type="button" data-action="accept" ${!review.ready || !review.hasProfile || accepted ? 'disabled' : ''}>${accepted ? 'Accepted ✓' : !review.hasSubmission ? 'Documents required' : !review.hasProfile ? 'Profile unavailable' : review.ready ? 'Accept candidate' : 'Video required'}</button></footer>
     </article>`;
   }).join('');
   reviewEmpty.hidden = visible.length > 0;
   const ready = reviews.filter((review) => review.ready && review.hasProfile && !['verified', 'rejected'].includes(review.candidate.verificationStatus));
   acceptAllButton.disabled = ready.length === 0;
   acceptAllButton.textContent = ready.length ? `Accept all ready (${ready.length})` : 'Accept all ready';
-  reviewSummary.textContent = `${reviews.length} submission${reviews.length === 1 ? '' : 's'} · ${ready.length} ready for approval`;
+  const accounts = reviews.filter((review) => !review.hasSubmission).length;
+  reviewSummary.textContent = `${reviews.length} candidate${reviews.length === 1 ? '' : 's'} · ${accounts} awaiting documents · ${ready.length} ready for approval`;
 }
 
 async function loadReviews() {

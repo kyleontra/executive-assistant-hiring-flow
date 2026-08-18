@@ -1,0 +1,63 @@
+.portal-resume-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin: 0 0 22px;
+  padding: 24px 26px;
+  border: 1px solid #dfe6ef;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 12px 34px rgba(32, 55, 86, 0.05);
+}
+
+.portal-resume-card h2 {
+  margin: 0;
+  font: 800 19px/1.25 "Manrope", sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.portal-resume-card > div > p:last-child {
+  margin: 6px 0 0;
+  color: #718097;
+  font-size: 13px;
+}
+
+.portal-resume-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+
+.portal-resume-actions a {
+  padding: 11px 14px;
+  border: 1px solid #d7e0ec;
+  border-radius: 9px;
+  color: #53647b;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.portal-resume-actions a:last-child {
+  border-color: #14233a;
+  background: #14233a;
+  color: #fff;
+}
+
+.portal-resume-actions a[hidden] {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .portal-resume-card {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .portal-resume-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+}

@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#1d6be8" />
+    <title>Connect your resume</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./candidate-resume.css" />
+  </head>
+  <body>
+    <header class="resume-header"><a class="resume-brand" href="./jobs.html">EXECUTIVE <span>ASSISTANTS</span></a><span>Candidate profile</span><a href="./jobs.html">Exit</a></header>
+    <main class="resume-shell">
+      <aside class="resume-aside">
+        <p class="eyebrow">YOUR CANDIDATE PROFILE</p>
+        <h1>Connect your resume.</h1>
+        <p>Your resume stays private and is shared only with hirers reviewing an application you submit.</p>
+        <div class="flow-steps"><span>✓</span><b>Account created</b><span>✓</span><b>Email confirmed</b><span class="active">3</span><b>Resume</b><span>4</span><b>Intro &amp; experience</b><span>5</span><b>Profile photo</b><span>6</span><b>ID photos</b><span>7</span><b>ID video</b></div>
+      </aside>
+      <section class="resume-main">
+        <div class="resume-card">
+          <p class="eyebrow blue">STEP 3 OF 7</p>
+          <h2>Add your current resume.</h2>
+          <p class="lead">Upload a PDF, DOC, or DOCX file. You can replace it from your candidate dashboard whenever it changes.</p>
+          <p id="authStatus" class="status-box" aria-live="polite">Checking your verified account…</p>
+          <form id="resumeForm" novalidate>
+            <label class="resume-picker" for="resumeInput">
+              <input id="resumeInput" type="file" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
+              <span class="file-icon" aria-hidden="true">↥</span>
+              <span><strong id="resumePickerTitle">Choose your resume</strong><small id="resumePickerDetail">PDF, DOC, or DOCX · maximum 10 MB</small></span>
+            </label>
+            <div id="savedResume" class="saved-resume" hidden><span><b id="savedResumeName"></b><small>Connected to your account</small></span><a id="openResume" href="#" target="_blank" rel="noopener">Open resume</a></div>
+            <p id="resumeResult" class="status-box" aria-live="polite" hidden></p>
+            <button id="saveResume" class="primary-action" type="submit" disabled>Connect resume and continue <span>→</span></button>
+            <button id="skipResume" class="skip-action" type="button">Skip for now</button>
+          </form>
+        </div>
+      </section>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./auth-client.js"></script>
+    <script src="./platform-client.js"></script>
+    <script src="./candidate-resume.js"></script>
+  </body>
+</html>

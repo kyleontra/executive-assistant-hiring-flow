@@ -1,6 +1,18 @@
 const applicationsRoot = document.querySelector('#candidateApplications');
 const portalStatus = document.querySelector('#portalStatus');
 
+function renderResume(profile) {
+  const connected = Boolean(profile?.resumeFileName);
+  document.querySelector('#candidateResumeTitle').textContent = connected ? profile.resumeFileName : 'No resume connected yet';
+  document.querySelector('#candidateResumeDetail').textContent = connected
+    ? 'This resume is connected to your candidate account and available with your applications.'
+    : 'Add a PDF, DOC, or DOCX resume now, or connect one the next time you apply.';
+  const openResume = document.querySelector('#candidateOpenResume');
+  openResume.hidden = !profile?.resumeUrl;
+  if (profile?.resumeUrl) openResume.href = profile.resumeUrl;
+  document.querySelector('#candidateManageResume').textContent = connected ? 'Replace resume' : 'Add resume';
+}
+
 function portalEscape(value) {
   return String(value ?? '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
 }
@@ -28,7 +40,8 @@ async function loadCandidateDashboard() {
   }
   document.querySelector('#candidateWelcome').textContent = `Signed in as ${user.email}. Track applications and interview conversations here.`;
   try {
-    const { applications } = await window.savaPlatform.candidateRequest('candidateDashboard');
+    const { applications, profile } = await window.savaPlatform.candidateRequest('candidateDashboard');
+    renderResume(profile);
     portalStatus.hidden = true;
     renderApplications(applications || []);
   } catch (error) {

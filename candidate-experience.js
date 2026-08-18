@@ -23,7 +23,7 @@ const previewMode = demoMode || (['localhost', '127.0.0.1'].includes(window.loca
   && pageParams.get('preview') === '1');
 
 if (demoMode && pageParams.get('reset') === '1') {
-  ['experience', 'intro-watched', 'profile-photo'].forEach((type) => sessionStorage.removeItem(`sava:${type}:demo-candidate`));
+  ['experience', 'intro-watched', 'profile-photo', 'resume-path', 'resume-name'].forEach((type) => sessionStorage.removeItem(`sava:${type}:demo-candidate`));
   window.history.replaceState(null, '', './candidate-experience.html?demo=1');
 }
 

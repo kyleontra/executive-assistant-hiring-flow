@@ -22,7 +22,7 @@
 
       <section id="reviewDashboard" hidden>
         <header class="dashboard-heading"><div><p class="eyebrow">PRIVATE REVIEW TEAM</p><h1>Application review</h1><p id="reviewSummary">Loading submissions…</p></div><div class="dashboard-actions"><button id="refreshReviews" class="secondary" type="button">Refresh</button><button id="acceptAll" type="button" disabled>Accept all ready</button><button id="lockDashboard" class="text-button" type="button">Lock</button></div></header>
-        <nav class="review-filters" aria-label="Review status"><button class="active" type="button" data-filter="pending">Needs review</button><button type="button" data-filter="incomplete">Waiting for video</button><button type="button" data-filter="verified">Accepted</button><button type="button" data-filter="rejected">Rejected</button><button type="button" data-filter="all">All</button></nav>
+        <nav class="review-filters" aria-label="Review status"><button type="button" data-filter="pending">Needs review</button><button type="button" data-filter="incomplete">Waiting for documents</button><button type="button" data-filter="verified">Accepted</button><button type="button" data-filter="rejected">Rejected</button><button class="active" type="button" data-filter="all">All</button></nav>
         <div id="reviewList" class="review-list" aria-live="polite"></div>
         <p id="reviewEmpty" class="empty-state" hidden>No submissions in this view.</p>
       </section>
