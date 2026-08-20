@@ -10,9 +10,8 @@
     <link rel="stylesheet" href="./style.css" />
     <link rel="stylesheet" href="./employer-simple.css" />
     <link rel="stylesheet" href="./post-flow.css" />
-    <link rel="stylesheet" href="./screening-questions.css" />
   </head>
-  <body class="simple-employer-page">
+  <body class="simple-employer-page employer-only">
     <header class="simple-header">
       <a class="simple-brand" href="./index.html">HIRE FROM <span>SA</span></a>
       <nav><a href="./applicants.html">Hiring inbox</a><a href="./applicants.html?view=messages">Messages</a><a href="./posted-jobs.html">Posted jobs</a></nav>
@@ -35,10 +34,7 @@
             <div><h2 data-review="title">Executive Assistant</h2><a href="./index.html">Edit</a></div>
             <div class="review-pills"><span data-review="commitment">Full-time (40 hours per week)</span><span data-review="rate">$3 – $5 / hour</span></div>
           </section>
-          <div class="review-content-grid">
-            <section class="simple-review-section"><div><h3>About the role</h3><a href="./job-description.html">Edit</a></div><p data-review="description">No description added.</p></section>
-            <section class="simple-review-section"><div><h3>Applicant questions</h3><a href="./job-description.html">Edit</a></div><ol id="reviewQuestions" class="review-questions"></ol></section>
-          </div>
+          <div class="review-content-grid"><section class="simple-review-section"><div><h3>About the role</h3><a href="./job-description.html">Edit</a></div><p data-review="description">No description added.</p></section></div>
         </article>
 
         <section class="promotion-card modern-promotion-card">
@@ -54,7 +50,10 @@
       </section>
     </main>
     <div class="toast" id="toast"></div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./auth-client.js"></script>
     <script src="./platform-client.js"></script>
     <script src="./script.js"></script>
+    <script src="./account-role.js"></script>
   </body>
 </html>

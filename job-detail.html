@@ -9,10 +9,9 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="./style.css" />
     <link rel="stylesheet" href="./jobs.css" />
-    <link rel="stylesheet" href="./screening-questions.css" />
   </head>
   <body class="jobs-page">
-    <header class="jobs-header"><a class="jobs-brand" href="./jobs.html">HIRE FROM <span>SA</span></a><nav><a class="active" href="./jobs.html">Find jobs</a><a href="./candidate-dashboard.html">My applications</a><a href="./index.html">Post a role</a></nav><a class="text-btn" href="./candidate-login.html">Candidate sign in →</a></header>
+    <header class="jobs-header"><a class="jobs-brand" href="./jobs.html">HIRE FROM <span>SA</span></a><nav><a class="active" href="./jobs.html">Find jobs</a><a href="./candidate-dashboard.html">My applications</a><a data-employer-link href="./index.html">Post a role</a></nav><a class="text-btn" href="./candidate-login.html">Candidate sign in →</a></header>
     <main class="job-detail-main">
       <a class="back-jobs" href="./jobs.html">← Back to jobs</a>
       <div class="job-detail-grid">
@@ -23,14 +22,14 @@
           <section class="detail-section"><h2>About the role</h2><p id="detailDescription"></p></section>
           <section class="detail-section"><h2>What you’ll do</h2><ul id="detailResponsibilities"></ul></section>
           <section class="detail-section"><h2>Skills and experience</h2><div class="detail-skills" id="detailSkills"></div></section>
-          <section class="detail-section"><h2>Questions you’ll answer</h2><p>Complete every screening question using the answer format shown below.</p><ol id="detailQuestions"></ol></section>
         </article>
-        <aside class="apply-card"><strong>Interested in this role?</strong><p>Create your candidate profile, complete verification, and answer the employer’s questions.</p><button id="showApplication" class="next-btn" type="button">Apply now <span>→</span></button><small>Your professional profile photo is required before you can apply.</small></aside>
+        <aside class="apply-card"><strong>Interested in this role?</strong><p>Create or sign in to your assistant account, connect your resume, and send it directly to the hirer.</p><button id="showApplication" class="next-btn" type="button">Apply with resume <span>→</span></button><small>No cover letter or application form required.</small></aside>
       </div>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./auth-client.js"></script>
     <script src="./platform-client.js"></script>
     <script src="./script.js"></script>
+    <script src="./account-role.js"></script>
   </body>
 </html>

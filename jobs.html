@@ -13,7 +13,7 @@
   <body class="jobs-page">
     <header class="jobs-header">
       <a class="jobs-brand" href="./jobs.html">HIRE FROM <span>SA</span></a>
-      <nav><a class="active" href="./jobs.html">Find jobs</a><a href="./candidate-dashboard.html">My applications</a><a href="./index.html">Post a role</a></nav>
+      <nav><a class="active" href="./jobs.html">Find jobs</a><a href="./candidate-dashboard.html">My applications</a><a data-employer-link href="./index.html">Post a role</a></nav>
       <a class="text-btn" href="./candidate-login.html">Candidate sign in →</a>
     </header>
     <section class="jobs-hero">
@@ -43,7 +43,10 @@
         <div id="jobResults"><p class="no-results">Loading live roles…</p></div>
       </section>
     </main>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./auth-client.js"></script>
     <script src="./platform-client.js"></script>
     <script src="./script.js"></script>
+    <script src="./account-role.js"></script>
   </body>
 </html>

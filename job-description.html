@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="./employer-simple.css" />
     <link rel="stylesheet" href="./post-flow.css" />
   </head>
-  <body class="simple-employer-page">
+  <body class="simple-employer-page employer-only">
     <header class="simple-header">
       <a class="simple-brand" href="./index.html">HIRE FROM <span>SA</span></a>
       <nav><a href="./applicants.html">Hiring inbox</a><a href="./applicants.html?view=messages">Messages</a><a href="./posted-jobs.html">Posted jobs</a></nav>
@@ -47,14 +47,6 @@
         </label>
         </section>
 
-        <section class="question-builder standalone-questions combined-question-section">
-          <div class="combined-section-heading"><span>02</span><div><h2>Applicant questions</h2><p>Add at least one question to help you screen candidates.</p></div></div>
-          <div id="jobQuestionList" class="job-question-list"></div>
-          <div class="question-builder-actions">
-            <button id="addQuestion" class="add-question-button" type="button"><span>+</span> Add question</button>
-          </div>
-        </section>
-
         <div id="postFormResult" class="simple-form-result" aria-live="polite"></div>
         <footer class="flow-card-footer">
           <a href="./index.html">← Back</a>
@@ -63,6 +55,9 @@
       </form>
     </main>
     <div class="toast" id="toast"></div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./auth-client.js"></script>
     <script src="./script.js"></script>
+    <script src="./account-role.js"></script>
   </body>
 </html>

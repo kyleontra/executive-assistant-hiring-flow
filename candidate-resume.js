@@ -26,7 +26,9 @@ let selectedResume = null;
 function nextDestination() {
   const requested = params.get('next');
   if (requested?.startsWith('./')) return requested;
-  return `./candidate-experience.html${demoMode ? '?demo=1' : ''}`;
+  const applyingJob = sessionStorage.getItem('sava-applying-job');
+  if (applyingJob) return `./application-questions.html?job=${encodeURIComponent(applyingJob)}`;
+  return `./candidate-dashboard.html${demoMode ? '?demo=1' : ''}`;
 }
 
 function showResult(message, type) {
@@ -64,6 +66,8 @@ async function initialize() {
   }
   authStatus.textContent = demoMode ? 'Demo mode — your resume stays in this browser and is never uploaded.' : `Email confirmed for ${candidate.email}.`;
   authStatus.className = 'status-box success';
+  const applyingForJob = Boolean(params.get('next') || sessionStorage.getItem('sava-applying-job'));
+  skipButton.hidden = applyingForJob;
   if (demoMode) return;
   try {
     ({ profile } = await window.savaPlatform.candidateRequest('getProfile'));

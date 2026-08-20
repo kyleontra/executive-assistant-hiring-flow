@@ -18,7 +18,7 @@ const defaults = {
   commitment: 'Full-time (40 hours per week)',
   minRate: '3',
   maxRate: '5',
-  questions: [{ text: '', type: 'text', options: [] }],
+  questions: [],
   promote: true,
   promotionBudget: '8',
   published: false,
@@ -34,7 +34,7 @@ const defaults = {
 function read() {
   try {
     const stored = JSON.parse(localStorage.getItem(storageKey) || '{}');
-    const questions = Array.isArray(stored.questions) && stored.questions.length ? stored.questions : defaults.questions;
+    const questions = Array.isArray(stored.questions) ? stored.questions : defaults.questions;
     return { ...defaults, ...stored, questions: questions.map(normalizeQuestion) };
   } catch {
     return { ...defaults, questions: defaults.questions.map(normalizeQuestion) };
@@ -155,6 +155,19 @@ function bindPostJob() {
       });
       return;
     }
+  }
+
+  if (step === 'details' && !$('#jobQuestionList')) {
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      if (!form.reportValidity()) {
+        showPostError('Add the job description to continue.');
+        return;
+      }
+      write({ description: text(roleDescription.value), questions: [], published: false });
+      window.location.href = './compensation.html';
+    });
+    return;
   }
 
   const questionList = $('#jobQuestionList');
@@ -389,7 +402,7 @@ async function loadServerJobs(force = false) {
   if (!serverJobsPromise) {
     serverJobsPromise = (async () => {
       const localRole = read();
-      if (localRole.published && !localRole.serverJobId && localRole.description && localRole.questions.some(questionText)) {
+      if (localRole.published && !localRole.serverJobId && localRole.description) {
         const { job } = await window.savaPlatform.employerRequest('createJob', {
           companyName: localRole.company || 'Your company', title: localRole.title, description: localRole.description,
           arrangement: localRole.arrangement, employmentType: localRole.commitment.split(' (')[0], location: localRole.location,
@@ -476,14 +489,14 @@ async function bindJobDetail() {
         return;
       }
       const { profile } = await window.savaPlatform.candidateRequest('getProfile');
-      let destination = `./application-questions.html?job=${encodeURIComponent(job.id)}`;
-      if (!profile?.experience?.length) destination = profile?.resumePath ? './candidate-experience.html' : './candidate-resume.html';
-      else if (!profile.photoPath) destination = './candidate-profile.html';
-      else if (!['pending', 'verified'].includes(profile.verificationStatus)) destination = './id-verification.html';
+      const applicationDestination = `./application-questions.html?job=${encodeURIComponent(job.id)}`;
+      const destination = profile?.resumePath
+        ? applicationDestination
+        : `./candidate-resume.html?next=${encodeURIComponent(applicationDestination)}`;
       window.location.href = destination;
     } catch (error) {
       applyButton.disabled = false;
-      applyButton.innerHTML = 'Apply now <span>→</span>';
+      applyButton.innerHTML = 'Apply with resume <span>→</span>';
       if (applyHelp) applyHelp.textContent = error.message || 'Your candidate profile could not be checked. Try again.';
     }
   });
@@ -870,6 +883,8 @@ async function bindApplicants() {
       $('#profileResumeName').textContent = candidate.dataset.resumeName || 'Candidate resume';
     }
     const answers = candidateAnswers(candidate);
+    const answersSection = $('#profileAnswersSection');
+    answersSection.hidden = !answers.length;
     $('#profileAnswers').innerHTML = questions.map((question, index) => `<article class="answer-card"><b>${escapeHtml(question)}</b><p>${escapeHtml(answers[index]?.answer || 'No answer submitted.')}</p></article>`).join('');
     updateProfileActions(candidate);
     profilePanel.hidden = false;

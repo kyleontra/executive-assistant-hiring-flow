@@ -28,7 +28,12 @@ async function platformRequest(action, payload = {}, token = '') {
 
 window.savaPlatform = {
   publicRequest: (action, payload) => platformRequest(action, payload),
-  employerRequest: (action, payload = {}) => platformRequest(action, { ...platformEmployerIdentity(), ...payload }),
+  employerRequest: async (action, payload = {}) => {
+    // Forward any active Supabase session so the server can keep candidate
+    // accounts out of hirer-only actions.
+    const token = await window.getAccessToken?.();
+    return platformRequest(action, { ...platformEmployerIdentity(), ...payload }, token || '');
+  },
   candidateRequest: async (action, payload = {}) => {
     const token = await window.getAccessToken?.();
     if (!token) throw new Error('Sign in with your verified candidate account to continue.');

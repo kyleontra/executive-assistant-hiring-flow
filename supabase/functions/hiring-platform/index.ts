@@ -128,6 +128,19 @@ async function candidateUser(request: Request, admin: ReturnType<typeof createCl
   return error || !user?.email_confirmed_at ? null : user;
 }
 
+async function authenticatedUser(request: Request, admin: ReturnType<typeof createClient>) {
+  const token = tokenFrom(request);
+  if (!token) return null;
+  const { data: { user }, error } = await admin.auth.getUser(token);
+  return error ? null : user;
+}
+
+async function rejectCandidateEmployerAccess(request: Request, admin: ReturnType<typeof createClient>) {
+  const user = await authenticatedUser(request, admin);
+  if (!user) return null;
+  return reply(request, { error: 'Assistant accounts cannot post jobs or use the hirer workspace.' }, 403);
+}
+
 async function ensureEmployer(admin: ReturnType<typeof createClient>, body: Record<string, unknown>) {
   const employerId = clean(body.employerId, 36);
   const editToken = clean(body.editToken, 160);
@@ -173,6 +186,8 @@ Deno.serve(async (request) => {
     }
 
     if (action === 'createJob') {
+      const candidateBlock = await rejectCandidateEmployerAccess(request, admin);
+      if (candidateBlock) return candidateBlock;
       const access = await ensureEmployer(admin, body);
       if (access.error) return reply(request, { error: access.error }, 403);
       const title = clean(body.title, 180);
@@ -180,8 +195,8 @@ Deno.serve(async (request) => {
       const questions = normalizeQuestions(body.questions);
       const payMin = Number(body.payMin);
       const payMax = Number(body.payMax);
-      if (!title || !description || !Number.isFinite(payMin) || !Number.isFinite(payMax) || payMin < 0 || payMax < payMin || !questions.length) {
-        return reply(request, { error: 'Complete the title, description, pay, and applicant questions before publishing.' }, 400);
+      if (!title || !description || !Number.isFinite(payMin) || !Number.isFinite(payMax) || payMin < 0 || payMax < payMin) {
+        return reply(request, { error: 'Complete the title, description, and pay before publishing.' }, 400);
       }
       const requestedId = clean(body.jobId, 80);
       const id = requestedId || crypto.randomUUID();
@@ -216,6 +231,8 @@ Deno.serve(async (request) => {
     }
 
     if (action === 'employerDashboard') {
+      const candidateBlock = await rejectCandidateEmployerAccess(request, admin);
+      if (candidateBlock) return candidateBlock;
       const access = await ensureEmployer(admin, body);
       if (access.error) return reply(request, { error: access.error }, 403);
       const { data: jobs, error: jobsError } = await admin.from('hiring_jobs').select('*').eq('employer_id', access.employer.id).order('created_at', { ascending: false });
@@ -266,6 +283,8 @@ Deno.serve(async (request) => {
     }
 
     if (action === 'updateApplication') {
+      const candidateBlock = await rejectCandidateEmployerAccess(request, admin);
+      if (candidateBlock) return candidateBlock;
       const access = await ensureEmployer(admin, body);
       if (access.error) return reply(request, { error: access.error }, 403);
       const applicationId = clean(body.applicationId, 36);
@@ -286,10 +305,12 @@ Deno.serve(async (request) => {
     if (!user) return reply(request, { error: 'Sign in with your verified candidate account to continue.' }, 401);
 
     if (action === 'saveProfile' || action === 'submitApplication') {
-      const experience = normalizeExperience(body.experience);
-      const existingProfileResult = await admin.from('candidate_profiles').select('profile_photo_path, resume_path, resume_file_name, verification_status').eq('user_id', user.id).maybeSingle();
+      const submittedExperience = normalizeExperience(body.experience);
+      const existingProfileResult = await admin.from('candidate_profiles').select('experience, profile_photo_path, resume_path, resume_file_name, verification_status').eq('user_id', user.id).maybeSingle();
       if (existingProfileResult.error) throw existingProfileResult.error;
       const existingProfile = existingProfileResult.data || {};
+      const existingExperience = normalizeExperience(existingProfile.experience);
+      const experience = submittedExperience.length ? submittedExperience : existingExperience;
       const firstName = clean(user.user_metadata?.first_name, 80);
       const lastName = clean(user.user_metadata?.last_name, 80);
       const fullName = clean(body.fullName, 160) || `${firstName} ${lastName}`.trim() || clean(user.email, 160) || 'Candidate';
@@ -315,19 +336,12 @@ Deno.serve(async (request) => {
       if (action === 'saveProfile') return reply(request, { profile: { ...profile, userId: profile.user_id } });
 
       const jobId = clean(body.jobId, 80);
-      const answers = Array.isArray(body.answers) ? body.answers.slice(0, 20).map((answer) => {
-        const record = answer && typeof answer === 'object' ? answer as Record<string, unknown> : {};
-        return { question: clean(record.question, 240), type: record.type === 'multiple-choice' ? 'multiple-choice' : 'text', answer: clean(record.answer, 2000) };
-      }).filter((answer) => answer.question && answer.answer) : [];
       const { data: job, error: jobError } = await admin.from('hiring_jobs').select('*').eq('id', jobId).eq('status', 'active').maybeSingle();
       if (jobError) throw jobError;
       if (!job) return reply(request, { error: 'This job is no longer accepting applications.' }, 404);
-      if (!photoPath) return reply(request, { error: 'Add your professional profile photo before applying.' }, 400);
-      if (!['pending', 'verified'].includes(profile.verification_status)) return reply(request, { error: 'Complete the ID verification steps before applying.' }, 400);
-      const requiredQuestions = Array.isArray(job.questions) ? job.questions.length : 0;
-      if (answers.length < requiredQuestions) return reply(request, { error: 'Answer every employer question before submitting.' }, 400);
-      const matchScore = Math.min(100, Math.round(60 + Math.min(25, profile.relevant_years * 3) + Math.min(15, answers.length * 3)));
-      const applicationValues = { job_id: jobId, candidate_id: user.id, answers, match_score: matchScore, updated_at: new Date().toISOString() };
+      if (!resumePath) return reply(request, { error: 'Upload a resume before applying.' }, 400);
+      const matchScore = Math.min(100, Math.round(60 + Math.min(40, profile.relevant_years * 4)));
+      const applicationValues = { job_id: jobId, candidate_id: user.id, answers: [], match_score: matchScore, updated_at: new Date().toISOString() };
       const { data: application, error: applicationError } = await admin.from('job_applications').upsert(applicationValues, { onConflict: 'job_id,candidate_id' }).select('id, status, match_score, submitted_at').single();
       if (applicationError) throw applicationError;
       return reply(request, { application, status: 'submitted' }, 201);

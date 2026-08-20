@@ -58,6 +58,7 @@ Deno.serve(async (request) => {
     }
 
     const auth = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!);
+    const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
     const { data, error } = await auth.auth.signUp({
       email,
       password,
@@ -72,6 +73,10 @@ Deno.serve(async (request) => {
     if (!data.user || data.user.identities?.length === 0) {
       return reply(request, { error: 'An account with this email already exists. Use a different email address for a new test.' }, 409);
     }
+    const { error: roleError } = await admin.auth.admin.updateUserById(data.user.id, {
+      app_metadata: { ...(data.user.app_metadata || {}), account_role: 'candidate' },
+    });
+    if (roleError) console.error('Candidate role assignment failed:', roleError);
     return reply(request, { status: 'created' }, 201);
   } catch (error) {
     console.error('Candidate registration failed:', error);

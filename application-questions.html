@@ -3,26 +3,25 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Complete your application</title>
+    <title>Apply with your resume</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="./application-questions.css" />
-    <link rel="stylesheet" href="./screening-questions.css" />
   </head>
   <body>
-    <header class="application-header"><a href="./jobs.html">EXECUTIVE <span>ASSISTANTS</span></a><span>Final application step</span><a href="./jobs.html">Exit</a></header>
+    <header class="application-header"><a href="./jobs.html">EXECUTIVE <span>ASSISTANTS</span></a><span>Resume application</span><a href="./jobs.html">Exit</a></header>
     <main class="application-shell">
-      <section class="application-intro"><p class="eyebrow">SCREENING QUESTIONS</p><h1>Complete your application.</h1><p>Answer each employer question using the format requested. Your profile and these responses will appear together in the hiring inbox.</p></section>
+      <section class="application-intro"><p class="eyebrow">APPLY WITH YOUR RESUME</p><h1>Send your resume.</h1><p>No cover letter or application form. Confirm the resume connected to your account and send it directly to the hirer.</p></section>
       <section class="application-card">
         <header><p class="eyebrow blue">APPLYING FOR</p><h2 id="applicationRole">Executive Assistant</h2><p id="applicationCompany">Your company</p></header>
         <p id="authStatus" class="status-box" aria-live="polite">Checking your candidate profile…</p>
         <form id="questionsForm" novalidate>
-          <div id="applicationQuestions"></div>
+          <section id="applicationResume" class="application-resume" hidden><span class="resume-file-icon" aria-hidden="true">PDF</span><div><small>RESUME ATTACHED</small><strong id="applicationResumeName">Connected resume</strong><a id="applicationOpenResume" href="#" target="_blank" rel="noopener">Open resume</a></div><a class="replace-resume" href="./candidate-resume.html">Replace</a></section>
           <div id="applicationResult" class="status-box" aria-live="polite" hidden></div>
-          <button id="submitApplication" type="submit">Submit application <span>→</span></button>
+          <button id="submitApplication" type="submit" disabled>Submit resume <span>→</span></button>
         </form>
-        <section id="applicationComplete" class="complete-state" hidden><span>✓</span><h2>Application submitted.</h2><p>Your profile and answers are now in the employer’s hiring inbox.</p><a href="./candidate-dashboard.html">View my applications →</a></section>
+        <section id="applicationComplete" class="complete-state" hidden><span>✓</span><h2>Resume submitted.</h2><p>Your resume is now in the employer’s hiring inbox.</p><a href="./candidate-dashboard.html">View my applications →</a></section>
       </section>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

@@ -23,7 +23,7 @@ function statusLabel(status) {
 
 function renderApplications(applications) {
   if (!applications.length) {
-    applicationsRoot.innerHTML = '<section class="portal-empty"><h2>No applications yet.</h2><p>Find a role that fits your experience and submit your profile.</p><a href="./jobs.html">Browse open roles →</a></section>';
+    applicationsRoot.innerHTML = '<section class="portal-empty"><h2>No applications yet.</h2><p>Find a role that fits and send your connected resume.</p><a href="./jobs.html">Browse open roles →</a></section>';
     return;
   }
   applicationsRoot.innerHTML = applications.map((application) => {

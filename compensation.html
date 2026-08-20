@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="./employer-simple.css" />
     <link rel="stylesheet" href="./post-flow.css" />
   </head>
-  <body class="simple-employer-page">
+  <body class="simple-employer-page employer-only">
     <header class="simple-header">
       <a class="simple-brand" href="./index.html">HIRE FROM <span>SA</span></a>
       <nav><a href="./applicants.html">Hiring inbox</a><a href="./applicants.html?view=messages">Messages</a><a href="./posted-jobs.html">Posted jobs</a></nav>
@@ -54,6 +54,9 @@
       </form>
     </main>
     <div class="toast" id="toast"></div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./auth-client.js"></script>
     <script src="./script.js"></script>
+    <script src="./account-role.js"></script>
   </body>
 </html>

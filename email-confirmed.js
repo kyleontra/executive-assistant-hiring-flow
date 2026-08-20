@@ -26,7 +26,7 @@ form.addEventListener('submit', async (event) => {
   try {
     const { error } = await window.savaAuth.auth.verifyOtp({ email, token, type: 'email' });
     if (error) throw error;
-    showResult('Email verified. Continuing to your candidate profile…', 'success');
+    showResult('Email verified. Continuing to your resume…', 'success');
     window.setTimeout(() => { window.location.assign('./candidate-resume.html'); }, 650);
   } catch (error) {
     showResult(error.message || 'That code could not be verified. Request a new code and try again.', 'error');
