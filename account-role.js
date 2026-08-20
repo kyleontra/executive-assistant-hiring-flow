@@ -4,6 +4,10 @@
 
   document.documentElement.dataset.accountRole = 'candidate';
   document.querySelectorAll('[data-employer-link]').forEach((link) => { link.hidden = true; });
+  document.querySelectorAll('[data-candidate-auth-link]').forEach((link) => {
+    link.textContent = 'My account →';
+    link.href = './candidate-dashboard.html';
+  });
 
   if (!document.body.classList.contains('employer-only')) return;
   const main = document.querySelector('main');

@@ -1,5 +1,17 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
+const RESUME_BUCKET = 'candidate-resumes';
+const MAX_RESUME_BYTES = 10 * 1024 * 1024;
+const TYPE_EXTENSIONS = new Map([
+  ['application/pdf', 'pdf'],
+  ['application/msword', 'doc'],
+  ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'docx'],
+]);
+const EXTENSION_TYPES = new Map([
+  ['pdf', 'application/pdf'],
+  ['doc', 'application/msword'],
+  ['docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+]);
 const PRIMARY_ORIGIN = 'https://www.hirefromsa.com';
 const ALLOWED_ORIGINS = new Set([
   PRIMARY_ORIGIN,
@@ -7,7 +19,6 @@ const ALLOWED_ORIGINS = new Set([
   'https://executive-assistant-hiring-flow.vercel.app',
   'http://localhost:5173',
   'http://127.0.0.1:5173',
-  // Browsers serialize requests from a directly opened local HTML file as Origin: null.
   'null',
 ]);
 
@@ -30,18 +41,45 @@ function clean(value: unknown, maxLength: number) {
   return typeof value === 'string' ? value.trim().slice(0, maxLength) : '';
 }
 
+function resumeType(file: File) {
+  const supplied = file.type.split(';')[0].toLowerCase();
+  if (TYPE_EXTENSIONS.has(supplied)) return supplied;
+  if (supplied && supplied !== 'application/octet-stream') return '';
+  const extension = file.name.toLowerCase().split('.').pop() || '';
+  return EXTENSION_TYPES.get(extension) || '';
+}
+
+function safeFileName(value: string, extension: string) {
+  const cleaned = value.replace(/[\u0000-\u001f\u007f]/g, '').replace(/[\\/]/g, '-').trim().slice(0, 255);
+  return cleaned || `resume.${extension}`;
+}
+
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response('ok', { headers: headers(request) });
   if (request.method !== 'POST') return reply(request, { error: 'Method not allowed.' }, 405);
   if (!ALLOWED_ORIGINS.has(request.headers.get('origin') || '')) return reply(request, { error: 'This endpoint only accepts requests from the hiring site.' }, 403);
 
+  let createdUserId = '';
+  let uploadedPath = '';
   try {
-    const body = await request.json();
-    const firstName = clean(body.firstName, 80);
-    const lastName = clean(body.lastName, 80);
-    const email = clean(body.email, 254).toLowerCase();
-    const calendarLink = clean(body.calendarLink, 500);
-    const password = typeof body.password === 'string' ? body.password : '';
+    const isMultipart = (request.headers.get('content-type') || '').includes('multipart/form-data');
+    let input: Record<string, unknown> = {};
+    let resume: File | null = null;
+    if (isMultipart) {
+      const formData = await request.formData();
+      input = Object.fromEntries(formData.entries());
+      const suppliedResume = formData.get('resume');
+      resume = suppliedResume instanceof File ? suppliedResume : null;
+    } else {
+      // Keep accepting the previous JSON client while the new site deployment rolls out.
+      input = await request.json();
+    }
+
+    const firstName = clean(input.firstName, 80);
+    const lastName = clean(input.lastName, 80);
+    const email = clean(input.email, 254).toLowerCase();
+    const calendarLink = clean(input.calendarLink, 500);
+    const password = typeof input.password === 'string' ? input.password : '';
     if (!firstName || !lastName || !/^\S+@\S+\.\S+$/.test(email)) {
       return reply(request, { error: 'Enter a valid first name, last name, and email address.' }, 400);
     }
@@ -55,6 +93,17 @@ Deno.serve(async (request) => {
       } catch {
         return reply(request, { error: 'Enter a valid calendar scheduling link beginning with https://.' }, 400);
       }
+    }
+
+    let type = '';
+    let extension = '';
+    if (isMultipart) {
+      if (!resume || resume.size === 0 || resume.size > MAX_RESUME_BYTES) {
+        return reply(request, { error: 'Choose a PDF, DOC, or DOCX resume no larger than 10 MB.' }, 400);
+      }
+      type = resumeType(resume);
+      extension = TYPE_EXTENSIONS.get(type) || '';
+      if (!type || !extension) return reply(request, { error: 'Choose a PDF, DOC, or DOCX resume no larger than 10 MB.' }, 400);
     }
 
     const auth = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!);
@@ -73,13 +122,47 @@ Deno.serve(async (request) => {
     if (!data.user || data.user.identities?.length === 0) {
       return reply(request, { error: 'An account with this email already exists. Use a different email address for a new test.' }, 409);
     }
+    createdUserId = data.user.id;
+
     const { error: roleError } = await admin.auth.admin.updateUserById(data.user.id, {
       app_metadata: { ...(data.user.app_metadata || {}), account_role: 'candidate' },
     });
-    if (roleError) console.error('Candidate role assignment failed:', roleError);
+    if (roleError) throw roleError;
+
+    if (resume) {
+      uploadedPath = `${data.user.id}/resume.${extension}`;
+      const { error: uploadError } = await admin.storage.from(RESUME_BUCKET).upload(uploadedPath, resume, {
+        cacheControl: '0',
+        contentType: type,
+        upsert: false,
+      });
+      if (uploadError) throw uploadError;
+
+      const { error: profileError } = await admin.from('candidate_profiles').upsert({
+        user_id: data.user.id,
+        email,
+        full_name: `${firstName} ${lastName}`.trim(),
+        calendar_link: calendarLink,
+        experience: [],
+        relevant_years: 0,
+        summary: 'Resume submitted with candidate account.',
+        profile_photo_path: '',
+        resume_path: uploadedPath,
+        resume_file_name: safeFileName(resume.name, extension),
+        verification_status: 'draft',
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id' });
+      if (profileError) throw profileError;
+    }
+
     return reply(request, { status: 'created' }, 201);
   } catch (error) {
     console.error('Candidate registration failed:', error);
-    return reply(request, { error: 'Your account could not be created. Please try again.' }, 500);
+    if (createdUserId) {
+      const cleanup = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+      if (uploadedPath) await cleanup.storage.from(RESUME_BUCKET).remove([uploadedPath]);
+      await cleanup.auth.admin.deleteUser(createdUserId);
+    }
+    return reply(request, { error: 'Your account or resume could not be saved. Please try again.' }, 500);
   }
 });
