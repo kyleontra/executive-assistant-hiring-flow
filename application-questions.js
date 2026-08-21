@@ -5,6 +5,44 @@ let candidate = null;
 let job = null;
 let profile = null;
 
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
+}
+
+function normalizedQuestions() {
+  return (Array.isArray(job?.questions) ? job.questions : []).map((question) => {
+    const normalized = typeof question === 'string' ? { text: question, type: 'text', options: [] } : question;
+    return {
+      text: String(normalized?.text || '').trim(),
+      type: normalized?.type === 'multiple-choice' ? 'multiple-choice' : 'text',
+      options: Array.isArray(normalized?.options) ? normalized.options.map((option) => String(option).trim()).filter(Boolean) : [],
+    };
+  }).filter((question) => question.text);
+}
+
+function renderQuestions() {
+  const questions = normalizedQuestions();
+  const section = document.querySelector('#applicationQuestions');
+  const list = document.querySelector('#applicationQuestionList');
+  section.hidden = !questions.length;
+  list.innerHTML = questions.map((question, index) => {
+    const prompt = `<span class="application-question-number">${String(index + 1).padStart(2, '0')}</span>${escapeHtml(question.text)}`;
+    if (question.type === 'multiple-choice') {
+      const options = question.options.map((option, optionIndex) => `<label class="answer-option"><input type="radio" name="answer-${index}" value="${escapeHtml(option)}" ${optionIndex === 0 ? 'required' : ''} /><span>${escapeHtml(option)}</span></label>`).join('');
+      return `<div class="application-question" data-question-index="${index}"><fieldset><legend>${prompt}</legend><div class="answer-options">${options}</div></fieldset></div>`;
+    }
+    return `<div class="application-question" data-question-index="${index}"><label for="answer-${index}">${prompt}</label><textarea id="answer-${index}" name="answer-${index}" maxlength="2000" required placeholder="Write your answer"></textarea></div>`;
+  }).join('');
+}
+
+function collectAnswers() {
+  return normalizedQuestions().map((question, index) => {
+    const selected = form.elements.namedItem(`answer-${index}`);
+    const answer = selected instanceof RadioNodeList ? selected.value : selected?.value || '';
+    return { question: question.text, answer: String(answer).trim() };
+  });
+}
+
 function showResult(message, type) {
   result.textContent = message;
   result.hidden = false;
@@ -32,6 +70,7 @@ async function initialize() {
 
   document.querySelector('#applicationRole').textContent = job.title;
   document.querySelector('#applicationCompany').textContent = job.company;
+  renderQuestions();
   try {
     ({ profile } = await window.savaPlatform.candidateRequest('getProfile'));
   } catch (error) {
@@ -59,13 +98,15 @@ async function initialize() {
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
   if (!candidate || !job || !profile?.resumePath || submitButton.disabled) return;
+  if (!form.reportValidity()) return;
   submitButton.disabled = true;
-  submitButton.textContent = 'Submitting resume…';
+  submitButton.textContent = 'Submitting application…';
   try {
     await window.savaPlatform.candidateRequest('submitApplication', {
       jobId: job.id,
       fullName: profile.fullName || `${candidate.user_metadata?.first_name || ''} ${candidate.user_metadata?.last_name || ''}`.trim(),
       calendarLink: profile.calendarLink || candidate.user_metadata?.calendar_link || '',
+      answers: collectAnswers(),
     });
     sessionStorage.removeItem('sava-applying-job');
     form.hidden = true;
@@ -73,8 +114,8 @@ form.addEventListener('submit', async (event) => {
     document.querySelector('#applicationComplete').hidden = false;
   } catch (error) {
     submitButton.disabled = false;
-    submitButton.innerHTML = 'Submit resume <span>→</span>';
-    showResult(error.message || 'Your resume application could not be submitted.', 'error');
+    submitButton.innerHTML = 'Submit application <span>→</span>';
+    showResult(error.message || 'Your application could not be submitted.', 'error');
   }
 });
 

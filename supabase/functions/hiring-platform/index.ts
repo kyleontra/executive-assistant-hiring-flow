@@ -13,6 +13,7 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3
 const APPLICATION_STATUSES = new Set(['new', 'shortlisted', 'interviewing', 'rejected', 'hired']);
 const BUCKET = 'sava-id-review-videos';
 const RESUME_BUCKET = 'candidate-resumes';
+const REDACTED_RESUME_BUCKET = 'candidate-redacted-resumes';
 
 function headers(request: Request) {
   const origin = request.headers.get('origin') || '';
@@ -59,6 +60,18 @@ function normalizeQuestions(value: unknown) {
       options: type === 'multiple-choice' ? cleanList(record.options, 12, 120) : [],
     };
   }).filter((question) => question.text && (question.type === 'text' || question.options.length >= 2));
+}
+
+function normalizeAnswers(value: unknown, questions: Array<{ text: string; type: string; options: string[] }>) {
+  if (!questions.length) return [];
+  if (!Array.isArray(value) || value.length !== questions.length) return null;
+  const answers = questions.map((question, index) => {
+    const item = value[index] && typeof value[index] === 'object' ? value[index] as Record<string, unknown> : {};
+    const answer = clean(item.answer, 2000);
+    if (!answer || (question.type === 'multiple-choice' && !question.options.includes(answer))) return null;
+    return { question: question.text, answer };
+  });
+  return answers.some((answer) => !answer) ? null : answers;
 }
 
 function normalizeExperience(value: unknown) {
@@ -195,8 +208,8 @@ Deno.serve(async (request) => {
       const questions = normalizeQuestions(body.questions);
       const payMin = Number(body.payMin);
       const payMax = Number(body.payMax);
-      if (!title || !description || !Number.isFinite(payMin) || !Number.isFinite(payMax) || payMin < 0 || payMax < payMin) {
-        return reply(request, { error: 'Complete the title, description, and pay before publishing.' }, 400);
+      if (!title || !description || !questions.length || !Number.isFinite(payMin) || !Number.isFinite(payMax) || payMin < 0 || payMax < payMin) {
+        return reply(request, { error: 'Complete the title, description, at least one applicant question, and pay before publishing.' }, 400);
       }
       const requestedId = clean(body.jobId, 80);
       const id = requestedId || crypto.randomUUID();
@@ -274,7 +287,7 @@ Deno.serve(async (request) => {
             verificationStatus: profile.verification_status || 'draft',
             photoUrl: await signedAsset(admin, BUCKET, String(profile.profile_photo_path || '')),
             resumeFileName: profile.resume_file_name || '',
-            resumeUrl: await signedAsset(admin, RESUME_BUCKET, String(profile.resume_path || '')),
+            resumeUrl: await signedAsset(admin, REDACTED_RESUME_BUCKET, `${application.candidate_id}/resume-redacted.txt`),
           },
           job: jobResponse(job),
         };
@@ -340,8 +353,11 @@ Deno.serve(async (request) => {
       if (jobError) throw jobError;
       if (!job) return reply(request, { error: 'This job is no longer accepting applications.' }, 404);
       if (!resumePath) return reply(request, { error: 'Upload a resume before applying.' }, 400);
+      const questions = normalizeQuestions(job.questions);
+      const answers = normalizeAnswers(body.answers, questions);
+      if (!answers) return reply(request, { error: 'Answer every applicant question before submitting.' }, 400);
       const matchScore = Math.min(100, Math.round(60 + Math.min(40, profile.relevant_years * 4)));
-      const applicationValues = { job_id: jobId, candidate_id: user.id, answers: [], match_score: matchScore, updated_at: new Date().toISOString() };
+      const applicationValues = { job_id: jobId, candidate_id: user.id, answers, match_score: matchScore, updated_at: new Date().toISOString() };
       const { data: application, error: applicationError } = await admin.from('job_applications').upsert(applicationValues, { onConflict: 'job_id,candidate_id' }).select('id, status, match_score, submitted_at').single();
       if (applicationError) throw applicationError;
       return reply(request, { application, status: 'submitted' }, 201);

@@ -11,9 +11,10 @@
     <link rel="stylesheet" href="./candidate-signup.css" />
     <link rel="stylesheet" href="./candidate-signup-overrides.css" />
     <link rel="stylesheet" href="./candidate-flow.css" />
+    <link rel="stylesheet" href="./brand.css" />
   </head>
   <body>
-    <header class="signup-header"><a class="signup-brand" href="./jobs.html">EXECUTIVE <span>ASSISTANTS</span></a><a href="./jobs.html">Exit</a></header>
+    <header class="signup-header"><a class="signup-brand site-logo-link" href="./jobs.html"><img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a><a href="./jobs.html">Exit</a></header>
     <main class="signup-shell">
       <aside class="signup-aside">
         <p class="eyebrow">APPLY TO SOUTH AFRICA ROLES</p>
@@ -35,9 +36,9 @@
             <label>Calendar scheduling link <span>(optional)</span><input id="calendarLink" name="calendarLink" type="url" inputmode="url" autocomplete="url" maxlength="500" placeholder="https://cal.com/your-name" /></label>
             <p class="field-help">Employers can use this link to invite you to an interview in one click. You can leave it blank for now.</p>
             <label class="resume-upload" for="resumeInput">
-              <input id="resumeInput" name="resume" type="file" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required />
+              <input id="resumeInput" name="resume" type="file" accept=".pdf,.doc,.docx,.txt,.rtf,.odt,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,application/rtf,text/rtf,application/vnd.oasis.opendocument.text" required />
               <span class="resume-upload-icon" aria-hidden="true">↑</span>
-              <span><strong id="resumePickerTitle">Upload your resume</strong><small id="resumePickerDetail">PDF, DOC, or DOCX · maximum 10 MB</small></span>
+              <span><strong id="resumePickerTitle">Upload your resume</strong><small id="resumePickerDetail">PDF, DOC, DOCX, TXT, RTF, or ODT · maximum 10 MB</small></span>
             </label>
             <label>Password<input id="password" name="password" type="password" autocomplete="new-password" required minlength="10" maxlength="128" placeholder="At least 10 characters" /></label>
             <p class="field-help">Your password is stored securely by Supabase. It is never added to your ID review files.</p>

@@ -5,9 +5,16 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "redact:resume": "node scripts/redact-resume.mjs",
+    "test:redaction": "node --test scripts/redact-resume.test.mjs"
   },
   "devDependencies": {
-    "vite": "latest"
+    "vite": "^7.3.6"
+  },
+  "dependencies": {
+    "fflate": "^0.8.2",
+    "unpdf": "^1.8.1",
+    "word-extractor": "^1.0.4"
   }
 }

@@ -1,16 +1,25 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { createRedactedResume } from '../_shared/resume-redaction.js';
 
 const RESUME_BUCKET = 'candidate-resumes';
+const REDACTED_RESUME_BUCKET = 'candidate-redacted-resumes';
 const MAX_RESUME_BYTES = 10 * 1024 * 1024;
 const TYPE_EXTENSIONS = new Map([
   ['application/pdf', 'pdf'],
   ['application/msword', 'doc'],
   ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'docx'],
+  ['text/plain', 'txt'],
+  ['application/rtf', 'rtf'],
+  ['text/rtf', 'rtf'],
+  ['application/vnd.oasis.opendocument.text', 'odt'],
 ]);
 const EXTENSION_TYPES = new Map([
   ['pdf', 'application/pdf'],
   ['doc', 'application/msword'],
   ['docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+  ['txt', 'text/plain'],
+  ['rtf', 'application/rtf'],
+  ['odt', 'application/vnd.oasis.opendocument.text'],
 ]);
 const PRIMARY_ORIGIN = 'https://www.hirefromsa.com';
 const ALLOWED_ORIGINS = new Set([
@@ -61,6 +70,7 @@ Deno.serve(async (request) => {
 
   let createdUserId = '';
   let uploadedPath = '';
+  let uploadedRedactedPath = '';
   try {
     const isMultipart = (request.headers.get('content-type') || '').includes('multipart/form-data');
     let input: Record<string, unknown> = {};
@@ -97,13 +107,19 @@ Deno.serve(async (request) => {
 
     let type = '';
     let extension = '';
+    let redactedResume: Blob | null = null;
     if (isMultipart) {
       if (!resume || resume.size === 0 || resume.size > MAX_RESUME_BYTES) {
-        return reply(request, { error: 'Choose a PDF, DOC, or DOCX resume no larger than 10 MB.' }, 400);
+        return reply(request, { error: 'Choose a PDF, DOC, DOCX, TXT, RTF, or ODT resume no larger than 10 MB.' }, 400);
       }
       type = resumeType(resume);
       extension = TYPE_EXTENSIONS.get(type) || '';
-      if (!type || !extension) return reply(request, { error: 'Choose a PDF, DOC, or DOCX resume no larger than 10 MB.' }, 400);
+      if (!type || !extension) return reply(request, { error: 'Choose a PDF, DOC, DOCX, TXT, RTF, or ODT resume no larger than 10 MB.' }, 400);
+      try {
+        redactedResume = await createRedactedResume(resume, extension);
+      } catch (error) {
+        return reply(request, { error: error instanceof Error ? error.message : 'This resume could not be redacted safely.' }, 400);
+      }
     }
 
     const auth = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!);
@@ -131,6 +147,13 @@ Deno.serve(async (request) => {
 
     if (resume) {
       uploadedPath = `${data.user.id}/resume.${extension}`;
+      uploadedRedactedPath = `${data.user.id}/resume-redacted.txt`;
+      const { error: redactedUploadError } = await admin.storage.from(REDACTED_RESUME_BUCKET).upload(uploadedRedactedPath, redactedResume!, {
+        cacheControl: '0',
+        contentType: 'text/plain;charset=utf-8',
+        upsert: false,
+      });
+      if (redactedUploadError) throw redactedUploadError;
       const { error: uploadError } = await admin.storage.from(RESUME_BUCKET).upload(uploadedPath, resume, {
         cacheControl: '0',
         contentType: type,
@@ -161,6 +184,7 @@ Deno.serve(async (request) => {
     if (createdUserId) {
       const cleanup = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
       if (uploadedPath) await cleanup.storage.from(RESUME_BUCKET).remove([uploadedPath]);
+      if (uploadedRedactedPath) await cleanup.storage.from(REDACTED_RESUME_BUCKET).remove([uploadedRedactedPath]);
       await cleanup.auth.admin.deleteUser(createdUserId);
     }
     return reply(request, { error: 'Your account or resume could not be saved. Please try again.' }, 500);

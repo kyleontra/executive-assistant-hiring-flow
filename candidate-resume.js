@@ -4,8 +4,12 @@ const RESUME_TYPES = new Set([
   'application/pdf',
   'application/msword',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'text/plain',
+  'application/rtf',
+  'text/rtf',
+  'application/vnd.oasis.opendocument.text',
 ]);
-const RESUME_EXTENSION = /\.(?:pdf|doc|docx)$/i;
+const RESUME_EXTENSION = /\.(?:pdf|doc|docx|txt|rtf|odt)$/i;
 const input = document.querySelector('#resumeInput');
 const form = document.querySelector('#resumeForm');
 const saveButton = document.querySelector('#saveResume');
@@ -82,7 +86,7 @@ input.addEventListener('change', () => {
   if (!validResume(file)) {
     selectedResume = null;
     input.value = '';
-    showResult('Choose a PDF, DOC, or DOCX resume no larger than 10 MB.', 'error');
+    showResult('Choose a PDF, DOC, DOCX, TXT, RTF, or ODT resume no larger than 10 MB.', 'error');
     saveButton.disabled = !profile?.resumePath;
     return;
   }

@@ -6,7 +6,7 @@ function renderResume(profile) {
   document.querySelector('#candidateResumeTitle').textContent = connected ? profile.resumeFileName : 'No resume connected yet';
   document.querySelector('#candidateResumeDetail').textContent = connected
     ? 'This resume is connected to your candidate account and available with your applications.'
-    : 'Add a PDF, DOC, or DOCX resume now, or connect one the next time you apply.';
+    : 'Add a PDF, DOC, DOCX, TXT, RTF, or ODT resume now, or connect one the next time you apply.';
   const openResume = document.querySelector('#candidateOpenResume');
   openResume.hidden = !profile?.resumeUrl;
   if (profile?.resumeUrl) openResume.href = profile.resumeUrl;

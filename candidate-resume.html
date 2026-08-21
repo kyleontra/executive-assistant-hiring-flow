@@ -9,9 +9,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="./candidate-resume.css" />
+    <link rel="stylesheet" href="./brand.css" />
   </head>
   <body>
-    <header class="resume-header"><a class="resume-brand" href="./jobs.html">EXECUTIVE <span>ASSISTANTS</span></a><span>Candidate profile</span><a href="./jobs.html">Exit</a></header>
+    <header class="resume-header"><a class="resume-brand site-logo-link" href="./jobs.html"><img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a><span>Candidate profile</span><a href="./jobs.html">Exit</a></header>
     <main class="resume-shell">
       <aside class="resume-aside">
         <p class="eyebrow">YOUR CANDIDATE PROFILE</p>
@@ -23,13 +24,13 @@
         <div class="resume-card">
           <p class="eyebrow blue">STEP 3 OF 3</p>
           <h2>Add your current resume.</h2>
-          <p class="lead">Upload a PDF, DOC, or DOCX file. You can replace it from your candidate dashboard whenever it changes.</p>
+          <p class="lead">Upload a PDF, DOC, DOCX, TXT, RTF, or ODT file. You can replace it from your candidate dashboard whenever it changes.</p>
           <p id="authStatus" class="status-box" aria-live="polite">Checking your verified account…</p>
           <form id="resumeForm" novalidate>
             <label class="resume-picker" for="resumeInput">
-              <input id="resumeInput" type="file" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
+              <input id="resumeInput" type="file" accept=".pdf,.doc,.docx,.txt,.rtf,.odt,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,application/rtf,text/rtf,application/vnd.oasis.opendocument.text" />
               <span class="file-icon" aria-hidden="true">↥</span>
-              <span><strong id="resumePickerTitle">Choose your resume</strong><small id="resumePickerDetail">PDF, DOC, or DOCX · maximum 10 MB</small></span>
+              <span><strong id="resumePickerTitle">Choose your resume</strong><small id="resumePickerDetail">PDF, DOC, DOCX, TXT, RTF, or ODT · maximum 10 MB</small></span>
             </label>
             <div id="savedResume" class="saved-resume" hidden><span><b id="savedResumeName"></b><small>Connected to your account</small></span><a id="openResume" href="#" target="_blank" rel="noopener">Open resume</a></div>
             <p id="resumeResult" class="status-box" aria-live="polite" hidden></p>

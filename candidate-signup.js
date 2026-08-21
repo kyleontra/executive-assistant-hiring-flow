@@ -11,8 +11,12 @@ const RESUME_TYPES = new Set([
   'application/pdf',
   'application/msword',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'text/plain',
+  'application/rtf',
+  'text/rtf',
+  'application/vnd.oasis.opendocument.text',
 ]);
-const RESUME_EXTENSION = /\.(?:pdf|doc|docx)$/i;
+const RESUME_EXTENSION = /\.(?:pdf|doc|docx|txt|rtf|odt)$/i;
 
 const requestedJob = new URLSearchParams(window.location.search).get('job');
 if (requestedJob) {
@@ -37,8 +41,8 @@ resumeInput.addEventListener('change', () => {
   if (!validResume(file)) {
     resumeInput.value = '';
     resumePickerTitle.textContent = 'Upload your resume';
-    resumePickerDetail.textContent = 'PDF, DOC, or DOCX · maximum 10 MB';
-    if (file) showResult('Choose a PDF, DOC, or DOCX resume no larger than 10 MB.', 'error');
+    resumePickerDetail.textContent = 'PDF, DOC, DOCX, TXT, RTF, or ODT · maximum 10 MB';
+    if (file) showResult('Choose a PDF, DOC, DOCX, TXT, RTF, or ODT resume no larger than 10 MB.', 'error');
     return;
   }
   resumePickerTitle.textContent = file.name;
@@ -51,7 +55,7 @@ form.addEventListener('submit', async (event) => {
   if (!form.reportValidity() || submitButton.disabled) return;
   const resume = resumeInput.files?.[0];
   if (!validResume(resume)) {
-    showResult('Choose a PDF, DOC, or DOCX resume no larger than 10 MB.', 'error');
+    showResult('Choose a PDF, DOC, DOCX, TXT, RTF, or ODT resume no larger than 10 MB.', 'error');
     resumeInput.focus();
     return;
   }

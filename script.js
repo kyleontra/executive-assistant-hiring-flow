@@ -225,7 +225,7 @@ function bindPostJob() {
     if (focus) row.querySelector('.job-question-input').focus();
   }
 
-  const savedQuestions = role.questions.length ? role.questions : defaults.questions;
+  const savedQuestions = role.questions.length ? role.questions : [{ text: '', type: 'text', options: [] }];
   savedQuestions.forEach((question) => addQuestion(question));
   addButton.addEventListener('click', () => addQuestion(undefined, true));
   questionList.addEventListener('change', (event) => {
@@ -254,7 +254,7 @@ function bindPostJob() {
 
   form.addEventListener('submit', (event) => {
     event.preventDefault();
-    if (!form.reportValidity()) {
+    if (!questionList.children.length || !form.reportValidity()) {
       showPostError(step === 'details' ? 'Complete the job description and every applicant question.' : 'Add at least one complete applicant question.');
       return;
     }
