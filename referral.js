@@ -68,6 +68,7 @@ async function initialize() {
   }
   authStatus.textContent = `Email confirmed for ${candidate.email}.`;
   authStatus.className = 'status-box success';
+  authStatus.hidden = true;
 }
 
 initialize();
