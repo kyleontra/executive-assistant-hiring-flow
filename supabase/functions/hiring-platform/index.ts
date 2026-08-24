@@ -414,7 +414,7 @@ Deno.serve(async (request) => {
     }
 
     if (action === 'candidateDashboard') {
-      const { data: profile, error: profileError } = await admin.from('candidate_profiles').select('resume_path, resume_file_name').eq('user_id', user.id).maybeSingle();
+      const { data: profile, error: profileError } = await admin.from('candidate_profiles').select('resume_path, resume_file_name, referral_source, verification_bypass').eq('user_id', user.id).maybeSingle();
       if (profileError) throw profileError;
       const { data: applications, error } = await admin.from('job_applications').select('*').eq('candidate_id', user.id).order('submitted_at', { ascending: false });
       if (error) throw error;
