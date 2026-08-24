@@ -19,15 +19,14 @@
         <p class="lead">Choose one option.</p>
         <p id="authStatus" class="status-box" aria-live="polite" hidden>Checking your verified account…</p>
         <form id="referralForm" novalidate>
-          <label class="sr-only" for="referralSource">How did you find Hire From SA?</label>
-          <select id="referralSource" name="referralSource" required>
-            <option value="" selected disabled>Select an option</option>
-            <option value="search">Search engine</option>
-            <option value="social">Social media</option>
-            <option value="friend">Friend or referral</option>
-            <option value="job-board">Job board</option>
-            <option value="other">Other</option>
-          </select>
+          <fieldset>
+            <legend class="sr-only">How did you find Hire From SA?</legend>
+            <label class="referral-choice"><input type="radio" name="referralSource" value="search" required />Search engine</label>
+            <label class="referral-choice"><input type="radio" name="referralSource" value="social" />Social media</label>
+            <label class="referral-choice"><input type="radio" name="referralSource" value="friend" />Friend or referral</label>
+            <label class="referral-choice"><input type="radio" name="referralSource" value="job-board" />Job board</label>
+            <label class="referral-choice"><input type="radio" name="referralSource" value="other" />Other</label>
+          </fieldset>
           <label id="otherField" class="other-field" hidden>Where did you hear about us?<input id="referralOther" type="text" maxlength="240" autocomplete="off" /></label>
           <div id="referralResult" class="status-box" aria-live="polite" hidden></div>
           <button id="continueReferral" type="submit">Continue <span>→</span></button>

@@ -42,7 +42,6 @@ form { display: grid; }
 .other-field { margin-bottom: 8px; font-weight: 700; }
 .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; border: 0; clip: rect(0, 0, 0, 0); white-space: nowrap; }
 
-select,
 .other-field input {
   width: 100%;
   height: 54px;
@@ -54,10 +53,34 @@ select,
   font: inherit;
 }
 
-select:focus,
 .other-field input:focus {
   border-color: #1d6be8;
   outline: 3px solid rgba(29, 107, 232, .12);
+}
+
+fieldset {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 28px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.referral-choice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 28px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.referral-choice input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: #1d6be8;
 }
 
 .other-field { display: grid; margin: 18px 0 0; }
@@ -82,4 +105,5 @@ button:disabled { cursor: wait; opacity: .6; }
   .referral-header { height: 56px; padding: 0 18px; }
   .referral-shell { min-height: calc(100vh - 56px); padding: 24px 20px; }
   .referral-card h1 { font-size: 2rem; }
+  fieldset { grid-template-columns: 1fr; gap: 12px; }
 }
