@@ -45,6 +45,11 @@ async function loadCandidateDashboard() {
       window.location.replace('./referral.html');
       return;
     }
+    if (profile.resumeRequired) {
+      const dashboard = encodeURIComponent('./candidate-dashboard.html');
+      window.location.replace(`./candidate-resume.html?required=1&next=${dashboard}`);
+      return;
+    }
     renderResume(profile);
     portalStatus.hidden = true;
     renderApplications(applications || []);

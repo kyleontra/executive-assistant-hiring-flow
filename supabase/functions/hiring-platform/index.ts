@@ -340,10 +340,15 @@ Deno.serve(async (request) => {
         updated_at: new Date().toISOString(),
       };
       if (bypassVerification) values.verification_status = 'verified';
-      const { data: profile, error } = await admin.from('candidate_profiles').update(values).eq('user_id', user.id).select('user_id, verification_status').maybeSingle();
+      const { data: profile, error } = await admin.from('candidate_profiles').update(values).eq('user_id', user.id).select('user_id, verification_status, resume_path').maybeSingle();
       if (error) throw error;
       if (!profile) return reply(request, { error: 'Your candidate profile could not be found.' }, 404);
-      return reply(request, { status: 'saved', bypassVerification, verificationStatus: profile.verification_status });
+      return reply(request, {
+        status: 'saved',
+        bypassVerification,
+        resumeRequired: !clean(profile.resume_path, 500),
+        verificationStatus: profile.verification_status,
+      });
     }
 
     if (action === 'saveProfile' || action === 'submitApplication') {
@@ -439,6 +444,7 @@ Deno.serve(async (request) => {
       return reply(request, { profile: {
         resumeFileName: profile?.resume_file_name || '',
         resumeUrl: await signedAsset(admin, RESUME_BUCKET, String(profile?.resume_path || '')),
+        resumeRequired: Boolean(profile?.verification_bypass) && !profile?.resume_path,
         referralCompleted: Boolean(profile?.referral_source),
         verificationBypass: Boolean(profile?.verification_bypass),
       }, applications: (applications || []).map((application) => {

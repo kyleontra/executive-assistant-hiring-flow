@@ -11,6 +11,9 @@ async function resolvedDestination() {
   try {
     const { profile } = await window.savaPlatform.candidateRequest('getProfile');
     if (!profile?.referralCompleted) return './referral.html';
+    if (profile.verificationBypass && !profile.resumePath) {
+      return `./candidate-resume.html?required=1&next=${encodeURIComponent(loginDestination())}`;
+    }
   } catch { /* The destination page will show any account loading error. */ }
   return loginDestination();
 }

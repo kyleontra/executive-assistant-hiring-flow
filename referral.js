@@ -21,12 +21,15 @@ function updateOtherField() {
   if (!isOther) otherInput.value = '';
 }
 
-function destination(bypassVerification) {
-  if (!bypassVerification) return './candidate-experience.html';
+function destination(payload) {
+  if (!payload.bypassVerification) return './candidate-experience.html';
   const applyingJob = sessionStorage.getItem('sava-applying-job');
-  return applyingJob
+  const completedDestination = applyingJob
     ? `./application-questions.html?job=${encodeURIComponent(applyingJob)}`
     : './candidate-dashboard.html';
+  return payload.resumeRequired
+    ? `./candidate-resume.html?required=1&next=${encodeURIComponent(completedDestination)}`
+    : completedDestination;
 }
 
 form.addEventListener('change', (event) => {
@@ -43,8 +46,13 @@ form.addEventListener('submit', async (event) => {
       source: form.elements.referralSource.value,
       other: otherInput.value.trim(),
     });
-    showResult(payload.bypassVerification ? 'Saved. Opening your candidate account…' : 'Saved. Continuing to your candidate profile…', 'success');
-    window.setTimeout(() => window.location.assign(destination(payload.bypassVerification)), 500);
+    const confirmation = payload.bypassVerification && payload.resumeRequired
+      ? 'Saved. Add your resume to finish setting up your account…'
+      : payload.bypassVerification
+        ? 'Saved. Opening your candidate account…'
+        : 'Saved. Continuing to your candidate profile…';
+    showResult(confirmation, 'success');
+    window.setTimeout(() => window.location.assign(destination(payload)), 500);
   } catch (error) {
     submitButton.disabled = false;
     submitButton.innerHTML = 'Continue <span>→</span>';
