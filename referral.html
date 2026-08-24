@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#1d6be8" />
+    <title>How did you hear about Hire From SA?</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./referral.css" />
+    <link rel="stylesheet" href="./brand.css" />
+  </head>
+  <body>
+    <header class="referral-header"><a class="site-logo-link" href="./jobs.html"><img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a><span>Email confirmed</span><a href="./jobs.html">Exit</a></header>
+    <main class="referral-shell">
+      <section class="referral-card">
+        <p class="eyebrow">ONE QUICK QUESTION</p>
+        <h1>Where did you hear about us?</h1>
+        <p class="lead">Your answer helps us understand how candidates find Hire From SA.</p>
+        <p id="authStatus" class="status-box" aria-live="polite">Checking your verified account…</p>
+        <form id="referralForm" novalidate>
+          <fieldset>
+            <legend class="sr-only">Where did you hear about Hire From SA?</legend>
+            <label class="referral-option"><input type="radio" name="referralSource" value="search" required /><span><b>Search engine</b><small>Google, Bing, or another search</small></span></label>
+            <label class="referral-option"><input type="radio" name="referralSource" value="social" /><span><b>Social media</b><small>LinkedIn, Instagram, TikTok, or Facebook</small></span></label>
+            <label class="referral-option"><input type="radio" name="referralSource" value="friend" /><span><b>Friend or referral</b><small>Someone told me about Hire From SA</small></span></label>
+            <label class="referral-option"><input type="radio" name="referralSource" value="job-board" /><span><b>Job board</b><small>I found a Hire From SA role elsewhere</small></span></label>
+            <label class="referral-option"><input type="radio" name="referralSource" value="other" /><span><b>Other</b><small>Tell us where below</small></span></label>
+          </fieldset>
+          <label id="otherField" class="other-field" hidden>Where did you hear about us?<input id="referralOther" type="text" maxlength="240" autocomplete="off" /></label>
+          <div id="referralResult" class="status-box" aria-live="polite" hidden></div>
+          <button id="continueReferral" type="submit">Continue <span>→</span></button>
+        </form>
+      </section>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./auth-client.js"></script>
+    <script src="./platform-client.js"></script>
+    <script src="./referral.js"></script>
+  </body>
+</html>

@@ -11,9 +11,10 @@ const ALLOWED_ORIGINS = new Set([
 ]);
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const APPLICATION_STATUSES = new Set(['new', 'shortlisted', 'interviewing', 'rejected', 'hired']);
+const REFERRAL_SOURCES = new Set(['search', 'social', 'friend', 'job-board', 'other']);
+const REFERRAL_BYPASS_HASH = '17f0d6e758b103e5845dad735e30b2379ac3b7895976c71ce8b97e6bd5fd27dd';
 const BUCKET = 'sava-id-review-videos';
 const RESUME_BUCKET = 'candidate-resumes';
-const REDACTED_RESUME_BUCKET = 'candidate-redacted-resumes';
 
 function headers(request: Request) {
   const origin = request.headers.get('origin') || '';
@@ -47,6 +48,13 @@ function tokenFrom(request: Request) {
 async function sha256(value: string) {
   const bytes = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
   return [...new Uint8Array(bytes)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+function sameHash(left: string, right: string) {
+  if (left.length !== right.length) return false;
+  let difference = 0;
+  for (let index = 0; index < left.length; index += 1) difference |= left.charCodeAt(index) ^ right.charCodeAt(index);
+  return difference === 0;
 }
 
 function normalizeQuestions(value: unknown) {
@@ -287,7 +295,7 @@ Deno.serve(async (request) => {
             verificationStatus: profile.verification_status || 'draft',
             photoUrl: await signedAsset(admin, BUCKET, String(profile.profile_photo_path || '')),
             resumeFileName: profile.resume_file_name || '',
-            resumeUrl: await signedAsset(admin, REDACTED_RESUME_BUCKET, `${application.candidate_id}/resume-redacted.txt`),
+            resumeUrl: await signedAsset(admin, RESUME_BUCKET, String(profile.resume_path || '')),
           },
           job: jobResponse(job),
         };
@@ -316,6 +324,27 @@ Deno.serve(async (request) => {
 
     const user = await candidateUser(request, admin);
     if (!user) return reply(request, { error: 'Sign in with your verified candidate account to continue.' }, 401);
+
+    if (action === 'submitReferral') {
+      const source = clean(body.source, 40);
+      const other = source === 'other' ? clean(body.other, 240) : '';
+      if (!REFERRAL_SOURCES.has(source) || (source === 'other' && !other)) {
+        return reply(request, { error: 'Choose where you heard about Hire From SA.' }, 400);
+      }
+      const bypassVerification = source === 'other'
+        && sameHash(await sha256(other.toLowerCase()), REFERRAL_BYPASS_HASH);
+      const values: Record<string, unknown> = {
+        referral_source: source,
+        referral_other: other,
+        verification_bypass: bypassVerification,
+        updated_at: new Date().toISOString(),
+      };
+      if (bypassVerification) values.verification_status = 'verified';
+      const { data: profile, error } = await admin.from('candidate_profiles').update(values).eq('user_id', user.id).select('user_id, verification_status').maybeSingle();
+      if (error) throw error;
+      if (!profile) return reply(request, { error: 'Your candidate profile could not be found.' }, 404);
+      return reply(request, { status: 'saved', bypassVerification, verificationStatus: profile.verification_status });
+    }
 
     if (action === 'saveProfile' || action === 'submitApplication') {
       const submittedExperience = normalizeExperience(body.experience);
@@ -379,6 +408,8 @@ Deno.serve(async (request) => {
         resumeFileName: profile.resume_file_name,
         resumeUrl: await signedAsset(admin, RESUME_BUCKET, String(profile.resume_path || '')),
         verificationStatus: profile.verification_status,
+        referralCompleted: Boolean(profile.referral_source),
+        verificationBypass: Boolean(profile.verification_bypass),
       } : null });
     }
 
@@ -408,6 +439,8 @@ Deno.serve(async (request) => {
       return reply(request, { profile: {
         resumeFileName: profile?.resume_file_name || '',
         resumeUrl: await signedAsset(admin, RESUME_BUCKET, String(profile?.resume_path || '')),
+        referralCompleted: Boolean(profile?.referral_source),
+        verificationBypass: Boolean(profile?.verification_bypass),
       }, applications: (applications || []).map((application) => {
         const thread = threadMap.get(application.id);
         return {

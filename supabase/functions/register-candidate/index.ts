@@ -2,7 +2,6 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import { createRedactedResume } from '../_shared/resume-redaction.js';
 
 const RESUME_BUCKET = 'candidate-resumes';
-const REDACTED_RESUME_BUCKET = 'candidate-redacted-resumes';
 const MAX_RESUME_BYTES = 10 * 1024 * 1024;
 const TYPE_EXTENSIONS = new Map([
   ['application/pdf', 'pdf'],
@@ -58,9 +57,10 @@ function resumeType(file: File) {
   return EXTENSION_TYPES.get(extension) || '';
 }
 
-function safeFileName(value: string, extension: string) {
-  const cleaned = value.replace(/[\u0000-\u001f\u007f]/g, '').replace(/[\\/]/g, '-').trim().slice(0, 255);
-  return cleaned || `resume.${extension}`;
+function safeTextFileName(value: string) {
+  const cleaned = value.replace(/[\u0000-\u001f\u007f]/g, '').replace(/[\\/]/g, '-').trim();
+  const base = cleaned.replace(/\.[^.]+$/, '').trim().slice(0, 240) || 'resume';
+  return `${base}.txt`;
 }
 
 Deno.serve(async (request) => {
@@ -70,7 +70,6 @@ Deno.serve(async (request) => {
 
   let createdUserId = '';
   let uploadedPath = '';
-  let uploadedRedactedPath = '';
   try {
     const isMultipart = (request.headers.get('content-type') || '').includes('multipart/form-data');
     let input: Record<string, unknown> = {};
@@ -146,17 +145,10 @@ Deno.serve(async (request) => {
     if (roleError) throw roleError;
 
     if (resume) {
-      uploadedPath = `${data.user.id}/resume.${extension}`;
-      uploadedRedactedPath = `${data.user.id}/resume-redacted.txt`;
-      const { error: redactedUploadError } = await admin.storage.from(REDACTED_RESUME_BUCKET).upload(uploadedRedactedPath, redactedResume!, {
+      uploadedPath = `${data.user.id}/resume.txt`;
+      const { error: uploadError } = await admin.storage.from(RESUME_BUCKET).upload(uploadedPath, redactedResume!, {
         cacheControl: '0',
         contentType: 'text/plain;charset=utf-8',
-        upsert: false,
-      });
-      if (redactedUploadError) throw redactedUploadError;
-      const { error: uploadError } = await admin.storage.from(RESUME_BUCKET).upload(uploadedPath, resume, {
-        cacheControl: '0',
-        contentType: type,
         upsert: false,
       });
       if (uploadError) throw uploadError;
@@ -171,7 +163,7 @@ Deno.serve(async (request) => {
         summary: 'Resume submitted with candidate account.',
         profile_photo_path: '',
         resume_path: uploadedPath,
-        resume_file_name: safeFileName(resume.name, extension),
+        resume_file_name: safeTextFileName(resume.name),
         verification_status: 'draft',
         updated_at: new Date().toISOString(),
       }, { onConflict: 'user_id' });
@@ -184,7 +176,6 @@ Deno.serve(async (request) => {
     if (createdUserId) {
       const cleanup = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
       if (uploadedPath) await cleanup.storage.from(RESUME_BUCKET).remove([uploadedPath]);
-      if (uploadedRedactedPath) await cleanup.storage.from(REDACTED_RESUME_BUCKET).remove([uploadedRedactedPath]);
       await cleanup.auth.admin.deleteUser(createdUserId);
     }
     return reply(request, { error: 'Your account or resume could not be saved. Please try again.' }, 500);

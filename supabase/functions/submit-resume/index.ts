@@ -2,7 +2,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import { createRedactedResume } from '../_shared/resume-redaction.js';
 
 const BUCKET = 'candidate-resumes';
-const REDACTED_BUCKET = 'candidate-redacted-resumes';
+const LEGACY_REDACTED_BUCKET = 'candidate-redacted-resumes';
 const MAX_RESUME_BYTES = 10 * 1024 * 1024;
 const TYPE_EXTENSIONS = new Map([
   ['application/pdf', 'pdf'],
@@ -58,9 +58,10 @@ function resumeType(file: File) {
   return EXTENSION_TYPES.get(extension) || '';
 }
 
-function safeFileName(value: string, extension: string) {
-  const cleaned = value.replace(/[\u0000-\u001f\u007f]/g, '').replace(/[\\/]/g, '-').trim().slice(0, 255);
-  return cleaned || `resume.${extension}`;
+function safeTextFileName(value: string) {
+  const cleaned = value.replace(/[\u0000-\u001f\u007f]/g, '').replace(/[\\/]/g, '-').trim();
+  const base = cleaned.replace(/\.[^.]+$/, '').trim().slice(0, 240) || 'resume';
+  return `${base}.txt`;
 }
 
 Deno.serve(async (request) => {
@@ -88,29 +89,20 @@ Deno.serve(async (request) => {
     const { data: { user }, error: userError } = await admin.auth.getUser(tokenFrom(request));
     if (userError || !user?.email_confirmed_at) return reply(request, { error: 'Confirm your email before connecting a resume.' }, 401);
 
-    const path = `${user.id}/resume.${extension}`;
-    const redactedPath = `${user.id}/resume-redacted.txt`;
-    const { error: redactedUploadError } = await admin.storage.from(REDACTED_BUCKET).upload(redactedPath, redactedResume, {
+    const path = `${user.id}/resume.txt`;
+    const { error: uploadError } = await admin.storage.from(BUCKET).upload(path, redactedResume, {
       cacheControl: '0',
       contentType: 'text/plain;charset=utf-8',
       upsert: true,
     });
-    if (redactedUploadError) throw redactedUploadError;
-    const { error: uploadError } = await admin.storage.from(BUCKET).upload(path, resume, {
-      cacheControl: '0',
-      contentType: type,
-      upsert: true,
-    });
-    if (uploadError) {
-      await admin.storage.from(REDACTED_BUCKET).remove([redactedPath]);
-      throw uploadError;
-    }
-    const oldPaths = ['pdf', 'doc', 'docx', 'txt', 'rtf', 'odt'].filter((item) => item !== extension).map((item) => `${user.id}/resume.${item}`);
+    if (uploadError) throw uploadError;
+    const oldPaths = ['pdf', 'doc', 'docx', 'rtf', 'odt'].map((item) => `${user.id}/resume.${item}`);
     await admin.storage.from(BUCKET).remove(oldPaths);
+    await admin.storage.from(LEGACY_REDACTED_BUCKET).remove([`${user.id}/resume-redacted.txt`]);
 
     return reply(request, {
       path,
-      fileName: safeFileName(resume.name, extension),
+      fileName: safeTextFileName(resume.name),
       status: 'resume_saved',
     }, 201);
   } catch (error) {

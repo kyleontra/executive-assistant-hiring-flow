@@ -73,6 +73,10 @@ async function initialize() {
   renderQuestions();
   try {
     ({ profile } = await window.savaPlatform.candidateRequest('getProfile'));
+    if (!profile?.referralCompleted) {
+      window.location.replace('./referral.html');
+      return;
+    }
   } catch (error) {
     showResult(error.message || 'Your candidate account could not be loaded.', 'error');
     submitButton.disabled = true;

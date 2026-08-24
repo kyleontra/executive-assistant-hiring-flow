@@ -207,10 +207,20 @@ async function initialize() {
 
   authStatus.textContent = demoMode ? 'Demo mode — no account is required and nothing will be saved to the server.' : `Email confirmed for ${candidate.email}.`;
   authStatus.className = 'status-message success';
-  if (!previewMode && !sessionStorage.getItem(storageKey('experience'))) {
+  if (!previewMode) {
     try {
       const { profile } = await window.savaPlatform.candidateRequest('getProfile');
-      if (profile?.experience?.length) sessionStorage.setItem(storageKey('experience'), JSON.stringify(profile.experience));
+      if (!profile?.referralCompleted) {
+        window.location.replace('./referral.html');
+        return;
+      }
+      if (profile.verificationBypass) {
+        window.location.replace('./candidate-dashboard.html');
+        return;
+      }
+      if (!sessionStorage.getItem(storageKey('experience')) && profile?.experience?.length) {
+        sessionStorage.setItem(storageKey('experience'), JSON.stringify(profile.experience));
+      }
     } catch { /* Start with an empty experience form if there is no saved server profile yet. */ }
   }
   loadExperienceDraft();

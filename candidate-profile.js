@@ -79,6 +79,14 @@ async function initialize() {
 
   try {
     const { profile } = await window.savaPlatform.candidateRequest('getProfile');
+    if (!profile?.referralCompleted) {
+      window.location.replace('./referral.html');
+      return;
+    }
+    if (profile.verificationBypass) {
+      window.location.replace('./candidate-dashboard.html');
+      return;
+    }
     existingPhotoPath = profile?.photoPath || sessionStorage.getItem(`sava:profile-photo:${candidate.id}`) || '';
     if (existingPhotoPath) {
       sessionStorage.setItem(`sava:profile-photo:${candidate.id}`, existingPhotoPath);

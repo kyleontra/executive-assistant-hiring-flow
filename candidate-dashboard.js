@@ -41,6 +41,10 @@ async function loadCandidateDashboard() {
   document.querySelector('#candidateWelcome').textContent = `Signed in as ${user.email}. Track applications and interview conversations here.`;
   try {
     const { applications, profile } = await window.savaPlatform.candidateRequest('candidateDashboard');
+    if (!profile?.referralCompleted) {
+      window.location.replace('./referral.html');
+      return;
+    }
     renderResume(profile);
     portalStatus.hidden = true;
     renderApplications(applications || []);

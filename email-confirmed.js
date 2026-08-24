@@ -26,12 +26,8 @@ form.addEventListener('submit', async (event) => {
   try {
     const { error } = await window.savaAuth.auth.verifyOtp({ email, token, type: 'email' });
     if (error) throw error;
-    const applyingJob = sessionStorage.getItem('sava-applying-job');
-    const destination = applyingJob
-      ? `./application-questions.html?job=${encodeURIComponent(applyingJob)}`
-      : './candidate-dashboard.html';
-    showResult(`Email verified. ${applyingJob ? 'Continuing to your application…' : 'Opening your account…'}`, 'success');
-    window.setTimeout(() => { window.location.assign(destination); }, 650);
+    showResult('Email verified. One quick question before you continue…', 'success');
+    window.setTimeout(() => { window.location.assign('./referral.html'); }, 650);
   } catch (error) {
     showResult(error.message || 'That code could not be verified. Request a new code and try again.', 'error');
     verifyButton.disabled = false;

@@ -109,8 +109,8 @@ form.addEventListener('submit', async (event) => {
   skipButton.disabled = true;
   saveButton.textContent = 'Connecting resume…';
   try {
-    let resumePath = `demo-candidate/resume.${selectedResume.name.split('.').pop()?.toLowerCase() || 'pdf'}`;
-    let resumeFileName = selectedResume.name;
+    let resumePath = 'demo-candidate/resume.txt';
+    let resumeFileName = `${selectedResume.name.replace(/\.[^.]+$/, '') || 'resume'}.txt`;
     if (!demoMode) {
       const experience = profile?.experience || [];
       await window.savaPlatform.candidateRequest('saveProfile', {
