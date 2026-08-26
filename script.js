@@ -445,7 +445,9 @@ function renderJobs(filter = '') {
 async function bindJobs() {
   if (!$('#jobResults')) return;
   await loadServerJobs();
-  renderJobs();
+  const initialSearch = new URLSearchParams(window.location.search).get('q') || '';
+  $('#jobSearch').value = initialSearch;
+  renderJobs(initialSearch);
   $('#searchJobs').addEventListener('click', () => renderJobs($('#jobSearch').value));
   $('#jobSearch').addEventListener('input', (event) => renderJobs(event.target.value));
   document.querySelectorAll('.filters input[type="checkbox"]').forEach((input) => input.addEventListener('change', () => renderJobs($('#jobSearch').value)));

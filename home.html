@@ -3,8 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#256fe8" />
-    <title>Hire From SA — Hiring marketplace</title>
+    <meta name="theme-color" content="#f3f8ff" />
+    <meta name="description" content="Hire skilled South African remote talent or find your next remote role with Hire From SA." />
+    <title>Hire From SA — South African remote talent</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
@@ -12,28 +13,185 @@
     <link rel="stylesheet" href="./brand.css" />
   </head>
   <body>
-    <header class="home-header"><a href="./home.html" class="brand site-logo-link"><img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a><span>South African talent marketplace</span></header>
+    <header class="home-header">
+      <a href="./home.html" class="brand site-logo-link" aria-label="Hire From SA home">
+        <img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" />
+      </a>
+      <nav class="desktop-nav" aria-label="Main navigation">
+        <a href="#how-it-works">How it works</a>
+        <a href="#why-south-africa">Why South Africa</a>
+        <a href="./jobs.html">Find jobs</a>
+      </nav>
+      <div class="header-actions">
+        <a class="text-link candidate-login-link" href="./candidate-login.html">Candidate sign in</a>
+        <a class="text-link post-link" href="./index.html">Post a job</a>
+        <a class="header-cta" href="./candidate-signup.html">Join as talent</a>
+      </div>
+    </header>
+
     <main>
       <section class="home-hero">
-        <p class="eyebrow">HIRING, CONNECTED</p>
-        <h1>Hire talent or find your next role.</h1>
-        <p>Hirers and candidates use one connected platform for jobs, applications, interviews, and messages.</p>
+        <div class="hero-grid" aria-hidden="true"></div>
+        <div class="activity-pill activity-one" aria-hidden="true">
+          <span class="activity-avatar blue">TM</span>
+          <span><b>Talent matched</b><small>Executive assistant · 94% match</small></span>
+        </div>
+        <div class="activity-pill activity-two" aria-hidden="true">
+          <span class="activity-avatar green">✓</span>
+          <span><b>Application received</b><small>Ready for review</small></span>
+        </div>
+
+        <div class="hero-content">
+          <p class="eyebrow"><span></span> SOUTH AFRICAN REMOTE TALENT</p>
+          <h1>Hire skilled remote talent from South Africa.</h1>
+          <p class="hero-copy">Connect with English-speaking professionals who are ready to support your business—or find a remote role where your experience stands out.</p>
+
+          <div class="hero-paths" aria-label="Choose how to use Hire From SA">
+            <a class="path-button primary" href="./index.html">Hire talent <span>→</span></a>
+            <a class="path-button secondary" href="./jobs.html">Find a job <span>→</span></a>
+          </div>
+
+          <form class="job-search" action="./jobs.html" method="get" role="search">
+            <label class="sr-only" for="homeJobSearch">Search open jobs</label>
+            <span class="search-icon" aria-hidden="true">⌕</span>
+            <input id="homeJobSearch" name="q" type="search" placeholder="Search roles, skills, or companies" autocomplete="off" />
+            <button type="submit">Search jobs</button>
+          </form>
+
+          <div class="role-links" aria-label="Popular job searches">
+            <span>Popular:</span>
+            <a href="./jobs.html?q=Virtual%20Assistant">Virtual Assistant</a>
+            <a href="./jobs.html?q=Executive%20Assistant">Executive Assistant</a>
+            <a href="./jobs.html?q=Sales">Sales</a>
+            <a href="./jobs.html?q=Customer%20Support">Customer Support</a>
+            <a href="./jobs.html?q=Operations">Operations</a>
+          </div>
+        </div>
       </section>
-      <section class="flow-grid" aria-label="Choose a test flow">
-        <a class="flow-card employer" href="./index.html">
-          <div class="flow-icon">↗</div><p class="card-kicker">FOR HIRERS</p><h2>Post a role and hire</h2><p>Publish a role, review applications, shortlist candidates, message directly, and arrange interviews.</p><span>Open hirer workspace <b>→</b></span>
-          <div class="mini-flow"><i></i><i></i><i></i><i></i></div>
-        </a>
-        <a class="flow-card candidate" href="./jobs.html">
-          <div class="flow-icon">⌕</div><p class="card-kicker">FOR CANDIDATES</p><h2>Find and apply for a job</h2><p>Browse live roles, connect your resume, apply in one step, track progress, and message hirers.</p><span>Browse live jobs <b>→</b></span>
-          <div class="mini-job"><i></i><i></i><i></i></div>
-        </a>
-        <a class="flow-card verify" href="./candidate-dashboard.html">
-          <div class="flow-icon">✓</div><p class="card-kicker">RETURNING CANDIDATES</p><h2>Track applications and messages</h2><p>Sign in to see every application, current stage, and conversation in one place.</p><span>Open my applications <b>→</b></span>
-          <div class="mini-shield">⌖</div>
-        </a>
+
+      <section class="platform-strip" aria-label="Platform features">
+        <p>One connected hiring platform</p>
+        <div>
+          <span><i>✓</i> Verified candidates</span>
+          <span><i>✓</i> Direct messaging</span>
+          <span><i>✓</i> Interview scheduling</span>
+          <span><i>✓</i> Application tracking</span>
+        </div>
       </section>
-      <p class="home-footnote">Hire From SA connects verified South African candidates with hiring teams.</p>
+
+      <section class="section how-section" id="how-it-works">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">HOW IT WORKS</p>
+            <h2>From open role to great hire.</h2>
+          </div>
+          <p>Create a role, compare applicants, and move the right people forward without losing track of conversations or interviews.</p>
+        </div>
+
+        <div class="steps-grid">
+          <article class="step-card">
+            <span class="step-number">01</span>
+            <div class="step-icon">＋</div>
+            <h3>Post your role</h3>
+            <p>Describe the work, set your requirements, and add the questions that matter to your team.</p>
+          </article>
+          <article class="step-card">
+            <span class="step-number">02</span>
+            <div class="step-icon">≋</div>
+            <h3>Review applicants</h3>
+            <p>Compare match, relevant experience, resumes, and question answers in one focused inbox.</p>
+          </article>
+          <article class="step-card">
+            <span class="step-number">03</span>
+            <div class="step-icon">✓</div>
+            <h3>Interview and hire</h3>
+            <p>Shortlist candidates, message them directly, and schedule the next conversation.</p>
+          </article>
+        </div>
+        <a class="section-cta" href="./index.html">Post your first job <span>→</span></a>
+      </section>
+
+      <section class="why-section" id="why-south-africa">
+        <div class="why-intro">
+          <p class="section-kicker light">WHY SOUTH AFRICA</p>
+          <h2>Global talent.<br />A better way to hire.</h2>
+          <p>Work with capable professionals who communicate clearly, understand international teams, and are ready for remote work.</p>
+          <a href="./jobs.html">Explore open roles <span>→</span></a>
+        </div>
+        <div class="benefits-grid">
+          <article>
+            <span>01</span>
+            <h3>English fluency</h3>
+            <p>Clear written and spoken communication for customer-facing and internal work.</p>
+          </article>
+          <article>
+            <span>02</span>
+            <h3>Time-zone overlap</h3>
+            <p>Flexible working hours that overlap with teams across Europe and North America.</p>
+          </article>
+          <article>
+            <span>03</span>
+            <h3>Experienced professionals</h3>
+            <p>Talent across administration, operations, support, sales, and specialist roles.</p>
+          </article>
+          <article>
+            <span>04</span>
+            <h3>Ready for remote work</h3>
+            <p>Candidates can share their experience, resume, answers, and video introduction.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section audience-section">
+        <div class="audience-card hirers">
+          <p class="section-kicker">FOR HIRING TEAMS</p>
+          <h2>Everything you need to make the next hire.</h2>
+          <ul>
+            <li>Search and sort applicants for each active role</li>
+            <li>Review profiles, resumes, and application answers</li>
+            <li>Shortlist, message, and invite candidates to interview</li>
+          </ul>
+          <div class="audience-actions">
+            <a class="path-button primary" href="./index.html">Start hiring <span>→</span></a>
+            <a class="inline-link" href="./applicants.html">Open hiring inbox</a>
+          </div>
+        </div>
+        <div class="audience-card candidates">
+          <p class="section-kicker">FOR SOUTH AFRICAN TALENT</p>
+          <h2>Put your experience in front of global teams.</h2>
+          <ul>
+            <li>Create one profile and connect your resume</li>
+            <li>Apply to roles and answer employer questions</li>
+            <li>Track every application and message in one place</li>
+          </ul>
+          <div class="audience-actions">
+            <a class="path-button dark" href="./candidate-signup.html">Create your profile <span>→</span></a>
+            <a class="inline-link" href="./jobs.html">Browse jobs</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="final-cta">
+        <p class="section-kicker light">YOUR NEXT CONNECTION STARTS HERE</p>
+        <h2>Build your remote team—or your remote career.</h2>
+        <p>Join the marketplace connecting South African professionals with hiring teams around the world.</p>
+        <div class="final-actions">
+          <a class="path-button white" href="./index.html">Post a job <span>→</span></a>
+          <a class="path-button outline" href="./candidate-signup.html">Join as talent <span>→</span></a>
+        </div>
+      </section>
     </main>
+
+    <footer class="home-footer">
+      <a href="./home.html" class="brand site-logo-link" aria-label="Hire From SA home">
+        <img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" />
+      </a>
+      <p>South African talent. Global opportunity.</p>
+      <nav aria-label="Footer navigation">
+        <a href="./jobs.html">Find jobs</a>
+        <a href="./candidate-login.html">Candidate sign in</a>
+        <a href="./index.html">Post a job</a>
+      </nav>
+    </footer>
   </body>
 </html>
