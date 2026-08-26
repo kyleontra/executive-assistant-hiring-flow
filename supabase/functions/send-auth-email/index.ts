@@ -6,6 +6,7 @@ const clientId = Deno.env.get('MS_CLIENT_ID') || '';
 const clientSecret = Deno.env.get('MS_CLIENT_SECRET') || '';
 const initialRefreshToken = Deno.env.get('MS_REFRESH_TOKEN') || '';
 const senderAddress = Deno.env.get('MS_SENDER_ADDRESS') || 'info@hirefromsa.com';
+const internalServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
 
 let cachedToken = '';
 let cachedTokenExpiresAt = 0;
@@ -23,6 +24,15 @@ type HookPayload = {
   };
 };
 
+type MessageNotification = {
+  type: 'message_notification';
+  recipient: string;
+  candidateName: string;
+  companyName: string;
+  roleName: string;
+  messageBody: string;
+};
+
 function escapeHtml(value: string) {
   return value.replace(/[&<>'"]/g, (character) => ({
     '&': '&amp;',
@@ -31,6 +41,17 @@ function escapeHtml(value: string) {
     "'": '&#39;',
     '"': '&quot;',
   }[character] || character));
+}
+
+function sameSecret(left: string, right: string) {
+  if (!left || left.length !== right.length) return false;
+  let difference = 0;
+  for (let index = 0; index < left.length; index += 1) difference |= left.charCodeAt(index) ^ right.charCodeAt(index);
+  return difference === 0;
+}
+
+function clean(value: unknown, maxLength: number) {
+  return typeof value === 'string' ? value.trim().slice(0, maxLength) : '';
 }
 
 function emailCopy(action: string) {
@@ -86,6 +107,32 @@ function renderEmail(code: string, heading: string, instruction: string) {
 </html>`;
 }
 
+function renderMessageNotification(candidateName: string, companyName: string, roleName: string, messageBody: string) {
+  const firstName = escapeHtml(candidateName.split(/\s+/)[0] || 'there');
+  const safeCompany = escapeHtml(companyName || 'A hirer');
+  const safeRole = escapeHtml(roleName || 'your application');
+  const safeMessage = escapeHtml(messageBody).replace(/\r?\n/g, '<br />');
+  return `<!doctype html>
+<html lang="en">
+  <body style="margin:0;background:#f4f7fb;font-family:Arial,sans-serif;color:#12213a">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f4f7fb;padding:36px 16px">
+      <tr><td align="center">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:580px;background:#ffffff;border:1px solid #dbe4f0;border-radius:18px;overflow:hidden">
+          <tr><td style="background:#246fe5;padding:24px 30px;color:#ffffff;font-size:15px;font-weight:700;letter-spacing:.08em">HIRE FROM SA</td></tr>
+          <tr><td style="padding:34px 30px">
+            <h1 style="margin:0 0 12px;font-size:28px;line-height:1.2">You have a new message</h1>
+            <p style="margin:0 0 22px;color:#5c6b82;font-size:16px;line-height:1.6">Hi ${firstName}, ${safeCompany} sent you a message about the ${safeRole} role.</p>
+            <div style="padding:18px 20px;border-left:4px solid #246fe5;border-radius:8px;background:#f5f8fd;color:#24344f;font-size:15px;line-height:1.65">${safeMessage}</div>
+            <p style="margin:26px 0 0"><a href="https://www.hirefromsa.com/candidate-login.html?next=.%2Fcandidate-dashboard.html" style="display:inline-block;padding:14px 20px;border-radius:10px;background:#12213a;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none">Open messages</a></p>
+            <p style="margin:24px 0 0;color:#7b8799;font-size:13px;line-height:1.6">Reply through Hire From SA so the conversation stays connected to your application.</p>
+          </td></tr>
+        </table>
+      </td></tr>
+    </table>
+  </body>
+</html>`;
+}
+
 async function getGraphToken() {
   if (cachedToken && Date.now() < cachedTokenExpiresAt) return cachedToken;
   const response = await fetch(`https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`, {
@@ -109,9 +156,8 @@ async function getGraphToken() {
   return cachedToken;
 }
 
-async function sendEmail(recipient: string, code: string, action: string) {
+async function sendGraphEmail(recipient: string, subject: string, content: string) {
   const token = await getGraphToken();
-  const copy = emailCopy(action);
   const response = await fetch('https://graph.microsoft.com/v1.0/me/sendMail', {
     method: 'POST',
     headers: {
@@ -120,10 +166,10 @@ async function sendEmail(recipient: string, code: string, action: string) {
     },
     body: JSON.stringify({
       message: {
-        subject: copy.subject,
+        subject,
         body: {
           contentType: 'HTML',
-          content: renderEmail(code, copy.heading, copy.instruction),
+          content,
         },
         toRecipients: [{ emailAddress: { address: recipient } }],
       },
@@ -136,13 +182,47 @@ async function sendEmail(recipient: string, code: string, action: string) {
   }
 }
 
+async function sendEmail(recipient: string, code: string, action: string) {
+  const copy = emailCopy(action);
+  await sendGraphEmail(recipient, copy.subject, renderEmail(code, copy.heading, copy.instruction));
+}
+
+async function sendCandidateMessageEmail(notification: MessageNotification) {
+  const recipient = clean(notification.recipient, 254).toLowerCase();
+  const candidateName = clean(notification.candidateName, 120);
+  const companyName = clean(notification.companyName, 120);
+  const roleName = clean(notification.roleName, 180);
+  const messageBody = clean(notification.messageBody, 2000);
+  if (!recipient || !recipient.includes('@') || !messageBody) throw new Error('The message notification is missing required fields.');
+  const subjectCompany = (companyName || 'A hirer').replace(/[\r\n]+/g, ' ');
+  const subjectRole = (roleName || 'your application').replace(/[\r\n]+/g, ' ');
+  await sendGraphEmail(
+    recipient,
+    `New message from ${subjectCompany} about ${subjectRole}`,
+    renderMessageNotification(candidateName, companyName, roleName, messageBody),
+  );
+}
+
 Deno.serve(async (request) => {
   if (request.method !== 'POST') return new Response('not allowed', { status: 400 });
-  if (!hookSecret || !tenantId || !clientId || !clientSecret || !initialRefreshToken || !senderAddress) {
+  if (!tenantId || !clientId || !clientSecret || !initialRefreshToken || !senderAddress) {
     return Response.json({ error: { http_code: 500, message: 'Email service is not configured.' } }, { status: 500 });
   }
 
   try {
+    const suppliedInternalKey = request.headers.get('x-internal-email-key') || '';
+    if (suppliedInternalKey) {
+      if (!sameSecret(suppliedInternalKey, internalServiceKey)) return Response.json({ error: 'Unauthorized.' }, { status: 401 });
+      const notification = await request.json() as MessageNotification | { type: 'health_check' };
+      if (notification.type === 'health_check') {
+        await getGraphToken();
+        return Response.json({ configured: true });
+      }
+      if (notification.type !== 'message_notification') return Response.json({ error: 'Unknown internal email type.' }, { status: 400 });
+      await sendCandidateMessageEmail(notification);
+      return Response.json({ sent: true });
+    }
+    if (!hookSecret) return Response.json({ error: { http_code: 500, message: 'Auth email hook is not configured.' } }, { status: 500 });
     const payload = await request.text();
     const webhook = new Webhook(hookSecret);
     const { user, email_data } = webhook.verify(payload, Object.fromEntries(request.headers)) as HookPayload;

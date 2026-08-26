@@ -987,10 +987,14 @@ async function bindApplicants() {
     button.disabled = true;
     messageStatus.textContent = 'Sending…';
     try {
-      const { messages } = await messageRequest('send', selectedCandidate, { body });
+      const { messages, emailNotification } = await messageRequest('send', selectedCandidate, { body });
       renderMessages(messages || []);
       messageBody.value = '';
-      messageStatus.textContent = 'Sent just now.';
+      messageStatus.textContent = emailNotification === 'sent'
+        ? 'Sent. Candidate notified by email.'
+        : emailNotification === 'failed'
+          ? 'Sent, but the email notification failed.'
+          : 'Sent just now.';
       if (pendingInterviewCandidate === selectedCandidate) {
         await setCandidateStatus(selectedCandidate, 'interviewing');
         pendingInterviewCandidate = null;

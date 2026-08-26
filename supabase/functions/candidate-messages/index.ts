@@ -49,6 +49,30 @@ function messagesResponse(messages: Array<Record<string, unknown>>) {
   }));
 }
 
+async function sendCandidateNotification(notification: {
+  recipient: string;
+  candidateName: string;
+  companyName: string;
+  roleName: string;
+  messageBody: string;
+}) {
+  const projectUrl = Deno.env.get('SUPABASE_URL') || '';
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+  if (!projectUrl || !serviceKey) throw new Error('The internal email service is not configured.');
+  const response = await fetch(`${projectUrl}/functions/v1/send-auth-email`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-internal-email-key': serviceKey,
+    },
+    body: JSON.stringify({ type: 'message_notification', ...notification }),
+  });
+  if (!response.ok) {
+    const detail = (await response.text()).slice(0, 500);
+    throw new Error(`Notification email failed (${response.status}): ${detail}`);
+  }
+}
+
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response('ok', { headers: headers(request) });
   if (request.method !== 'POST') return reply(request, { error: 'Method not allowed.' }, 405);
@@ -79,15 +103,19 @@ Deno.serve(async (request) => {
     if (threadError) throw threadError;
 
     let linkedCandidateId = '';
+    let notificationCompanyName = 'A hirer';
+    let notificationRoleName = roleName;
     if (applicationId) {
       if (!UUID_PATTERN.test(applicationId)) return reply(request, { error: 'Invalid application conversation.' }, 400);
       const { data: application, error: applicationError } = await admin.from('job_applications').select('candidate_id, job_id').eq('id', applicationId).maybeSingle();
       if (applicationError) throw applicationError;
       if (!application) return reply(request, { error: 'That application is no longer available.' }, 404);
-      const { data: job, error: jobError } = await admin.from('hiring_jobs').select('employer_id').eq('id', application.job_id).single();
+      const { data: job, error: jobError } = await admin.from('hiring_jobs').select('employer_id, company_name, title').eq('id', application.job_id).single();
       if (jobError) throw jobError;
       if (job.employer_id !== employerId) return reply(request, { error: 'That application belongs to a different hirer workspace.' }, 403);
       linkedCandidateId = application.candidate_id;
+      notificationCompanyName = clean(job.company_name, 120) || notificationCompanyName;
+      notificationRoleName = clean(job.title, 180) || notificationRoleName;
     }
 
     if (!thread) {
@@ -106,6 +134,7 @@ Deno.serve(async (request) => {
 
     if (thread.edit_token_hash !== tokenHash) return reply(request, { error: 'This browser cannot access that conversation.' }, 403);
 
+    let emailNotification = 'not_requested';
     if (action === 'send') {
       const messageBody = clean(body.body, 2000);
       if (!messageBody) return reply(request, { error: 'Write a message before sending.' }, 400);
@@ -117,6 +146,30 @@ Deno.serve(async (request) => {
       if (insertError) throw insertError;
       const { error: updateError } = await admin.from('candidate_message_threads').update({ updated_at: new Date().toISOString() }).eq('id', thread.id);
       if (updateError) throw updateError;
+      emailNotification = 'unavailable';
+      if (linkedCandidateId) {
+        try {
+          const [{ data: authData, error: authError }, { data: profile, error: profileError }] = await Promise.all([
+            admin.auth.admin.getUserById(linkedCandidateId),
+            admin.from('candidate_profiles').select('full_name').eq('user_id', linkedCandidateId).maybeSingle(),
+          ]);
+          if (authError) throw authError;
+          if (profileError) throw profileError;
+          const recipient = clean(authData.user?.email, 254).toLowerCase();
+          if (!recipient) throw new Error('The candidate account has no email address.');
+          await sendCandidateNotification({
+            recipient,
+            candidateName: clean(profile?.full_name, 120) || candidateName,
+            companyName: notificationCompanyName,
+            roleName: notificationRoleName,
+            messageBody,
+          });
+          emailNotification = 'sent';
+        } catch (notificationError) {
+          emailNotification = 'failed';
+          console.error('Candidate notification email failed:', notificationError);
+        }
+      }
     } else if (action !== 'list') {
       return reply(request, { error: 'Unknown messaging action.' }, 400);
     }
@@ -128,7 +181,7 @@ Deno.serve(async (request) => {
       .order('created_at')
       .limit(200);
     if (messagesError) throw messagesError;
-    return reply(request, { messages: messagesResponse(messages || []) });
+    return reply(request, { messages: messagesResponse(messages || []), emailNotification });
   } catch (error) {
     console.error('Candidate messaging failed:', error);
     return reply(request, { error: 'Messages could not complete that request. Try again.' }, 500);
