@@ -51,6 +51,8 @@ Deno.serve(async (request) => {
     const { data: { user }, error: userError } = await admin.auth.getUser(tokenFrom(request));
     if (userError || !user?.email_confirmed_at) return reply(request, { error: 'Confirm your email before submitting ID photos.' }, 401);
     if (profilePhotoPath !== `candidate-profiles/${user.id}/profile`) return reply(request, { error: 'Add your professional profile photo before submitting ID photos.' }, 400);
+    const { data: photos, error: photosError } = await admin.storage.from(BUCKET).list(`candidate-profiles/${user.id}`, { limit: 10 });
+    if (photosError || !photos?.some((file) => file.name === 'profile')) return reply(request, { error: 'Upload your headshot before submitting ID photos.' }, 400);
     const reference = `SA-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
     const folder = `pending/${reference}`;
     const uploads = [

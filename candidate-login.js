@@ -10,8 +10,7 @@ function loginDestination() {
 async function resolvedDestination() {
   try {
     const { profile } = await window.savaPlatform.candidateRequest('getProfile');
-    if (!profile?.referralCompleted) return './referral.html';
-    if (profile.verificationBypass && !profile.resumePath) {
+    if (!profile?.resumePath) {
       return `./candidate-resume.html?required=1&next=${encodeURIComponent(loginDestination())}`;
     }
   } catch { /* The destination page will show any account loading error. */ }
@@ -32,6 +31,11 @@ loginForm.addEventListener('submit', async (event) => {
     if (error) throw error;
     window.location.assign(await resolvedDestination());
   } catch (error) {
+    if (error.code === 'email_not_confirmed') {
+      sessionStorage.setItem('sava-verification-email', document.querySelector('#loginEmail').value.trim().toLowerCase());
+      window.location.assign('./check-email.html');
+      return;
+    }
     loginResult.textContent = error.message || 'Sign in failed. Check your email and password.';
     loginResult.className = 'portal-result error';
     loginResult.hidden = false;

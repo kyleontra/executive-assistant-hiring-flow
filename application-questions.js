@@ -73,10 +73,6 @@ async function initialize() {
   renderQuestions();
   try {
     ({ profile } = await window.savaPlatform.candidateRequest('getProfile'));
-    if (!profile?.referralCompleted) {
-      window.location.replace('./referral.html');
-      return;
-    }
   } catch (error) {
     showResult(error.message || 'Your candidate account could not be loaded.', 'error');
     submitButton.disabled = true;
@@ -89,13 +85,12 @@ async function initialize() {
     return;
   }
 
+  if (!profile.applicationReady) {
+    window.location.replace(`./candidate-next-steps.html?job=${encodeURIComponent(job.id)}`);
+    return;
+  }
   document.querySelector('#authStatus').textContent = `Signed in as ${candidate.email}.`;
   document.querySelector('#authStatus').className = 'status-box success';
-  document.querySelector('#applicationResumeName').textContent = profile.resumeFileName || 'Connected resume';
-  const openResume = document.querySelector('#applicationOpenResume');
-  openResume.hidden = !profile.resumeUrl;
-  if (profile.resumeUrl) openResume.href = profile.resumeUrl;
-  document.querySelector('#applicationResume').hidden = false;
   submitButton.disabled = false;
 }
 

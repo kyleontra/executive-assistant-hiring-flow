@@ -22,7 +22,6 @@ function updateOtherField() {
 }
 
 function destination(payload) {
-  if (!payload.bypassVerification) return './candidate-experience.html';
   const applyingJob = sessionStorage.getItem('sava-applying-job');
   const completedDestination = applyingJob
     ? `./application-questions.html?job=${encodeURIComponent(applyingJob)}`
@@ -50,7 +49,7 @@ form.addEventListener('submit', async (event) => {
       ? 'Saved. Add your resume to finish setting up your account…'
       : payload.bypassVerification
         ? 'Saved. Opening your candidate account…'
-        : 'Saved. Continuing to your candidate profile…';
+        : 'Saved. Opening your candidate account…';
     showResult(confirmation, 'success');
     window.setTimeout(() => window.location.assign(destination(payload)), 500);
   } catch (error) {
@@ -69,6 +68,10 @@ async function initialize() {
   authStatus.textContent = `Email confirmed for ${candidate.email}.`;
   authStatus.className = 'status-box success';
   authStatus.hidden = true;
+  if (!previewMode) {
+    const { profile } = await window.savaPlatform.candidateRequest('getProfile');
+    if (!profile) await window.savaPlatform.candidateRequest('saveProfile');
+  }
 }
 
 initialize();

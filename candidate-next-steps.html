@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Finish up next steps — Hire From SA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./candidate-signup.css" />
+    <link rel="stylesheet" href="./candidate-next-steps.css" />
+    <link rel="stylesheet" href="./brand.css" />
+  </head>
+  <body>
+    <header class="signup-header"><a class="site-logo-link" href="./jobs.html"><img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a><a href="./candidate-dashboard.html">My account</a></header>
+    <main class="next-steps-shell">
+      <section class="next-steps-card">
+        <p class="eyebrow blue">BEFORE YOUR FIRST APPLICATION</p>
+        <h1>Finish up next steps</h1>
+        <p class="lead">Your account is ready. Complete these three items to apply to jobs—you can keep browsing in the meantime.</p>
+        <ol class="verification-checklist">
+          <li><span class="checklist-number" id="headshotStep">1</span><div><h2>Headshot</h2><p>A clear photo for your candidate profile.</p></div></li>
+          <li><span class="checklist-number" id="idStep">2</span><div><h2>ID photos</h2><p>Front and back, stored privately for review.</p></div></li>
+          <li><span class="checklist-number">3</span><div><h2>Short video</h2><p>Introduce yourself and show your ID.</p></div></li>
+        </ol>
+        <p id="nextStepsStatus" class="next-steps-help" aria-live="polite">Checking your progress…</p>
+        <a id="continueVerification" class="next-steps-primary" href="./candidate-profile.html" hidden>Finish up next steps <span>→</span></a>
+        <a class="next-steps-secondary" href="./jobs.html">Keep browsing jobs</a>
+      </section>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./auth-client.js"></script>
+    <script src="./platform-client.js"></script>
+    <script src="./candidate-next-steps.js"></script>
+  </body>
+</html>

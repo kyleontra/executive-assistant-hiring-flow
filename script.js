@@ -493,12 +493,12 @@ async function bindJobDetail() {
       const { profile } = await window.savaPlatform.candidateRequest('getProfile');
       const applicationDestination = `./application-questions.html?job=${encodeURIComponent(job.id)}`;
       const destination = profile?.resumePath
-        ? applicationDestination
+        ? profile.applicationReady ? applicationDestination : `./candidate-next-steps.html?job=${encodeURIComponent(job.id)}`
         : `./candidate-resume.html?next=${encodeURIComponent(applicationDestination)}`;
       window.location.href = destination;
     } catch (error) {
       applyButton.disabled = false;
-      applyButton.innerHTML = 'Apply with resume <span>→</span>';
+      applyButton.textContent = 'Apply';
       if (applyHelp) applyHelp.textContent = error.message || 'Your candidate profile could not be checked. Try again.';
     }
   });

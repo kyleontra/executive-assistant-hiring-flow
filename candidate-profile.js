@@ -79,8 +79,8 @@ async function initialize() {
 
   try {
     const { profile } = await window.savaPlatform.candidateRequest('getProfile');
-    if (!profile?.referralCompleted) {
-      window.location.replace('./referral.html');
+    if (!profile?.resumePath) {
+      window.location.replace('./candidate-resume.html?next=./candidate-profile.html');
       return;
     }
     if (profile.verificationBypass) {
@@ -192,7 +192,6 @@ form.addEventListener('submit', async (event) => {
     sessionStorage.setItem(`sava:profile-photo:${candidate.id}`, path);
     if (!previewMode) {
       await window.savaPlatform.candidateRequest('saveProfile', {
-        experience: JSON.parse(sessionStorage.getItem(`sava:experience:${candidate.id}`) || '[]'),
         photoPath: path,
         fullName: `${candidate.user_metadata?.first_name || ''} ${candidate.user_metadata?.last_name || ''}`.trim(),
         calendarLink: candidate.user_metadata?.calendar_link || '',

@@ -15,9 +15,11 @@
     <header class="portal-header"><a class="site-logo-link" href="./jobs.html"><img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a><nav><a href="./jobs.html">Find jobs</a><a class="active" href="./candidate-dashboard.html">My applications</a><button id="candidateSignOut" type="button">Sign out</button></nav></header>
     <main class="portal-shell">
       <section class="portal-heading"><div><p class="portal-kicker">CANDIDATE PORTAL</p><h1>My applications</h1><p id="candidateWelcome">Track every application and keep interview conversations in one place.</p></div><a href="./jobs.html">Browse open roles <span>→</span></a></section>
+      <section id="candidateNextSteps" class="portal-resume-card" hidden><div><p class="portal-kicker">BEFORE YOU APPLY</p><h2>Finish up next steps</h2><p>You can browse jobs now. Add your headshot, ID photos, and video when you’re ready to apply.</p></div><div class="portal-resume-actions"><a href="./candidate-next-steps.html">Finish up next steps →</a></div></section>
       <section id="candidateResumeCard" class="portal-resume-card" aria-label="Your connected resume"><div><p class="portal-kicker">YOUR PROFILE</p><h2 id="candidateResumeTitle">Checking your resume…</h2><p id="candidateResumeDetail">Your connected resume can be shared with hirers when you apply.</p></div><div class="portal-resume-actions"><a id="candidateOpenResume" href="#" target="_blank" rel="noopener" hidden>Open resume</a><a id="candidateManageResume" href="./candidate-resume.html?next=./candidate-dashboard.html">Add or replace resume</a></div></section>
       <p id="portalStatus" class="portal-status" aria-live="polite">Loading your applications…</p>
       <section id="candidateApplications" class="portal-applications" aria-label="Your applications"></section>
+      <p class="portal-referral"><a href="./referral.html">Tell us where you heard about Hire From SA</a></p>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./auth-client.js"></script>

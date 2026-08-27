@@ -5,7 +5,7 @@ const result = document.querySelector('#confirmationResult');
 const verifyButton = document.querySelector('#verifyCode');
 const resendButton = document.querySelector('#resendCode');
 
-emailInput.value = new URLSearchParams(window.location.search).get('email') || '';
+emailInput.value = new URLSearchParams(window.location.search).get('email') || sessionStorage.getItem('sava-verification-email') || '';
 
 function showResult(message, type) {
   result.textContent = message;
@@ -26,13 +26,19 @@ form.addEventListener('submit', async (event) => {
   try {
     const { error } = await window.savaAuth.auth.verifyOtp({ email, token, type: 'email' });
     if (error) throw error;
-    showResult('Email verified. One quick question before you continue…', 'success');
-    window.setTimeout(() => { window.location.assign('./referral.html'); }, 650);
+    sessionStorage.removeItem('sava-verification-email');
+    showResult('Email verified. Add your resume to finish setting up your account…', 'success');
+    window.location.assign('./candidate-resume.html');
   } catch (error) {
     showResult(error.message || 'That code could not be verified. Request a new code and try again.', 'error');
     verifyButton.disabled = false;
     verifyButton.innerHTML = 'Verify email <span>→</span>';
   }
+});
+
+// Confirmation links establish the session through the existing auth client.
+window.getVerifiedCandidate().then((user) => {
+  if (user) window.location.replace('./candidate-resume.html');
 });
 
 resendButton.addEventListener('click', async () => {

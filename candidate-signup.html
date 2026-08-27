@@ -18,13 +18,13 @@
     <main class="signup-shell">
       <aside class="signup-aside">
         <p class="eyebrow">APPLY TO SOUTH AFRICA ROLES</p>
-        <h1>Create your account and add your resume.</h1>
-        <p>Create your assistant account with one resume, then confirm your email. You can apply to roles without filling out a separate application form.</p>
-        <div class="signup-points"><span>1</span><b>Account and resume</b><span>2</span><b>Confirm email</b></div>
+        <h1>Your next role starts here.</h1>
+        <p>Create your account, confirm your email, and add your resume. Then explore jobs from your candidate account.</p>
+        <div class="signup-points"><span>1</span><b>Create account</b><span>2</span><b>Confirm email</b><span>3</span><b>Add resume</b></div>
       </aside>
       <section class="signup-main">
         <div class="signup-card">
-          <p class="eyebrow blue">STEP 1 OF 2</p>
+          <p class="eyebrow blue">CREATE YOUR ACCOUNT</p>
           <h2>Create your candidate account.</h2>
           <p class="lead">Use the name and email address you want connected to job applications.</p>
           <form id="candidateForm" novalidate>
@@ -33,20 +33,10 @@
               <label>Last name<input id="lastName" name="lastName" autocomplete="family-name" required maxlength="80" /></label>
             </div>
             <label>Email address<input id="email" name="email" type="email" autocomplete="email" required maxlength="254" placeholder="you@example.com" /></label>
-            <label>Calendar scheduling link <span>(optional)</span><input id="calendarLink" name="calendarLink" type="url" inputmode="url" autocomplete="url" maxlength="500" placeholder="https://cal.com/your-name" /></label>
-            <p class="field-help">Employers can use this link to invite you to an interview in one click. You can leave it blank for now.</p>
-            <label class="resume-upload" for="resumeInput">
-              <input id="resumeInput" name="resume" type="file" accept=".pdf,.doc,.docx,.txt,.rtf,.odt,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,application/rtf,text/rtf,application/vnd.oasis.opendocument.text" required />
-              <span class="resume-upload-icon" aria-hidden="true">↑</span>
-              <span><strong id="resumePickerTitle">Upload your resume</strong><small id="resumePickerDetail">PDF, DOC, DOCX, TXT, RTF, or ODT · maximum 10 MB</small></span>
-            </label>
-            <p class="field-help">Your resume is converted to a private text file and contact details are redacted before hirers can view it.</p>
             <label>Password<input id="password" name="password" type="password" autocomplete="new-password" required minlength="10" maxlength="128" placeholder="At least 10 characters" /></label>
-            <p class="field-help">Your password is stored securely by Supabase. It is never added to your ID review files.</p>
             <div id="formResult" class="form-result" aria-live="polite"></div>
-          <button id="submitProfile" type="submit">Create account with resume <span>→</span></button>
+          <button id="submitProfile" type="submit">Create account <span>→</span></button>
           <p class="account-switch">Already have an account? <a href="./candidate-login.html">Sign in</a></p>
-            <a id="confirmedEmail" class="confirmation-link" href="./email-confirmed.html" hidden>Enter verification code <span>→</span></a>
           </form>
         </div>
       </section>

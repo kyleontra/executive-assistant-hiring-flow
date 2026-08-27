@@ -1,4 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { candidateAccess } from '../_shared/candidate-access.mjs';
 
 const PRIMARY_ORIGIN = 'https://www.hirefromsa.com';
 const ALLOWED_ORIGINS = new Set([
@@ -353,17 +354,33 @@ Deno.serve(async (request) => {
 
     if (action === 'saveProfile' || action === 'submitApplication') {
       const submittedExperience = normalizeExperience(body.experience);
-      const existingProfileResult = await admin.from('candidate_profiles').select('experience, profile_photo_path, resume_path, resume_file_name, verification_status').eq('user_id', user.id).maybeSingle();
+      const existingProfileResult = await admin.from('candidate_profiles').select('experience, profile_photo_path, resume_path, resume_file_name, verification_status, verification_bypass').eq('user_id', user.id).maybeSingle();
       if (existingProfileResult.error) throw existingProfileResult.error;
       const existingProfile = existingProfileResult.data || {};
+      if (action === 'submitApplication') {
+        const access = candidateAccess(existingProfile);
+        if (access.resumeRequired) return reply(request, { error: 'Upload a resume before applying.', code: 'RESUME_REQUIRED' }, 403);
+        if (!access.verificationComplete) return reply(request, { error: 'Finish up next steps: add your headshot, ID photos, and video before applying.', code: 'VERIFICATION_REQUIRED' }, 403);
+      }
       const existingExperience = normalizeExperience(existingProfile.experience);
       const experience = submittedExperience.length ? submittedExperience : existingExperience;
       const firstName = clean(user.user_metadata?.first_name, 80);
       const lastName = clean(user.user_metadata?.last_name, 80);
       const fullName = clean(body.fullName, 160) || `${firstName} ${lastName}`.trim() || clean(user.email, 160) || 'Candidate';
-      const photoPath = clean(body.photoPath, 500) || existingProfile.profile_photo_path || '';
-      const resumePath = clean(body.resumePath, 500) || existingProfile.resume_path || '';
-      const resumeFileName = clean(body.resumeFileName, 255) || existingProfile.resume_file_name || '';
+      const photoPath = (action === 'saveProfile' ? clean(body.photoPath, 500) : '') || existingProfile.profile_photo_path || '';
+      const resumePath = (action === 'saveProfile' ? clean(body.resumePath, 500) : '') || existingProfile.resume_path || '';
+      const resumeFileName = (action === 'saveProfile' ? clean(body.resumeFileName, 255) : '') || existingProfile.resume_file_name || '';
+      // Only connect files uploaded into this candidate's private storage folder.
+      if (photoPath && photoPath !== existingProfile.profile_photo_path) {
+        if (photoPath !== `candidate-profiles/${user.id}/profile`) return reply(request, { error: 'Upload your own headshot before connecting it.' }, 400);
+        const { data: photos, error } = await admin.storage.from(BUCKET).list(`candidate-profiles/${user.id}`, { limit: 10 });
+        if (error || !photos?.some((file) => file.name === 'profile')) return reply(request, { error: 'Upload your headshot before connecting it.' }, 400);
+      }
+      if (resumePath && resumePath !== existingProfile.resume_path) {
+        if (resumePath !== `${user.id}/resume.txt`) return reply(request, { error: 'Upload your own resume before connecting it.' }, 400);
+        const { data: resumes, error } = await admin.storage.from(RESUME_BUCKET).list(user.id, { limit: 10 });
+        if (error || !resumes?.some((file) => file.name === 'resume.txt')) return reply(request, { error: 'Upload your resume before connecting it.' }, 400);
+      }
       const profile = {
         user_id: user.id,
         email: clean(user.email, 254).toLowerCase(),
@@ -415,11 +432,12 @@ Deno.serve(async (request) => {
         verificationStatus: profile.verification_status,
         referralCompleted: Boolean(profile.referral_source),
         verificationBypass: Boolean(profile.verification_bypass),
+        ...candidateAccess(profile),
       } : null });
     }
 
     if (action === 'candidateDashboard') {
-      const { data: profile, error: profileError } = await admin.from('candidate_profiles').select('resume_path, resume_file_name, referral_source, verification_bypass').eq('user_id', user.id).maybeSingle();
+      const { data: profile, error: profileError } = await admin.from('candidate_profiles').select('resume_path, resume_file_name, referral_source, verification_bypass, profile_photo_path, verification_status').eq('user_id', user.id).maybeSingle();
       if (profileError) throw profileError;
       const { data: applications, error } = await admin.from('job_applications').select('*').eq('candidate_id', user.id).order('submitted_at', { ascending: false });
       if (error) throw error;
@@ -444,7 +462,10 @@ Deno.serve(async (request) => {
       return reply(request, { profile: {
         resumeFileName: profile?.resume_file_name || '',
         resumeUrl: await signedAsset(admin, RESUME_BUCKET, String(profile?.resume_path || '')),
-        resumeRequired: Boolean(profile?.verification_bypass) && !profile?.resume_path,
+        resumePath: profile?.resume_path || '',
+        photoPath: profile?.profile_photo_path || '',
+        verificationStatus: profile?.verification_status || 'draft',
+        ...candidateAccess(profile),
         referralCompleted: Boolean(profile?.referral_source),
         verificationBypass: Boolean(profile?.verification_bypass),
       }, applications: (applications || []).map((application) => {

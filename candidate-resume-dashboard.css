@@ -46,9 +46,12 @@
   color: #fff;
 }
 
-.portal-resume-actions a[hidden] {
+.portal-resume-card[hidden], .portal-resume-actions a[hidden] {
   display: none;
 }
+
+.portal-referral { margin:24px 0; font-size:12px; }
+.portal-referral a { color:#66748a; }
 
 @media (max-width: 720px) {
   .portal-resume-card {

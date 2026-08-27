@@ -7,7 +7,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "redact:resume": "node scripts/redact-resume.mjs",
-    "test:redaction": "node --test scripts/redact-resume.test.mjs"
+    "test:redaction": "node --test scripts/redact-resume.test.mjs",
+    "test:candidate-flow": "node --test scripts/candidate-flow.test.mjs"
   },
   "devDependencies": {
     "vite": "^7.3.6"

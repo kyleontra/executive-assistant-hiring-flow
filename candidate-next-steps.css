@@ -1,0 +1,19 @@
+.next-steps-shell { min-height:calc(100svh - 69px); display:grid; place-items:center; padding:36px 20px; }
+.next-steps-card { width:min(590px,100%); padding:38px; border:1px solid #dce5f2; border-radius:18px; background:#fff; box-shadow:0 16px 50px #18335408; }
+.next-steps-card h1 { margin:14px 0 14px; font:800 clamp(30px,4vw,42px)/1.12 Manrope,sans-serif; letter-spacing:-1.8px; }
+.next-steps-card .lead { font-size:15px; }
+.verification-checklist { list-style:none; padding:0; margin:28px 0 22px; }
+.verification-checklist li { display:flex; align-items:center; gap:16px; padding:18px 0; border-bottom:1px solid #e7edf5; }
+.verification-checklist li:last-child { border-bottom:0; }
+.checklist-number { display:grid; place-items:center; flex:0 0 38px; height:38px; border-radius:50%; background:#edf4ff; color:#256fe8; font-size:14px; font-weight:700; }
+.checklist-number.complete { background:#e8f7ef; color:#237854; }
+.verification-checklist h2 { margin:0 0 4px; font-size:17px; letter-spacing:-.4px; }
+.verification-checklist p { margin:0; color:#718096; font-size:13px; line-height:1.5; }
+.next-steps-primary { display:flex; align-items:center; justify-content:center; gap:18px; min-height:52px; padding:12px 20px; border-radius:9px; background:#142238; color:#fff; font-size:14px; font-weight:700; text-decoration:none; }
+.next-steps-primary[hidden] { display:none; }
+.next-steps-secondary { display:block; margin:20px 0 0; text-align:center; color:#536681; font-size:13px; text-decoration:none; }
+.next-steps-help { margin:18px 0; color:#718096; font-size:12px; line-height:1.7; }
+.inbox-card { padding:48px 40px; text-align:center; }
+.inbox-icon { display:grid; place-items:center; width:64px; height:64px; margin:0 auto 25px; background:#edf4ff; color:#256fe8; border-radius:18px; font-size:29px; }
+.inbox-card .next-steps-primary { margin-top:30px; }
+@media(max-width:560px) { .next-steps-shell { padding:24px 16px; } .next-steps-card { padding:28px 22px; } }

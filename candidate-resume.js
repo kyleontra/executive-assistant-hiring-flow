@@ -13,7 +13,6 @@ const RESUME_EXTENSION = /\.(?:pdf|doc|docx|txt|rtf|odt)$/i;
 const input = document.querySelector('#resumeInput');
 const form = document.querySelector('#resumeForm');
 const saveButton = document.querySelector('#saveResume');
-const skipButton = document.querySelector('#skipResume');
 const result = document.querySelector('#resumeResult');
 const authStatus = document.querySelector('#authStatus');
 const pickerTitle = document.querySelector('#resumePickerTitle');
@@ -29,9 +28,7 @@ let selectedResume = null;
 
 function nextDestination() {
   const requested = params.get('next');
-  if (requested?.startsWith('./')) return requested;
-  const applyingJob = sessionStorage.getItem('sava-applying-job');
-  if (applyingJob) return `./application-questions.html?job=${encodeURIComponent(applyingJob)}`;
+  if (/^\.\/(?:candidate-dashboard|application-questions|candidate-next-steps|candidate-profile|id-verification|jobs)\.html(?:\?|$)/.test(requested || '')) return requested;
   return `./candidate-dashboard.html${demoMode ? '?demo=1' : ''}`;
 }
 
@@ -62,16 +59,11 @@ async function initialize() {
     ? { id: 'demo-candidate', email: 'demo@hirefromsa.com', user_metadata: { first_name: 'Demo', last_name: 'Candidate' } }
     : await window.getVerifiedCandidate();
   if (!candidate) {
-    authStatus.textContent = 'Your verified session is missing or has expired. Verify your email again to continue.';
-    authStatus.className = 'status-box error';
-    input.disabled = true;
-    skipButton.disabled = true;
+    window.location.replace(`./candidate-login.html?next=${encodeURIComponent('./candidate-resume.html')}`);
     return;
   }
   authStatus.textContent = demoMode ? 'Demo mode — your resume stays in this browser and is never uploaded.' : `Email confirmed for ${candidate.email}.`;
   authStatus.className = 'status-box success';
-  const applyingForJob = Boolean(params.get('next') || sessionStorage.getItem('sava-applying-job'));
-  skipButton.hidden = applyingForJob;
   if (demoMode) return;
   try {
     ({ profile } = await window.savaPlatform.candidateRequest('getProfile'));
@@ -106,7 +98,6 @@ form.addEventListener('submit', async (event) => {
     return;
   }
   saveButton.disabled = true;
-  skipButton.disabled = true;
   saveButton.textContent = 'Connecting resume…';
   try {
     let resumePath = 'demo-candidate/resume.txt';
@@ -143,12 +134,9 @@ form.addEventListener('submit', async (event) => {
     window.setTimeout(() => window.location.assign(nextDestination()), 500);
   } catch (error) {
     saveButton.disabled = false;
-    skipButton.disabled = false;
     saveButton.innerHTML = 'Connect resume and continue <span>→</span>';
     showResult(error instanceof TypeError ? 'The resume service could not be reached. Check your connection and try again.' : error.message || 'Your resume could not be saved.', 'error');
   }
 });
-
-skipButton.addEventListener('click', () => window.location.assign(nextDestination()));
 
 initialize();

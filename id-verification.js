@@ -56,36 +56,24 @@ async function requireVerifiedAccount() {
     updateSubmit();
     return;
   }
-  let experiences = [];
-  try {
-    experiences = JSON.parse(sessionStorage.getItem(`sava:experience:${user.id}`) || '[]');
-  } catch {
-    experiences = [];
-  }
   let savedProfile = null;
   try {
     ({ profile: savedProfile } = await window.savaPlatform.candidateRequest('getProfile'));
-    if (!savedProfile?.referralCompleted) {
-      window.location.replace('./referral.html');
+    if (!savedProfile?.resumePath) {
+      window.location.replace('./candidate-resume.html?next=./id-verification.html');
       return;
     }
     if (savedProfile.verificationBypass) {
       window.location.replace('./candidate-dashboard.html');
       return;
     }
-    if (!experiences.length || !sessionStorage.getItem(`sava:profile-photo:${user.id}`)) {
-      if (savedProfile?.experience?.length) {
-        experiences = savedProfile.experience;
-        sessionStorage.setItem(`sava:experience:${user.id}`, JSON.stringify(experiences));
-      }
-      if (savedProfile?.photoPath) sessionStorage.setItem(`sava:profile-photo:${user.id}`, savedProfile.photoPath);
-    }
-  } catch { /* Existing redirects below explain which profile step is missing. */ }
-  if (!Array.isArray(experiences) || experiences.length === 0) {
-    window.location.replace('./candidate-experience.html');
+    if (savedProfile?.photoPath) sessionStorage.setItem(`sava:profile-photo:${user.id}`, savedProfile.photoPath);
+  } catch (error) {
+    authStatus.textContent = error.message || 'Your profile could not be checked. Please refresh and try again.';
+    authStatus.className = 'status-box error';
     return;
   }
-  const profilePhotoPath = sessionStorage.getItem(`sava:profile-photo:${user.id}`);
+  const profilePhotoPath = savedProfile?.photoPath;
   if (!profilePhotoPath) {
     window.location.replace('./candidate-profile.html');
     return;
@@ -122,6 +110,7 @@ form.addEventListener('submit', async (event) => {
     const response = await fetch(PHOTO_ENDPOINT, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: formData });
     const payload = await response.json();
     if (!response.ok) throw new Error(payload.error || 'The ID photos could not be saved.');
+    sessionStorage.setItem(`sava:id-review:${verifiedUser.id}`, payload.reference);
     showResult('ID photos saved privately. Continuing to the video check…', 'success');
     window.location.assign(`./verification.html?review=${encodeURIComponent(payload.reference)}`);
   } catch (error) {

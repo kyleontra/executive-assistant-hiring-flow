@@ -41,16 +41,13 @@ async function loadCandidateDashboard() {
   document.querySelector('#candidateWelcome').textContent = `Signed in as ${user.email}. Track applications and interview conversations here.`;
   try {
     const { applications, profile } = await window.savaPlatform.candidateRequest('candidateDashboard');
-    if (!profile?.referralCompleted) {
-      window.location.replace('./referral.html');
-      return;
-    }
     if (profile.resumeRequired) {
       const dashboard = encodeURIComponent('./candidate-dashboard.html');
       window.location.replace(`./candidate-resume.html?required=1&next=${dashboard}`);
       return;
     }
     renderResume(profile);
+    document.querySelector('#candidateNextSteps').hidden = Boolean(profile.applicationReady);
     portalStatus.hidden = true;
     renderApplications(applications || []);
   } catch (error) {
