@@ -1,4 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { reviewSubmissionAcceptable, reviewSubmissionVisible } from '../_shared/review-access.mjs';
 
 const BUCKET = 'sava-id-review-videos';
 const ADMIN_KEY_HASH = 'a959bb56a21b2d9999f7abeb4803a5384b850dc6f46f54c1fa8db5c44cf2188a';
@@ -146,7 +147,8 @@ async function accountReviews(admin: ReturnType<typeof createClient>, submittedU
 async function allReviews(admin: ReturnType<typeof createClient>) {
   const references = await reviewReferences(admin);
   const storedReviews = (await Promise.all(references.map((reference) => loadReview(admin, reference))))
-    .filter((review): review is NonNullable<typeof review> => Boolean(review));
+    .filter((review): review is NonNullable<typeof review> => Boolean(review))
+    .filter((review) => reviewSubmissionVisible(review.candidate.verificationStatus));
   const submittedUserIds = new Set(storedReviews.map((review) => review.userId));
   const signupReviews = await accountReviews(admin, submittedUserIds);
   return [...storedReviews, ...signupReviews]
@@ -171,7 +173,7 @@ Deno.serve(async (request) => {
 
     if (action === 'acceptAll') {
       const reviews = await allReviews(admin);
-      const userIds = reviews.filter((review) => review.ready && review.hasProfile && review.candidate.verificationStatus !== 'verified').map((review) => review.userId);
+      const userIds = reviews.filter((review) => review.ready && review.hasProfile && reviewSubmissionAcceptable(review.candidate.verificationStatus)).map((review) => review.userId);
       if (!userIds.length) return reply(request, { accepted: 0 });
       const { error } = await admin.from('candidate_profiles').update({ verification_status: 'verified', updated_at: new Date().toISOString() }).in('user_id', userIds);
       if (error) throw error;
@@ -183,6 +185,7 @@ Deno.serve(async (request) => {
       if (!REFERENCE_PATTERN.test(reference)) return reply(request, { error: 'Choose a valid review submission.' }, 400);
       const review = await loadReview(admin, reference);
       if (!review) return reply(request, { error: 'That review submission was not found.' }, 404);
+      if (action === 'acceptReview' && !reviewSubmissionAcceptable(review.candidate.verificationStatus)) return reply(request, { error: 'This candidate must complete a fresh verification before this review can be accepted.' }, 409);
       if (action === 'acceptReview' && !review.ready) return reply(request, { error: 'The ID video must be submitted before this candidate can be accepted.' }, 409);
       if (action === 'acceptReview' && !review.hasProfile) return reply(request, { error: 'This older review is not linked to a current candidate profile.' }, 409);
       const verificationStatus = action === 'acceptReview' ? 'verified' : 'rejected';
