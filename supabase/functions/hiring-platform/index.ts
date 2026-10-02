@@ -157,7 +157,9 @@ function jobResponse(row: Record<string, unknown>) {
     location: row.location,
     payMin,
     payMax,
-    pay: `$${Number.isInteger(payMin) ? payMin : payMin.toFixed(2)}–$${Number.isInteger(payMax) ? payMax : payMax.toFixed(2)} / hour`,
+    payPeriod: row.pay_period === 'month' ? 'month' : 'hour',
+    hiringTimeline: row.hiring_timeline || '',
+    pay: `$${Number.isInteger(payMin) ? payMin : payMin.toFixed(2)}–$${Number.isInteger(payMax) ? payMax : payMax.toFixed(2)} / ${row.pay_period === 'month' ? 'month' : 'hour'}`,
     description: row.description,
     responsibilities: row.responsibilities || [],
     skills: row.skills || [],
@@ -344,8 +346,8 @@ Deno.serve(async (request) => {
       const questions = normalizeQuestions(body.questions);
       const payMin = Number(body.payMin);
       const payMax = Number(body.payMax);
-      if (!title || !description || !questions.length || !Number.isFinite(payMin) || !Number.isFinite(payMax) || payMin < 0 || payMax < payMin) {
-        return reply(request, { error: 'Complete the title, description, at least one applicant question, and pay before publishing.' }, 400);
+      if (!title || !description || !Number.isFinite(payMin) || !Number.isFinite(payMax) || payMin < 0 || payMax < payMin) {
+        return reply(request, { error: 'Complete the title, description, and pay before publishing.' }, 400);
       }
       const requestedId = clean(body.jobId, 80);
       const id = requestedId || crypto.randomUUID();
@@ -359,6 +361,8 @@ Deno.serve(async (request) => {
         location: clean(body.location, 120) || 'South Africa',
         pay_min: payMin,
         pay_max: payMax,
+        pay_period: body.payPeriod === 'month' ? 'month' : 'hour',
+        hiring_timeline: clean(body.hiringTimeline, 60) || null,
         description,
         responsibilities: cleanList(body.responsibilities, 40, 500),
         skills: cleanList(body.skills, 40, 120),
@@ -468,6 +472,12 @@ Deno.serve(async (request) => {
         result_limit: limit,
       });
       if (error) throw error;
+      const userIds = (profiles || []).map((profile) => profile.user_id).filter(Boolean);
+      const { data: slugRows, error: slugError } = userIds.length
+        ? await admin.from('candidate_profiles').select('user_id, share_slug').in('user_id', userIds)
+        : { data: [], error: null };
+      if (slugError) throw slugError;
+      const shareSlugs = new Map((slugRows || []).map((row) => [row.user_id, row.share_slug || '']));
       const candidates = await Promise.all((profiles || []).map(async (profile) => {
         const manualExperience = longerExperience(normalizeExperience(profile.experience));
         const resumeExperience = longerExperience(normalizeExperience(profile.resume_experience, false));
@@ -497,6 +507,7 @@ Deno.serve(async (request) => {
           keywords: profile.resume_keywords || [],
           searchRank: Number(profile.search_rank || 0),
           resumeIndexedAt: profile.resume_indexed_at || null,
+          shareSlug: shareSlugs.get(profile.user_id) || '',
           photoUrl: await signedAsset(admin, BUCKET, String(profile.profile_photo_path || '')),
             introUrl: await candidateIntroUrl(admin, String(profile.user_id || '')),
         };

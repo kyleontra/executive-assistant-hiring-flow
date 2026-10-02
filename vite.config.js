@@ -17,6 +17,7 @@ const pages = {
   applicantQuestions: 'applicant-questions.html',
   compensation: 'compensation.html',
   review: 'review.html',
+  promote: 'promote.html',
   published: 'published.html',
   applicants: 'applicants.html',
   postedJobs: 'posted-jobs.html',

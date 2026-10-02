@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Review Your Job | Hire From SA</title>
+    <title>Promote Your Job | Hire From SA</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
@@ -23,31 +23,40 @@
         <span class="done"><b>✓</b> Job basics</span><i></i>
         <span class="done"><b>✓</b> Pay</span><i></i>
         <span class="done"><b>✓</b> Description</span><i></i>
-        <span class="active"><b>4</b> Review</span><i></i>
-        <span><b>5</b> Promote</span>
+        <span class="done"><b>✓</b> Review</span><i></i>
+        <span class="active"><b>5</b> Promote</span>
       </nav>
 
-      <form id="reviewStepForm" class="post-step-card" novalidate>
-        <h1>Review your job</h1>
+      <form id="promoteForm" class="post-step-card" novalidate>
+        <h1>Promote your job</h1>
 
-        <dl class="post-review-list">
-          <div><dt>Job title</dt><dd data-review-field="title"></dd><a href="./index.html" aria-label="Edit job title">Edit</a></div>
-          <div><dt>Employment type</dt><dd data-review-field="employmentType"></dd><a href="./index.html" aria-label="Edit employment type">Edit</a></div>
-          <div><dt>Hiring timeline</dt><dd data-review-field="hiringTimeline"></dd><a href="./index.html" aria-label="Edit hiring timeline">Edit</a></div>
-          <div><dt>Pay</dt><dd data-review-field="pay"></dd><a href="./compensation.html" aria-label="Edit pay">Edit</a></div>
-        </dl>
+        <div class="post-plan-heading">
+          <h2>Choose a plan</h2>
+          <button id="customBudgetToggle" class="post-custom-link" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M16 7a6.5 6.5 0 0 0-11.6-2M4 13a6.5 6.5 0 0 0 11.6 2M4 2v3.5h3.5M16 18v-3.5h-3.5"/></svg>Set a custom budget</button>
+        </div>
 
-        <section class="post-screening">
-          <h2>Screening questions <span>(optional)</span></h2>
-          <p>Ask applicants a few questions before they apply. You can skip this.</p>
-          <div id="screeningList" class="post-screening-list"></div>
-          <button id="addScreening" class="post-add-question" type="button"><span aria-hidden="true">+</span> Add a question</button>
-        </section>
+        <div class="post-plans" role="radiogroup" aria-label="Promotion plan">
+          <label class="post-plan"><input type="radio" name="plan" value="5" /><span>
+            <b>Standard</b><strong>$5 <small>per day</small></strong>
+            <em>Extra visibility in candidate searches</em></span></label>
+          <label class="post-plan featured"><input type="radio" name="plan" value="10" checked /><span>
+            <i>Recommended</i><b>Premium</b><strong>$10 <small>per day</small></strong>
+            <em>Top placement and more visibility to candidates</em></span></label>
+        </div>
+
+        <div id="customBudget" class="post-custom-budget" hidden>
+          <label class="post-field"><span>Custom daily budget</span>
+            <span class="post-money"><b aria-hidden="true">$</b><input id="customBudgetInput" type="number" inputmode="numeric" min="5" step="1" placeholder="15" /></span>
+          </label>
+          <p class="post-pay-limits">Minimum $5 per day.</p>
+        </div>
+
+        <label class="post-skip"><input type="radio" name="plan" value="0" /> Publish without promoting</label>
 
         <div id="postFormResult" class="simple-form-result" aria-live="polite"></div>
         <footer class="post-step-footer">
-          <a class="post-back" href="./job-description.html"><span aria-hidden="true">←</span> Back</a>
-          <button class="post-continue" type="submit">Confirm <span aria-hidden="true">→</span></button>
+          <a class="post-back" href="./review.html"><span aria-hidden="true">←</span> Back</a>
+          <button id="publishPromoted" class="post-continue" type="submit">Publish job <span aria-hidden="true">→</span></button>
         </footer>
       </form>
     </main>

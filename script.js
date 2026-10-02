@@ -56,7 +56,11 @@ function normalizeQuestion(question) {
 }
 function questionText(question) { return normalizeQuestion(question).text; }
 function money(value) { const number = Number(value); return Number.isInteger(number) ? String(number) : number.toFixed(2).replace(/0$/, ''); }
-function rate(role) { return `$${money(role.minRate)} – $${money(role.maxRate)} / hour`; }
+function rate(role) {
+  const period = role.currency === 'USD' && role.payPeriod === 'month' ? 'month' : 'hour';
+  const usd = (value) => `$${Number(value).toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
+  return `${usd(role.minRate)} – ${usd(role.maxRate)} / ${period}`;
+}
 function escapeHtml(value) { return String(value ?? '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character])); }
 
 function toast(message) {
@@ -100,20 +104,23 @@ function bindPostJob() {
 
   if (step === 'title') {
     const title = $('#title');
-    const companyName = $('#companyName');
+    const timeline = $('#hiringTimeline');
     const savedTitle = text(role.title);
     const clearSavedTitle = savedTitle.toLowerCase() === 'sad';
     title.value = clearSavedTitle || (role.title === defaults.title && !role.description) ? '' : role.title;
-    companyName.value = role.company === defaults.company ? '' : role.company;
     if (clearSavedTitle) write({ title: '' });
+    const savedType = form.querySelector(`input[name="employmentType"][value="${role.employmentType || ''}"]`);
+    if (savedType) savedType.checked = true;
+    if (role.hiringTimeline) timeline.value = role.hiringTimeline;
     form.addEventListener('submit', (event) => {
       event.preventDefault();
       if (!form.reportValidity()) {
-        showPostError('Add the company name and job title to continue.');
+        showPostError('Add the job title, employment type and hiring timeline to continue.');
         return;
       }
-      write({ title: text(title.value), company: text(companyName.value), published: false, ...(role.published ? { serverJobId: '' } : {}) });
-      window.location.href = './job-description.html';
+      const employmentType = form.querySelector('input[name="employmentType"]:checked').value;
+      write({ title: text(title.value), company: '', employmentType, commitment: employmentType, type: employmentType, hiringTimeline: timeline.value, published: false, ...(role.published ? { serverJobId: '' } : {}) });
+      window.location.href = './compensation.html';
     });
     return;
   }
@@ -151,7 +158,7 @@ function bindPostJob() {
           return;
         }
         write({ description: text(description.value), published: false });
-        window.location.href = './job-description.html';
+        window.location.href = './review.html';
       });
       return;
     }
@@ -277,44 +284,81 @@ function bindPostJob() {
   });
 }
 
+const PAY_LIMITS = { hour: { min: 4, label: 'Hourly pay: the minimum hourly we recommend is $4 per hour.' }, month: { min: 600, label: 'Monthly pay: the minimum monthly we recommend is $600 per month.' } };
 function bindCompensation() {
   const form = $('#compensationForm');
   if (!form) return;
   const role = read();
   const minRate = $('#minRate');
   const maxRate = $('#maxRate');
-  minRate.value = role.minRate || '3';
-  maxRate.value = role.maxRate || '5';
-  const commitments = [...form.querySelectorAll('input[name="commitment"]')];
-  const selected = commitments.find((input) => input.value === role.commitment) || commitments[0];
-  selected.checked = true;
+  const payPeriod = $('#payPeriod');
+  const limitsNote = $('#payLimits');
+  const usd = (value) => `$${Number(value).toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
+  const applyLimits = () => {
+    const limits = PAY_LIMITS[payPeriod.value];
+    [minRate, maxRate].forEach((input) => { input.min = limits.min; });
+    limitsNote.textContent = limits.label;
+  };
+  // Only prefill drafts saved with the current USD hour/month pay format.
+  if (role.currency === 'USD' && PAY_LIMITS[role.payPeriod]) {
+    payPeriod.value = role.payPeriod;
+    minRate.value = role.minRate || '';
+    maxRate.value = role.maxRate || '';
+  }
+  applyLimits();
+  payPeriod.addEventListener('change', applyLimits);
+  // Whole dollars only: block decimal points, signs and exponents as they're typed or pasted.
+  [minRate, maxRate].forEach((input) => {
+    input.addEventListener('keydown', (event) => {
+      if (['e', 'E', '-', '+'].includes(event.key)) event.preventDefault();
+      if (['.', ','].includes(event.key)) {
+        event.preventDefault();
+        showPostError('Whole dollars only. Decimal points aren\'t allowed.');
+      }
+    });
+    input.addEventListener('paste', (event) => {
+      const pasted = event.clipboardData?.getData('text') || '';
+      if (/[.,]/.test(pasted)) {
+        event.preventDefault();
+        showPostError('Whole dollars only. Decimal points aren\'t allowed.');
+      }
+    });
+    input.addEventListener('input', () => { const digits = input.value.replace(/\D/g, ''); if (digits !== input.value) input.value = digits; });
+  });
 
   form.addEventListener('submit', (event) => {
     event.preventDefault();
-    if (!form.reportValidity()) {
-      showPostError('Choose a commitment and complete the hourly range.');
-      return;
-    }
+    const limits = PAY_LIMITS[payPeriod.value];
+    const unit = payPeriod.value === 'hour' ? 'hour' : 'month';
     const minimum = Number(minRate.value);
     const maximum = Number(maxRate.value);
-    if (minimum < 3) {
+    if (!minRate.value || !(minimum > 0)) {
       minRate.focus();
-      showPostError('The minimum hourly rate is $3 USD.');
+      showPostError('Add where the pay range starts.');
+      return;
+    }
+    if (!maxRate.value || !(maximum > 0)) {
+      maxRate.focus();
+      showPostError('Add where the pay range ends.');
+      return;
+    }
+    if (!Number.isInteger(minimum) || !Number.isInteger(maximum)) {
+      (Number.isInteger(minimum) ? maxRate : minRate).focus();
+      showPostError('Use whole dollar amounts with no decimal points.');
+      return;
+    }
+    if (minimum < limits.min) {
+      minRate.focus();
+      showPostError(`Pay can't start below ${usd(limits.min)} per ${unit}.`);
       return;
     }
     if (maximum <= minimum) {
       maxRate.focus();
-      showPostError('The top of the hourly range must be higher than the starting rate.');
+      showPostError('The second amount must be higher than the first.');
       return;
     }
-    write({
-      commitment: form.querySelector('input[name="commitment"]:checked').value,
-      minRate: minRate.value,
-      maxRate: maxRate.value,
-      showPay: true,
-      published: false,
-    });
-    window.location.href = './review.html';
+    write({ minRate: String(minimum), maxRate: String(maximum), payPeriod: payPeriod.value, currency: 'USD', showPay: true, published: false });
+    window.location.href = './job-description.html';
   });
 }
 
@@ -351,7 +395,7 @@ function bindPublish() {
       if (!window.savaPlatform) throw new Error('The publishing service did not load. Refresh and try again.');
       const { job } = await window.savaPlatform.employerRequest('createJob', {
         jobId: publishedRole.serverJobId || '',
-        companyName: publishedRole.company || 'Your company',
+        companyName: publishedRole.company === defaults.company ? '' : (publishedRole.company || ''),
         title: publishedRole.title,
         description: publishedRole.description,
         arrangement: publishedRole.arrangement,
@@ -404,7 +448,7 @@ async function loadServerJobs(force = false) {
       const localRole = read();
       if (localRole.published && !localRole.serverJobId && localRole.description) {
         const { job } = await window.savaPlatform.employerRequest('createJob', {
-          companyName: localRole.company || 'Your company', title: localRole.title, description: localRole.description,
+          companyName: localRole.company === defaults.company ? '' : (localRole.company || ''), title: localRole.title, description: localRole.description,
           arrangement: localRole.arrangement, employmentType: localRole.commitment.split(' (')[0], location: localRole.location,
           payMin: Number(localRole.minRate), payMax: Number(localRole.maxRate), questions: localRole.questions,
           responsibilities: localRole.responsibilities || [], skills: localRole.skills || [], promoted: localRole.promote,
@@ -525,7 +569,7 @@ async function bindApplicants() {
     const savedRole = read();
     if (savedRole.published && !savedRole.serverJobId && window.savaPlatform) {
       const { job } = await window.savaPlatform.employerRequest('createJob', {
-        companyName: savedRole.company || 'Your company',
+        companyName: savedRole.company === defaults.company ? '' : (savedRole.company || ''),
         title: savedRole.title,
         description: savedRole.description,
         arrangement: savedRole.arrangement,
@@ -1056,9 +1100,163 @@ async function bindApplicants() {
   if (new URLSearchParams(window.location.search).get('view') === 'messages') $('#headerMessages').click();
 }
 
+function bindReviewStep() {
+  const form = $('#reviewStepForm');
+  if (!form) return;
+  const role = read();
+  const fill = (field, value, fallback = 'Not added') => {
+    const element = form.querySelector(`[data-review-field="${field}"]`);
+    element.textContent = value || fallback;
+    element.classList.toggle('missing', !value);
+  };
+  const hasPay = role.currency === 'USD' && Number(role.minRate) > 0 && Number(role.maxRate) > 0;
+  fill('title', text(role.title));
+  fill('employmentType', role.employmentType);
+  fill('hiringTimeline', role.hiringTimeline);
+  fill('pay', hasPay ? rate(role) : '');
+
+  const list = $('#screeningList');
+  const refresh = () => {
+    [...list.children].forEach((row, index) => { row.querySelector('.post-question-number').textContent = `Question ${index + 1}`; });
+  };
+  const addQuestion = (value = '', focus = false) => {
+    const row = document.createElement('div');
+    row.className = 'post-question';
+    row.innerHTML = '<div class="post-question-head"><span class="post-question-number">Question</span><button type="button" class="post-question-remove">Remove</button></div><input class="post-question-text" maxlength="240" placeholder="e.g. How many years of executive support experience do you have?" />';
+    row.querySelector('.post-question-text').value = value;
+    list.appendChild(row);
+    refresh();
+    if (focus) row.querySelector('.post-question-text').focus();
+  };
+  role.questions.map(questionText).filter(Boolean).forEach((question) => addQuestion(question));
+  $('#addScreening').addEventListener('click', () => addQuestion('', true));
+  list.addEventListener('click', (event) => {
+    if (!event.target.closest('.post-question-remove')) return;
+    event.target.closest('.post-question').remove();
+    refresh();
+  });
+
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const missing = ['title', 'employmentType', 'hiringTimeline', 'pay'].filter((field) => form.querySelector(`[data-review-field="${field}"]`).classList.contains('missing'));
+    if (missing.length || !text(role.description)) {
+      showPostError('Some details are missing. Use Edit to finish them before confirming.');
+      return;
+    }
+    const questions = [];
+    for (const row of list.children) {
+      const value = text(row.querySelector('.post-question-text').value);
+      if (!value) { row.querySelector('.post-question-text').focus(); showPostError('Fill in each question or remove it.'); return; }
+      questions.push({ text: value, type: 'text', options: [] });
+    }
+    write({ questions, published: false });
+    window.location.href = './promote.html';
+  });
+}
+
+function bindPromoteStep() {
+  const form = $('#promoteForm');
+  if (!form) return;
+  const role = read();
+  const customPanel = $('#customBudget');
+  const customInput = $('#customBudgetInput');
+  const toggle = $('#customBudgetToggle');
+  const plans = [...form.querySelectorAll('input[name="plan"]')];
+  // Only restore a choice made on this page (older drafts carry a default $8 budget).
+  const savedBudget = role.promotionChosen ? String(role.promotionBudget || '') : '';
+  if (role.promotionChosen && role.promote === false) plans.find((input) => input.value === '0').checked = true;
+  else if (savedBudget && !['5', '10'].includes(savedBudget)) { customPanel.hidden = false; customInput.value = savedBudget; plans.forEach((input) => { input.checked = false; }); }
+  else if (savedBudget) plans.find((input) => input.value === savedBudget).checked = true;
+
+  toggle.addEventListener('click', () => {
+    customPanel.hidden = false;
+    plans.forEach((input) => { input.checked = false; });
+    customInput.focus();
+  });
+  plans.forEach((input) => input.addEventListener('change', () => { customPanel.hidden = true; customInput.value = ''; }));
+  customInput.addEventListener('keydown', (event) => { if (['.', ',', 'e', 'E', '-', '+'].includes(event.key)) event.preventDefault(); });
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const chosen = plans.find((input) => input.checked);
+    let budget = chosen ? Number(chosen.value) : NaN;
+    if (!customPanel.hidden) {
+      budget = Number(customInput.value);
+      if (!Number.isInteger(budget) || budget < 5) {
+        customInput.focus();
+        showPostError('Enter a whole-dollar daily budget of at least $5.');
+        return;
+      }
+    }
+    if (!Number.isFinite(budget)) {
+      showPostError('Choose a plan, set a custom budget, or publish without promoting.');
+      return;
+    }
+    if (!text(role.title) || !text(role.description) || !(Number(role.minRate) > 0)) {
+      showPostError('Some job details are missing. Go back to Review to finish them.');
+      return;
+    }
+    const promote = budget > 0;
+    const publishedRole = write({ promote, promotionBudget: promote ? String(budget) : '', promotionChosen: true });
+    const button = $('#publishPromoted');
+    button.disabled = true;
+    button.textContent = 'Publishing…';
+    try {
+      if (!window.savaPlatform) throw new Error('The publishing service did not load. Refresh and try again.');
+      const { job } = await window.savaPlatform.employerRequest('createJob', {
+        jobId: publishedRole.serverJobId || '',
+        companyName: publishedRole.company === defaults.company ? '' : (publishedRole.company || ''),
+        title: publishedRole.title,
+        description: publishedRole.description,
+        arrangement: publishedRole.arrangement,
+        employmentType: publishedRole.employmentType || publishedRole.commitment.split(' (')[0],
+        location: publishedRole.location,
+        payMin: Number(publishedRole.minRate),
+        payMax: Number(publishedRole.maxRate),
+        payPeriod: publishedRole.payPeriod === 'month' ? 'month' : 'hour',
+        hiringTimeline: publishedRole.hiringTimeline || '',
+        questions: publishedRole.questions,
+        responsibilities: publishedRole.responsibilities || [],
+        skills: publishedRole.skills || [],
+        promoted: promote,
+        promotionBudget: promote ? budget : 0,
+      });
+      write({ serverJobId: job.id, published: true });
+      window.location.href = './published.html';
+    } catch (error) {
+      button.disabled = false;
+      button.innerHTML = 'Publish job <span aria-hidden="true">→</span>';
+      showPostError(error.message || 'The job could not be published. Please try again.');
+    }
+  });
+}
+
+function bindPublishedStep() {
+  const card = $('#publishedStep');
+  if (!card) return;
+  const role = read();
+  const fill = (field, value) => { card.querySelector(`[data-published-field="${field}"]`).textContent = value || 'Not added'; };
+  const budget = Number(role.promotionBudget);
+  const plan = budget === 5 ? 'Standard' : budget === 10 ? 'Premium' : 'Custom';
+  const questionCount = role.questions.filter((question) => questionText(question)).length;
+  fill('title', text(role.title));
+  fill('employmentType', role.employmentType || role.commitment.split(' (')[0]);
+  fill('hiringTimeline', role.hiringTimeline);
+  fill('pay', Number(role.minRate) > 0 ? rate(role) : '');
+  fill('promotion', role.promote && budget > 0 ? `${plan} · $${budget} per day` : 'Not promoted');
+  fill('questions', questionCount ? `${questionCount} question${questionCount === 1 ? '' : 's'}` : 'None');
+  $('#postAnotherJob').addEventListener('click', () => {
+    localStorage.removeItem(storageKey);
+    window.location.href = './index.html';
+  });
+}
+
 hydrateRoleContent();
 bindPostJob();
 bindCompensation();
+bindReviewStep();
+bindPromoteStep();
+bindPublishedStep();
 bindPublish();
 bindApplicants();
 bindJobs();

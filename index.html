@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="./employer-simple.css" />
     <link rel="stylesheet" href="./brand.css" />
     <link rel="stylesheet" href="./post-flow.css" />
+    <link rel="stylesheet" href="./post-steps.css" />
   </head>
   <body class="simple-employer-page employer-only">
     <header class="simple-header">
@@ -18,31 +19,42 @@
       <nav><a href="./talent.html">Talent</a><a href="./applicants.html">Hiring inbox</a><a href="./applicants.html?view=messages">Messages</a><a href="./posted-jobs.html">Posted jobs</a></nav>
     </header>
 
-    <main class="job-flow-shell single-step-shell title-step-shell">
-      <nav class="flow-progress five-step-progress" aria-label="Job posting progress">
-        <span class="active"><b>1</b> Title</span><i></i>
-        <span><b>2</b> Role details</span><i></i>
-        <span><b>3</b> Pay</span><i></i>
-        <span><b>4</b> Review</span>
+    <main class="post-step-shell">
+      <nav class="post-step-progress" aria-label="Job posting progress">
+        <span class="active"><b>1</b> Job basics</span><i></i>
+        <span><b>2</b> Pay</span><i></i>
+        <span><b>3</b> Description</span><i></i>
+        <span><b>4</b> Review</span><i></i>
+        <span><b>5</b> Promote</span>
       </nav>
 
-      <form id="postJobForm" class="job-flow-card" data-step="title" novalidate>
-        <header class="flow-card-heading">
-          <p class="simple-kicker">POST A JOB</p>
-          <h1>Job title <em>*</em></h1>
-        </header>
+      <form id="postJobForm" class="post-step-card" data-step="title" novalidate>
+        <h1>Add job basics</h1>
 
-        <section class="wide-fields">
-          <label class="simple-field"><span>Company name <em>*</em></span><input id="companyName" name="companyName" maxlength="120" placeholder="Enter company name" required /></label>
-          <div class="job-title-editor">
-            <label class="simple-field"><span class="visually-hidden">Job title</span><input id="title" name="title" maxlength="100" placeholder="Enter job title" required /></label>
+        <label class="post-field"><span>Job title <em>*</em></span><input id="title" name="title" maxlength="100" placeholder="e.g. Executive Assistant" autocomplete="off" required /></label>
+
+        <fieldset class="post-field post-choice-group">
+          <legend>Employment type <em>*</em></legend>
+          <div class="post-choices">
+            <label><input type="radio" name="employmentType" value="Full-time" required /><span><b>Full-time</b><small>40 hours a week</small></span></label>
+            <label><input type="radio" name="employmentType" value="Part-time" required /><span><b>Part-time</b><small>20+ hours a week</small></span></label>
+            <label><input type="radio" name="employmentType" value="Contract" required /><span><b>Contract</b><small>Per project, no hourly</small></span></label>
           </div>
-        </section>
+        </fieldset>
+
+        <label class="post-field"><span>Hiring timeline <em>*</em></span>
+          <select id="hiringTimeline" name="hiringTimeline" required>
+            <option value="" disabled selected>How soon do you need to hire?</option>
+            <option>ASAP</option>
+            <option>Within 1-2 weeks</option>
+            <option>Within the month</option>
+            <option>Not urgently</option>
+          </select>
+        </label>
 
         <div id="postFormResult" class="simple-form-result" aria-live="polite"></div>
-        <footer class="flow-card-footer">
-          <span></span>
-          <button class="primary-button" type="submit">Continue <span>→</span></button>
+        <footer class="post-step-footer">
+          <button class="post-continue" type="submit">Continue <span aria-hidden="true">→</span></button>
         </footer>
       </form>
     </main>
