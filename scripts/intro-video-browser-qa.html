@@ -1,0 +1,35 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Local introduction recorder test</title></head><body><script type="module">
+if (!['localhost','127.0.0.1'].includes(location.hostname)) throw new Error('Local QA only');
+const cameraPreview = new URLSearchParams(location.search).has('camera');
+const doc = new DOMParser().parseFromString(await (await fetch('/candidate-onboarding.html')).text(),'text/html');
+doc.querySelectorAll('script').forEach(el=>el.remove());
+const base=document.createElement('base');base.href=location.origin+'/';document.head.prepend(base);
+doc.head.querySelectorAll('link').forEach(el=>document.head.append(el.cloneNode(true)));
+document.body.className=doc.body.className;document.body.innerHTML=doc.body.innerHTML;
+if(cameraPreview){
+ document.title='Candidate intro camera preview — Hire From SA';
+ document.body.insertAdjacentHTML('afterbegin','<p style="position:sticky;top:0;z-index:1000;margin:0;padding:12px 20px;background:#eaf2ff;color:#173a70;font:700 14px sans-serif;text-align:center">Camera preview of the actual intro recorder · Recordings stay in this browser and cannot be uploaded from this page.</p>');
+}
+window.getVerifiedCandidate=async()=>({id:'local-test'});window.getAccessToken=async()=>'local-test';
+const originalFetch=window.fetch.bind(window);
+window.fetch=(url,init)=>{
+ if(String(url).includes('/functions/v1/candidate-onboarding')) {
+  if(init.body instanceof FormData) throw new Error('Local recording test only — live upload not performed');
+  return Promise.resolve(Response.json({stage:'recording',introSaved:false}));
+ }
+ return originalFetch(url,init);
+};
+if(!cameraPreview){
+const canvas=document.createElement('canvas');canvas.width=640;canvas.height=360;
+const context=canvas.getContext('2d');let frame=0;
+const draw=()=>{context.fillStyle='#14233a';context.fillRect(0,0,640,360);context.fillStyle='white';context.font='24px sans-serif';context.fillText('One-minute recorder test',80,140);context.fillText('Synthetic camera — no personal data',80,180);context.fillRect((frame++*3)%600,240,40,40);};draw();
+setInterval(draw,40);
+Object.defineProperty(navigator.mediaDevices,'getUserMedia',{value:async()=>{
+ const stream=canvas.captureStream(24);
+ const audio=new AudioContext();await audio.resume();const oscillator=audio.createOscillator();const gain=audio.createGain();gain.gain.value=0.01;
+ const output=audio.createMediaStreamDestination();oscillator.connect(gain);gain.connect(output);oscillator.start();stream.addTrack(output.stream.getAudioTracks()[0]);
+ return stream;
+}});
+}
+await import('/candidate-onboarding.mjs');
+</script></body></html>

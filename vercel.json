@@ -1,6 +1,27 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(self), microphone=(self)"
+        }
+      ]
+    }
+  ],
   "redirects": [
+    {
+      "source": "/jobs.html",
+      "destination": "/candidate-login.html",
+      "permanent": false
+    },
+    {
+      "source": "/job-detail.html",
+      "destination": "/candidate-login.html",
+      "permanent": false
+    },
     {
       "source": "/",
       "destination": "/home.html",

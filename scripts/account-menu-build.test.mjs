@@ -1,0 +1,21 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync, existsSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+const root = dirname(dirname(fileURLToPath(import.meta.url)));
+const read = path => readFileSync(join(root,path),'utf8');
+test('production build publishes bounded account avatar styles', () => {
+  execFileSync('npm',['run','build'],{cwd:root,stdio:'pipe'});
+  assert.ok(existsSync(join(root,'dist/account-menu.css')));
+  const css = read('dist/account-menu.css');
+  assert.match(css,/\.sava-account-trigger img,.sava-account-panel-avatar img\{[^}]*width:100%;height:100%;object-fit:cover/);
+  assert.match(css,/\.sava-account-panel\[hidden\]\{display:none!important\}/);
+  const html = read('dist/candidate-dashboard.html');
+  assert.match(html,/candidateDashboard-[^" ]+\.css/);
+  const assets = [...html.matchAll(/href="([^"]+\.css)"/g)].map(match=>match[1]);
+  assert.ok(assets.some(asset=>read('dist'+asset).includes('.sava-account-trigger img')));
+  const fallback = read('dist/account-menu.js');
+  assert.match(fallback,/image\.width = avatar\.closest\('\.sava-account-trigger'\) \? 40 : 42/);
+});

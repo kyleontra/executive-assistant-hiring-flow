@@ -10,22 +10,23 @@
     <link rel="stylesheet" href="./candidate-signup.css" />
     <link rel="stylesheet" href="./candidate-next-steps.css" />
     <link rel="stylesheet" href="./brand.css" />
+    <link rel="stylesheet" href="./candidate-flow-layout.css" />
   </head>
-  <body>
+  <body class="onboarding-page">
     <header class="signup-header"><a class="site-logo-link" href="./jobs.html"><img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a><a href="./candidate-dashboard.html">My account</a></header>
     <main class="next-steps-shell">
       <section class="next-steps-card">
         <p class="eyebrow blue">BEFORE YOUR FIRST APPLICATION</p>
         <h1>Finish up next steps</h1>
-        <p class="lead">Your account is ready. Complete these three items to apply to jobs—you can keep browsing in the meantime.</p>
+        <p class="lead">Add your headshot and complete identity verification, including the platform guide and contract. After approval, fill in your job preferences before the intro guide and video.</p>
         <ol class="verification-checklist">
           <li><span class="checklist-number" id="headshotStep">1</span><div><h2>Headshot</h2><p>A clear photo for your candidate profile.</p></div></li>
           <li><span class="checklist-number" id="idStep">2</span><div><h2>ID photos</h2><p>Front and back, stored privately for review.</p></div></li>
           <li><span class="checklist-number">3</span><div><h2>Short video</h2><p>Introduce yourself and show your ID.</p></div></li>
+          <li><span class="checklist-number">4</span><div><h2>Job preferences</h2><p>First after identity approval: ideal roles, industries, income goals and availability.</p></div></li>
         </ol>
         <p id="nextStepsStatus" class="next-steps-help" aria-live="polite">Checking your progress…</p>
         <a id="continueVerification" class="next-steps-primary" href="./candidate-profile.html" hidden>Finish up next steps <span>→</span></a>
-        <a class="next-steps-secondary" href="./jobs.html">Keep browsing jobs</a>
       </section>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

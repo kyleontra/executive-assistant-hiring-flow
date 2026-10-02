@@ -18,16 +18,10 @@ async function loadNextSteps() {
       window.location.replace(job ? `./application-questions.html?job=${encodeURIComponent(job)}` : './candidate-dashboard.html');
       return;
     }
-    const reference = sessionStorage.getItem(`sava:id-review:${user.id}`);
     if (profile.photoPath) {
       document.querySelector('#headshotStep').textContent = '✓';
       document.querySelector('#headshotStep').classList.add('complete');
-      link.href = './id-verification.html';
-      if (profile.verificationStatus !== 'rejected' && /^SA-[A-Z0-9]{8}$/.test(reference || '')) {
-        document.querySelector('#idStep').textContent = '✓';
-        document.querySelector('#idStep').classList.add('complete');
-        link.href = `./verification.html?review=${encodeURIComponent(reference)}`;
-      }
+      link.href = './candidate-onboarding.html';
     }
     status.textContent = profile.verificationStatus === 'rejected'
       ? 'Your previous verification needs an update. Please submit clear ID photos and a new video.'

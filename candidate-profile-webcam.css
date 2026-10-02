@@ -34,6 +34,37 @@
   background: #0f1d30;
 }
 
+.headshot-upload-progress {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  width: min(390px, 100%);
+  margin: 18px auto 0;
+  padding: 16px 18px;
+  border: 2px solid var(--blue);
+  border-radius: 12px;
+  background: #edf5ff;
+  color: #173d73;
+  box-shadow: 0 12px 30px #256fe824;
+}
+
+.headshot-upload-progress[hidden] { display: none; }
+.headshot-upload-progress > span:last-child { display: grid; gap: 3px; }
+.headshot-upload-progress strong { font: 800 14px Manrope, sans-serif; }
+.headshot-upload-progress small { color: #52709a; font-size: 11px; }
+.headshot-spinner {
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border: 3px solid #bed5fa;
+  border-top-color: var(--blue);
+  border-radius: 50%;
+  animation: headshot-spin .75s linear infinite;
+}
+
+@keyframes headshot-spin { to { transform: rotate(360deg); } }
+
 .camera-panel[hidden] {
   display: none;
 }

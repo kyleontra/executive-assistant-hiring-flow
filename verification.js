@@ -1,8 +1,12 @@
+import { requestCameraStream } from './camera-request.mjs';
+import { onboardingRequest } from './onboarding-client.mjs';
+
 const REVIEW_ENDPOINT = 'https://jyxamdvvnoylaxolhlht.supabase.co/functions/v1/submit-id-video';
 const pageParams = new URLSearchParams(window.location.search);
-const reviewReference = pageParams.get('review');
-const demoMode = pageParams.get('demo') === '1';
+let reviewReference = pageParams.get('review');
+const demoMode = pageParams.get('demo') === '1' && ['localhost', '127.0.0.1'].includes(window.location.hostname);
 const REFERENCE_PATTERN = /^SA-[A-Z0-9]{8}$/;
+const MAX_VIDEO_BYTES = 4 * 1024 * 1024;
 let cameraStream;
 let recorder;
 let recordedVideo;
@@ -12,10 +16,15 @@ let scriptTimer;
 let cameraFrame;
 let visibleHeight;
 let verified = false;
+let recordingHasAudio = false;
+let recordingReady = false;
+let submittingVideo = false;
+let releasePreviewCheck = () => {};
 
 const $ = (selector) => document.querySelector(selector);
 
 function showResult(message, type) {
+  if (type === 'error' && /sign.in|expired/i.test(message)) document.querySelector('#signInAgain').hidden = false;
   const target = $('#cameraResult');
   target.textContent = message;
   target.hidden = false;
@@ -33,48 +42,92 @@ function stopCleanPreview() {
 }
 
 function preferredRecorderType() {
-  return ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm', 'video/mp4'].find((type) => MediaRecorder.isTypeSupported(type));
+  return ['video/mp4', 'video/webm;codecs=vp8,opus', 'video/webm', 'video/webm;codecs=vp9,opus'].find((type) => MediaRecorder.isTypeSupported(type));
 }
 
-async function recordedVideoHasPicture(blob) {
-  if (!(blob instanceof Blob) || blob.size < 25000) return false;
-  const preview = document.createElement('video');
-  const sample = document.createElement('canvas');
-  const objectUrl = URL.createObjectURL(blob);
-  preview.muted = true;
-  preview.playsInline = true;
-  preview.preload = 'auto';
-  preview.src = objectUrl;
+function cameraFailureMessage(error) {
+  if (error?.name === 'NotAllowedError' || error?.name === 'PermissionDeniedError') return 'Camera access is blocked. Use the camera icon in your browser address bar to allow camera and microphone access, then try again.';
+  if (error?.name === 'NotFoundError' || error?.name === 'DevicesNotFoundError') return 'No available camera was found. Connect a camera or upload an MP4/WebM video instead.';
+  if (error?.name === 'NotReadableError' || error?.name === 'TrackStartError') return 'Your camera is busy in another app. Turn off the Loom camera bubble or close the other camera app, then try again—or upload a video instead.';
+  return 'The camera could not start. Check browser permissions, close other camera apps, then try again or upload a video instead.';
+}
+
+async function requestCamera() {
+  const video = { facingMode: { ideal: 'user' }, width: { ideal: 720, max: 1280 }, height: { ideal: 480, max: 720 }, frameRate: { ideal: 24, max: 30 } };
   try {
-    await new Promise((resolve, reject) => {
-      const timeout = window.setTimeout(() => reject(new Error('Video preview timed out.')), 6000);
-      preview.addEventListener('loadeddata', () => { window.clearTimeout(timeout); resolve(); }, { once: true });
-      preview.addEventListener('error', () => { window.clearTimeout(timeout); reject(new Error('Video preview failed.')); }, { once: true });
-    });
-    if (!preview.videoWidth || !preview.videoHeight) return false;
-    if (Number.isFinite(preview.duration) && preview.duration > 0.5) {
-      preview.currentTime = Math.min(1, preview.duration / 2);
-      await new Promise((resolve) => preview.addEventListener('seeked', resolve, { once: true }));
-    }
-    sample.width = 64;
-    sample.height = 36;
-    const context = sample.getContext('2d', { willReadFrequently: true });
-    context.drawImage(preview, 0, 0, sample.width, sample.height);
-    const pixels = context.getImageData(0, 0, sample.width, sample.height).data;
-    let brightnessTotal = 0;
-    let brightest = 0;
-    for (let index = 0; index < pixels.length; index += 4) {
-      const brightness = (pixels[index] + pixels[index + 1] + pixels[index + 2]) / 3;
-      brightnessTotal += brightness;
-      brightest = Math.max(brightest, brightness);
-    }
-    return brightnessTotal / (pixels.length / 4) >= 8 || brightest >= 20;
-  } catch {
-    return false;
-  } finally {
-    preview.removeAttribute('src');
-    URL.revokeObjectURL(objectUrl);
+    return await requestCameraStream({ video, audio: { echoCancellation: true, noiseSuppression: true } });
+  } catch (error) {
+    if (/timed out/i.test(error.message || '')) throw error;
+    try { return await requestCameraStream({ video, audio: false }); }
+    catch { throw error; }
   }
+}
+
+function showRecordedVideo(blob) {
+  releasePreviewCheck();
+  recordingReady = false;
+  recordedVideo = blob;
+  $('#submitReview').disabled = true;
+  const preview = $('#recordedPreview');
+  preview.pause();
+  preview.removeAttribute('src');
+  if (recordedObjectUrl) URL.revokeObjectURL(recordedObjectUrl);
+  recordedObjectUrl = undefined;
+  if (!blob?.size || blob.size > MAX_VIDEO_BYTES) {
+    preview.hidden = true;
+    showResult(blob?.size ? 'The video is larger than 4 MB. Choose a smaller MP4 or WebM file.' : 'The camera returned an empty recording. Try again or upload a video instead.', 'error');
+    return;
+  }
+  recordedObjectUrl = URL.createObjectURL(blob);
+  preview.hidden = false;
+  preview.controls = true;
+  preview.playsInline = true;
+  preview.preload = 'metadata';
+  $('.camera-stage').classList.remove('live');
+  $('.camera-stage').classList.add('recorded');
+  showResult('Recording kept on this page. Tap Play to check your video before continuing.', 'success');
+  let timeout;
+  let disposed = false;
+  const inspect = () => {
+    if (disposed || preview.readyState < 1) return;
+    window.clearTimeout(timeout);
+    if (!preview.videoWidth || !preview.videoHeight) {
+      recordingReady = false;
+      $('#submitReview').disabled = true;
+      showResult('This file has no video track. Choose a recording that includes your camera picture.', 'error');
+      return;
+    }
+    // Dimensions establish a video track. A dark frame or mobile preload delay
+    // is not proof of a broken recording; the candidate and reviewer check it.
+    recordingReady = true;
+    $('#submitReview').disabled = submittingVideo || !verified;
+    showResult(demoMode
+      ? 'Demo video ready. Play it to check your picture, then complete the demo. Nothing will be uploaded.'
+      : verified
+      ? 'Video ready. Play it to check that your face and ID are visible, then save and continue.'
+      : 'Video ready. Play it to check your picture. Confirm your email and complete the ID photo step before submitting.', 'success');
+  };
+  const failed = () => {
+    if (disposed) return;
+    window.clearTimeout(timeout);
+    recordingReady = false;
+    $('#submitReview').disabled = true;
+    showResult('Your browser could not play this recording. It has been kept on this page. Try Play again, or upload an MP4 recorded with your phone’s Camera app.', 'error');
+  };
+  for (const event of ['loadedmetadata', 'loadeddata', 'canplay', 'playing']) preview.addEventListener(event, inspect);
+  preview.addEventListener('error', failed);
+  releasePreviewCheck = () => {
+    disposed = true;
+    window.clearTimeout(timeout);
+    for (const event of ['loadedmetadata', 'loadeddata', 'canplay', 'playing']) preview.removeEventListener(event, inspect);
+    preview.removeEventListener('error', failed);
+  };
+  timeout = window.setTimeout(() => {
+    if (!disposed && !recordingReady) showResult('Your recording is still here. Tap Play in the preview to load it; you do not need to record again.', 'success');
+  }, 8000);
+  // Register handlers before loading, including for immediately cached metadata.
+  preview.src = recordedObjectUrl;
+  preview.load();
 }
 
 function visibleCameraHeight(video) {
@@ -126,6 +179,7 @@ async function requireVerifiedAccount() {
   $('#submitReview').disabled = true;
   if (demoMode) {
     verified = true;
+    $('#submitReview').disabled = submittingVideo || !recordingReady;
     document.querySelector('.video-aside h1').textContent = 'Finish the demo.';
     document.querySelector('.video-aside > p').textContent = 'Record and preview a short test video locally. Demo recordings are never uploaded.';
     document.querySelector('.help-text').textContent = 'This recording stays in your browser and is discarded when you leave or restart the demo.';
@@ -135,20 +189,30 @@ async function requireVerifiedAccount() {
     $('#submitReview').innerHTML = 'Complete demo <span>→</span>';
     return;
   }
-  if (!REFERENCE_PATTERN.test(reviewReference || '')) {
-    $('#authStatus').textContent = 'You can test the camera and record a preview now. Complete the ID photo step before sending the video for review.';
+  const user = await window.getVerifiedCandidate();
+  if (!user) {
+    document.querySelector('#signInAgain').hidden = false;
+    $('#authStatus').textContent = 'You can test the camera now. Sign in before sending the video for review.';
     $('#authStatus').className = 'status-box';
     $('#startCamera').textContent = 'Test camera & microphone';
     return;
   }
-  const user = await window.getVerifiedCandidate();
-  if (!user) {
-    $('#authStatus').textContent = 'You can test the camera now. Confirm your email before sending the video for review.';
-    $('#authStatus').className = 'status-box';
-    $('#startCamera').textContent = 'Test camera & microphone';
+  try {
+    const state = await onboardingRequest('status');
+    if (state.stage !== 'verification') { window.location.replace('./candidate-onboarding.html'); return; }
+    reviewReference = state.reviewReference || '';
+  } catch (error) {
+    $('#authStatus').textContent = (['TimeoutError', 'AbortError'].includes(error?.name) ? 'The request took too long. Check your connection and try again. Your saved progress is kept.' : error.message) || 'Your saved ID photos could not be checked. Refresh to try again.';
+    $('#authStatus').className = 'status-box error';
+    $('#retryAccount').hidden = false;
+    return;
+  }
+  if (!REFERENCE_PATTERN.test(reviewReference)) {
+    window.location.replace('./id-verification.html');
     return;
   }
   verified = true;
+  $('#submitReview').disabled = submittingVideo || !recordingReady;
   $('#authStatus').textContent = `Email confirmed for ${user.email}. Your ID photo reference is ready.`;
   $('#authStatus').className = 'status-box success';
   $('#startCamera').textContent = 'Turn on camera & microphone';
@@ -159,15 +223,26 @@ $('#startCamera').addEventListener('click', async () => {
   if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) { showResult('Video recording needs a modern browser over HTTPS.', 'error'); return; }
   button.textContent = 'Starting…'; button.disabled = true;
   try {
-    cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'user' }, width: { ideal: 720, max: 1280 }, height: { ideal: 480, max: 720 }, frameRate: { ideal: 24, max: 30 } }, audio: { echoCancellation: true, noiseSuppression: true } });
+    stopCamera();
+    cameraStream = await requestCamera();
+    releasePreviewCheck();
+    recordingReady = false;
+    $('#submitReview').disabled = true;
+    recordingHasAudio = cameraStream.getAudioTracks().length > 0;
     const video = $('#cameraPreview'); video.srcObject = cameraStream;
-    await new Promise((resolve) => { if (video.readyState >= 2) resolve(); else video.addEventListener('loadeddata', resolve, { once: true }); });
+    await new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => reject(new Error('The camera did not start. Retry or upload a video instead.')), 15000);
+      const ready = () => { clearTimeout(timeout); resolve(); };
+      if (video.readyState >= 2) ready(); else video.addEventListener('loadeddata', ready, { once: true });
+    });
     await video.play();
     $('#recordedPreview').hidden = true; $('#recordedPreview').removeAttribute('src'); $('#recordingScript').hidden = true;
     startCleanPreview(video); $('.camera-stage').classList.add('live'); $('.camera-stage').classList.remove('recorded');
     button.textContent = 'Camera on'; $('#recordId').disabled = false;
-    showResult('When recording starts, follow the prompts and keep your ID in the frame.', 'success');
-  } catch (_) { button.textContent = verified ? 'Turn on camera & microphone' : 'Test camera & microphone'; button.disabled = false; showResult('Camera permission was not granted or no camera is available. Check browser permissions and try again.', 'error'); }
+    showResult(recordingHasAudio
+      ? 'Camera and microphone are ready. Follow the prompts and keep your ID in the frame.'
+      : 'Camera is ready, but the microphone is unavailable. You can record silently, or allow microphone access and try again.', 'success');
+  } catch (error) { stopCleanPreview(); stopCamera(); $('#recordId').disabled = true; button.textContent = verified ? 'Try camera again' : 'Test camera again'; button.disabled = false; showResult(cameraFailureMessage(error), 'error'); }
 });
 
 $('#recordId').addEventListener('click', () => {
@@ -183,7 +258,12 @@ $('#recordId').addEventListener('click', () => {
     showResult('The camera is not sending a picture. Turn it off, check the preview, and try again.', 'error');
     return;
   }
-  recorder = new MediaRecorder(cameraStream, { ...(mimeType ? { mimeType } : {}), videoBitsPerSecond: 1100000, audioBitsPerSecond: 96000 });
+  try {
+    recorder = new MediaRecorder(cameraStream, { ...(mimeType ? { mimeType } : {}), videoBitsPerSecond: 1100000, audioBitsPerSecond: 96000 });
+  } catch {
+    showResult('This browser could not start recording. Upload an MP4 from your phone’s Camera app instead.', 'error');
+    return;
+  }
   recorder.addEventListener('dataavailable', (event) => { if (event.data.size) chunks.push(event.data); });
   recorder.addEventListener('stop', async () => {
     clearInterval(recordTimer); clearInterval(scriptTimer); stopCleanPreview();
@@ -191,71 +271,94 @@ $('#recordId').addEventListener('click', () => {
     $('#recordingScript').hidden = true;
     $('#cameraPreview').srcObject = null;
     stopCamera();
-    const hasPicture = await recordedVideoHasPicture(candidateVideo);
     $('#startCamera').disabled = false;
     $('#startCamera').textContent = 'Turn camera back on';
     $('#recordId').disabled = true;
-    if (!hasPicture) {
-      recordedVideo = undefined;
-      $('#submitReview').disabled = true;
-      $('.camera-stage').classList.remove('live', 'recorded');
-      showResult('That recording did not contain a visible picture. Turn the camera back on and record again.', 'error');
-      return;
-    }
-    recordedVideo = candidateVideo;
-    if (recordedObjectUrl) URL.revokeObjectURL(recordedObjectUrl);
-    recordedObjectUrl = URL.createObjectURL(recordedVideo);
-    const preview = $('#recordedPreview'); preview.src = recordedObjectUrl; preview.hidden = false;
-    $('.camera-stage').classList.remove('live'); $('.camera-stage').classList.add('recorded');
-    $('#submitReview').disabled = !verified;
-    showResult(demoMode
-      ? 'Demo video ready with picture and audio. Watch the preview, then complete the demo. Nothing will be uploaded.'
-      : verified
-      ? 'Video ready with picture and audio. Watch the preview, then send it for private manual review.'
-      : 'Camera and recording are working. Complete the ID photo step before sending this video for review.', 'success');
+    showRecordedVideo(candidateVideo);
   });
   let seconds = 10; let scriptIndex = 0; $('#recordId').disabled = true; $('#startCamera').disabled = true; $('#submitReview').disabled = true;
-  recorder.start(); setScript(0); showResult(`Recording your ID video… ${seconds}s`, 'success');
+  try { recorder.start(); } catch { stopCamera(); $('#startCamera').disabled = false; $('#startCamera').textContent = 'Try camera again'; showResult('Recording could not start. Retry the camera or upload a video instead.', 'error'); return; }
+  recorder.addEventListener('error', () => { if (recorder.state === 'recording') recorder.stop(); showResult('The recording was interrupted. Retry the camera or upload a video instead.', 'error'); });
+  setScript(0); showResult(`Recording your ID video… ${seconds}s`, 'success');
   scriptTimer = setInterval(() => { scriptIndex += 1; if (scriptIndex < script.length) setScript(scriptIndex); }, 2000);
   recordTimer = setInterval(() => { seconds -= 1; if (seconds > 0) showResult(`Recording your ID video… ${seconds}s`, 'success'); }, 1000);
   window.setTimeout(() => { if (recorder?.state === 'recording') recorder.stop(); }, 10000);
 });
 
-$('#submitReview').addEventListener('click', async () => {
-  if (!recordedVideo) { showResult('Record your ID video before sending it for review.', 'error'); return; }
-  if (demoMode) {
-    const summaryValues = [...document.querySelectorAll('.summary-card b')];
-    ['Demo session', 'Previewed locally', 'Previewed locally', 'Previewed locally', 'Not submitted'].forEach((value, index) => { if (summaryValues[index]) summaryValues[index].textContent = value; });
-    $('#completePanel').querySelector('.eyebrow').textContent = 'DEMO COMPLETE';
-    $('#completePanel').querySelector('h2').textContent = 'The full demo works.';
-    $('#completePanel').querySelector('.lead').textContent = 'Your photos and video stayed in this browser. No account, application, or review submission was created.';
-    $('#completeNextLink').href = './candidate-profile.html?demo=1';
-    $('#completeNextLink').innerHTML = 'Restart demo <span>→</span>';
-    $('#recordPanel').hidden = true;
-    $('#completePanel').hidden = false;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+$('#videoUpload').addEventListener('change', async event => {
+  const input = event.currentTarget;
+  const file = input.files?.[0];
+  const type = file?.type?.split(';')[0].toLowerCase() || '';
+  if (!file || !['video/mp4', 'video/webm'].includes(type) || !file.size || file.size > MAX_VIDEO_BYTES) {
+    input.value = '';
+    showResult('Choose an MP4 or WebM video no larger than 4 MB.', 'error');
     return;
   }
-  const token = await window.getAccessToken();
-  if (!token) { showResult('Your sign-in expired. Confirm your email again, then retry.', 'error'); return; }
-  const button = $('#submitReview'); const extension = recordedVideo.type.includes('mp4') ? 'mp4' : 'webm'; const formData = new FormData();
-  formData.append('video', recordedVideo, `south-africa-id.${extension}`); formData.append('reviewReference', reviewReference);
-  button.disabled = true; button.textContent = 'Sending…'; showResult('Uploading your private review video…', 'success');
+  if (recorder?.state === 'recording') {
+    input.value = '';
+    showResult('Wait for the current recording to finish before choosing a file.', 'error');
+    return;
+  }
+  clearInterval(recordTimer); clearInterval(scriptTimer); stopCleanPreview(); stopCamera();
+  recordingHasAudio = false;
+  $('#cameraPreview').srcObject = null; $('#recordingScript').hidden = true;
+  $('.camera-stage').classList.remove('live'); $('.camera-stage').classList.add('recorded');
+  $('#startCamera').disabled = false; $('#startCamera').textContent = 'Use camera instead'; $('#recordId').disabled = true;
+  showRecordedVideo(file);
+});
+
+$('#submitReview').addEventListener('click', async () => {
+  if (submittingVideo) return;
+  if (!recordedVideo || !recordingReady) { showResult('Play your recorded video so the browser can check it before submitting.', 'error'); return; }
+  if (demoMode) {
+    if (pageParams.get('embedded') === '1' && window.parent !== window) window.parent.postMessage({ type: 'hirefromsa:camera-demo-complete' }, location.origin);
+    else window.location.assign('./onboarding-demo.html');
+    return;
+  }
+  submittingVideo = true;
+  const button = $('#submitReview');
+  button.disabled = true; button.textContent = 'Sending…';
+  $('#videoUpload').disabled = true; $('#startCamera').disabled = true;
+  showResult('Uploading your private review video…', 'success');
   try {
-    const response = await fetch(REVIEW_ENDPOINT, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: formData }); const payload = await response.json();
+    const token = await window.getAccessToken();
+    if (!token) throw new Error('Your sign-in expired. Sign in again, then retry.');
+    const extension = recordedVideo.type.includes('mp4') ? 'mp4' : 'webm';
+    const formData = new FormData();
+    formData.append('video', recordedVideo, `south-africa-id.${extension}`); formData.append('reviewReference', reviewReference);
+    const response = await fetch(REVIEW_ENDPOINT, { signal: AbortSignal.timeout(120000), method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: formData });
+    const payload = await response.json();
     if (!response.ok) throw new Error(payload.error || 'The video could not be sent.');
-    const user = await window.getVerifiedCandidate(); $('#reviewReference').textContent = payload.reference; $('#summaryEmail').textContent = user?.email || 'Confirmed';
-    const applyingJob = sessionStorage.getItem('sava-applying-job');
-    const nextLink = $('#completeNextLink');
-    if (applyingJob) nextLink.href = `./application-questions.html?job=${encodeURIComponent(applyingJob)}`;
-    else { nextLink.href = './jobs.html'; nextLink.innerHTML = 'Browse jobs <span>→</span>'; }
-    $('#recordPanel').hidden = true; $('#completePanel').hidden = false; window.scrollTo({ top: 0, behavior: 'smooth' });
-  } catch (error) { button.disabled = false; button.innerHTML = 'Send for review <span>→</span>'; showResult(error.message || 'The video could not be sent. Please try again.', 'error'); }
+    window.location.assign('./candidate-onboarding.html');
+  } catch (error) {
+    button.innerHTML = 'Save video and continue <span>→</span>';
+    showResult(['TimeoutError', 'AbortError'].includes(error?.name) ? 'The request took too long. Your recording is still here. Check your connection and retry.' : error.message || 'The video could not be sent. Please try again.', 'error');
+  } finally {
+    submittingVideo = false;
+    button.disabled = !verified || !recordingReady;
+    $('#videoUpload').disabled = false; $('#startCamera').disabled = false;
+  }
 });
 
 window.addEventListener('beforeunload', () => {
+  releasePreviewCheck();
   stopCamera();
   if (recordedObjectUrl) URL.revokeObjectURL(recordedObjectUrl);
 });
-if (!demoMode) window.savaAuth.auth.onAuthStateChange(() => { window.setTimeout(requireVerifiedAccount, 0); });
-requireVerifiedAccount();
+if (!demoMode) window.savaAuth.auth.onAuthStateChange(() => { window.setTimeout(() => requireVerifiedAccount().catch(accountLoadFailed), 0); });
+requireVerifiedAccount().catch(accountLoadFailed);
+
+function accountLoadFailed(error) {
+  const status = document.querySelector('#authStatus');
+  status.textContent = error.message || 'Your account could not be checked. Retry to continue.';
+  status.className = 'status-box error';
+  if (/sign.in|expired/i.test(error.message || '')) document.querySelector('#signInAgain').hidden = false;
+  document.querySelector('#retryAccount').hidden = false;
+}
+document.querySelector('#retryAccount').onclick = async () => {
+  const retry = document.querySelector('#retryAccount');
+  retry.disabled = true;
+  retry.hidden = true;
+  try { await requireVerifiedAccount(); } catch (error) { accountLoadFailed(error); }
+  finally { retry.disabled = false; }
+};

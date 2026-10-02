@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Post-verification onboarding demo | Hire From SA</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/brand.css">
+  <link rel="stylesheet" href="/onboarding-videos.css">
+  <link rel="stylesheet" href="/candidate-flow-layout.css">
+  <link rel="stylesheet" href="/candidate-onboarding.css">
+  <style>
+    .demo-actions { display:flex; align-items:center; gap:16px; font-size:12px; }
+    .demo-actions button { padding:8px 12px; border:1px solid #d4deeb; border-radius:8px; background:white; cursor:pointer; font:inherit; }
+    .demo-note { margin:0 0 22px; color:#526780; font-size:13px; }
+    .demo-result { display:grid; gap:20px; }
+    .demo-result dl { display:grid; grid-template-columns:150px 1fr; gap:12px; margin:0; }
+    .demo-result dt { font-weight:700; } .demo-result dd { margin:0; overflow-wrap:anywhere; white-space:pre-wrap; }
+    .demo-result video { width:100%; max-width:720px; border-radius:12px; }
+    @media(max-width:600px) { .demo-actions { gap:8px; } .demo-actions span { max-width:110px; } .demo-result dl { grid-template-columns:1fr; gap:5px; } .demo-result dd { margin-bottom:14px; } }
+  </style>
+</head>
+<body class="journey-page onboarding-page">
+  <header class="journey-header"><a class="site-logo-link" href="/home.html"><img class="site-logo" src="/assets/hire-from-sa-logo.jpeg" alt="Hire From SA"></a><div class="demo-actions"><span>Post-verification demo</span><button id="restartDemo" type="button">Restart demo</button></div></header>
+  <main class="journey-main"><p class="demo-note">Test the actual onboarding screens. Answers and recordings save only in this browser. <a href="/scripts/full-onboarding-demo.html">Open the full candidate demo →</a></p><div id="onboardingRoot"><p role="status">Loading demo…</p></div></main>
+  <script type="module" src="/scripts/post-verification-demo.mjs"></script>
+</body>
+</html>

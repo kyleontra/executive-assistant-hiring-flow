@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Verified virtual assistant profile on Hire From SA." />
+    <title>Private local share profile review</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/brand.css" />
+    <link rel="stylesheet" href="/candidate-public-profile.css" />
+  </head>
+  <body>
+    <p class="private-qa-label">Private local preview · Sample data only · Not published</p>
+    <header class="public-profile-header">
+      <a class="site-logo-link" href="/home.html"><img class="site-logo" src="/assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a>
+      <a class="public-profile-hire" href="/employer-login.html?next=.%2Ftalent.html">Find your next hire →</a>
+    </header>
+    <main class="public-profile-shell">
+      <p id="publicProfileStatus" class="public-profile-status" role="status" aria-live="polite">Loading candidate profile…</p>
+      <section id="publicProfile" hidden></section>
+      <section id="publicProfileError" class="public-profile-error" hidden>
+        <p class="public-profile-kicker">PROFILE UNAVAILABLE</p>
+        <h1>This candidate profile is not available.</h1>
+        <p>The link may be incomplete, or the candidate may still be finishing their profile.</p>
+        <a href="/home.html">Return to Hire From SA →</a>
+      </section>
+    </main>
+    <style>
+      .private-qa-label { position: fixed; left: 14px; bottom: 14px; z-index: 1000; padding: 8px 11px; border: 1px solid #d4deeb; border-radius: 8px; background: #fffef3; box-shadow: 0 8px 24px #14233a1c; font: 700 10px sans-serif; color: #526780; margin: 0; }
+    </style>
+    <script type="module">
+      if (!['localhost','127.0.0.1'].includes(location.hostname)) throw new Error('Private local review only');
+      window.__publicProfileErrors = [];
+      window.addEventListener('error', event => window.__publicProfileErrors.push(event.message));
+      window.addEventListener('unhandledrejection', event => window.__publicProfileErrors.push(String(event.reason)));
+      window.savaPlatform = {
+        publicRequest: async (action,payload) => {
+          if (action !== 'publicCandidateProfile' || payload.shareSlug !== '0123456789abcdef0123456789abcdef') throw new Error('Profile unavailable');
+          return { profile: {
+            name: 'Amy Mokoena', primaryRole: 'Executive Assistant',
+            summary: 'Organized virtual assistant with experience supporting founders, managing complex schedules, coordinating travel and keeping client communication on track.',
+            relevantYears: 7, verified: true,
+            jobTitles: ['Executive Assistant', 'Operations Coordinator'],
+            skills: ['Executive support','Calendar management','Travel coordination','Client communication'],
+            software: ['Google Workspace','Slack','Notion','Microsoft Office'],
+            industries: ['Professional services','Technology'], languages: ['English','Zulu'],
+            education: ['Business Administration Diploma'],
+            certifications: ['Project Management Certificate'],
+            portfolioLinks: ['https://www.behance.net/amy-samples', 'https://amy.example.com/work'],
+            experience: [],
+            photoUrl: '', introUrl: location.origin + '/videos/video-intro-v2.mp4',
+          } };
+        },
+      };
+      await import('/candidate-public-profile.js');
+    </script>
+  </body>
+</html>

@@ -10,14 +10,15 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="./candidate-resume.css" />
     <link rel="stylesheet" href="./brand.css" />
+    <link rel="stylesheet" href="./candidate-flow-layout.css" />
   </head>
-  <body>
+  <body class="onboarding-page">
     <header class="resume-header"><a class="resume-brand site-logo-link" href="./jobs.html"><img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a><span>Candidate profile</span><a href="./jobs.html">Exit</a></header>
     <main class="resume-shell">
       <aside class="resume-aside">
         <p class="eyebrow">YOUR CANDIDATE PROFILE</p>
         <h1>Connect your resume.</h1>
-        <p>Add your resume to finish setting up your account. You can browse jobs right away and complete your headshot, ID photos, and video when you’re ready to apply.</p>
+        <p>Add your resume, then complete your headshot, identity verification, and contract. We’ll review your account before you can apply for roles.</p>
         <div class="flow-steps"><span>✓</span><b>Account created</b><span>✓</span><b>Email confirmed</b><span class="active">3</span><b>Resume</b></div>
       </aside>
       <section class="resume-main">
@@ -26,7 +27,7 @@
           <h2>Add your current resume.</h2>
           <p class="lead">Upload a PDF, DOC, DOCX, TXT, RTF, or ODT file. You can replace it from your candidate dashboard whenever it changes.</p>
           <p class="resume-privacy-note">Your upload is converted to a private text file and contact details are redacted before hirers can view it.</p>
-          <p id="authStatus" class="status-box" aria-live="polite">Checking your verified account…</p>
+          <p id="authStatus" class="status-box" aria-live="polite">Checking your verified account…</p><button id="retryAccount" type="button" hidden>Retry loading account</button><a id="signInAgain" href="./candidate-login.html?next=./candidate-resume.html" hidden>Sign in again to continue</a>
           <form id="resumeForm" novalidate>
             <label class="resume-picker" for="resumeInput">
               <input id="resumeInput" type="file" accept=".pdf,.doc,.docx,.txt,.rtf,.odt,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,application/rtf,text/rtf,application/vnd.oasis.opendocument.text" />

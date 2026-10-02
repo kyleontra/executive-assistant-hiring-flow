@@ -30,6 +30,14 @@ Deno.serve(async (request) => {
     const admin = createClient(Deno.env.get('SUPABASE_URL')!, secretKey);
     const { data: { user }, error: userError } = await admin.auth.getUser(tokenFrom(request));
     if (userError || !user?.email_confirmed_at) return reply(request, { error: 'Confirm your email before submitting the ID video.' }, 401);
+    if (user.app_metadata?.account_role !== 'candidate') return reply(request, { error: 'A candidate account is required.' }, 403);
+    const { data: candidateProfile, error: candidateError } = await admin.from('candidate_profiles').select('verification_status,verification_bypass').eq('user_id', user.id).maybeSingle();
+    if (candidateError) throw candidateError;
+    if (!candidateProfile) return reply(request, { error: 'Complete your candidate profile before submitting your ID.' }, 403);
+    if (candidateProfile.verification_status === 'verified' || candidateProfile.verification_bypass) return reply(request, { error: 'Your identity is already approved. Return to your account to continue.' }, 409);
+    const { data: onboarding, error: onboardingError } = await admin.from('candidate_onboarding').select('identity_completed_at, review_reference').eq('user_id', user.id).maybeSingle();
+    if (onboardingError) throw onboardingError;
+    if (onboarding?.review_reference && onboarding.review_reference !== reviewReference) return reply(request, { error: 'Newer ID photos are saved on your account. Refresh this page to continue with them.' }, 409);
     const folder = `pending/${reviewReference}`;
     const { data: profileFile, error: profileError } = await admin.storage.from(BUCKET).download(`${folder}/candidate.json`);
     if (profileError || !profileFile) return reply(request, { error: 'The linked ID photos could not be found. Upload them again and retry.' }, 404);
@@ -40,9 +48,19 @@ Deno.serve(async (request) => {
     const extension = videoType === 'video/mp4' ? 'mp4' : 'webm';
     const { error: uploadError } = await admin.storage.from(BUCKET).upload(`${folder}/id-video.${extension}`, video, { cacheControl: '0', contentType: videoType, upsert: true });
     if (uploadError) throw uploadError;
-    const { error: profileUpdateError } = await admin.from('candidate_profiles').update({ verification_status: 'pending', updated_at: new Date().toISOString() }).eq('user_id', user.id);
-    if (profileUpdateError) throw profileUpdateError;
-    return reply(request, { reference: reviewReference, status: 'pending' }, 202);
+    const { error: progressError } = await admin.from('candidate_onboarding').upsert({
+      user_id: user.id,
+      identity_video_uploaded_at: new Date().toISOString(),
+      identity_completed_at: null,
+      platform_completed_at: null,
+      review_reference: reviewReference,
+      contract_accepted_at: null,
+      contract_name: null,
+      contract_version: null,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'user_id' });
+    if (progressError) throw progressError;
+    return reply(request, { reference: reviewReference, status: 'contract_required' }, 202);
   } catch (error) {
     console.error('ID review upload failed:', error);
     return reply(request, { error: 'The review video could not be saved. Please try again.' }, 500);

@@ -1,5 +1,5 @@
 const PROFILE_ENDPOINT = 'https://jyxamdvvnoylaxolhlht.supabase.co/functions/v1/submit-profile-photo';
-const MAX_PHOTO_BYTES = 4 * 1024 * 1024;
+const MAX_PHOTO_BYTES = 20 * 1024 * 1024;
 const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const form = document.querySelector('#profilePhotoForm');
 const input = document.querySelector('#profilePhotoInput');
@@ -14,6 +14,7 @@ const captureButton = document.querySelector('#capturePhoto');
 const cameraPanel = document.querySelector('#cameraPanel');
 const cameraPreview = document.querySelector('#cameraPreview');
 const cameraCanvas = document.querySelector('#cameraCanvas');
+const uploadProgress = document.querySelector('#headshotUploadProgress');
 const pageParams = new URLSearchParams(window.location.search);
 const demoMode = pageParams.get('demo') === '1';
 const previewMode = demoMode || (['localhost', '127.0.0.1'].includes(window.location.hostname)
@@ -26,9 +27,17 @@ let cameraStream = null;
 let previewUrl = '';
 
 function showResult(message, type) {
+  if (type === 'error' && /sign.in|expired/i.test(message)) document.querySelector('#signInAgain').hidden = false;
   result.textContent = message;
   result.hidden = false;
   result.className = `status-box ${type}`;
+}
+
+function setUploading(uploading) {
+  uploadProgress.hidden = !uploading;
+  form.setAttribute('aria-busy', String(uploading));
+  input.disabled = uploading;
+  openCameraButton.disabled = uploading;
 }
 
 function validPhoto(file) {
@@ -44,7 +53,9 @@ function stopCamera() {
 
 function selectPhoto(file) {
   if (!validPhoto(file)) {
-    showResult('Choose a JPG, PNG, or WebP image no larger than 4 MB.', 'error');
+    selectedPhoto = null;
+    submitButton.disabled = !existingPhotoPath;
+    showResult('Choose a JPG, PNG, or WebP image no larger than 20 MB.', 'error');
     return false;
   }
   selectedPhoto = file;
@@ -62,6 +73,7 @@ function selectPhoto(file) {
 async function initialize() {
   candidate = previewMode ? { id: demoMode ? 'demo-candidate' : 'local-preview', email: demoMode ? 'demo@hirefromsa.com' : 'verified.candidate@example.com', user_metadata: {} } : await window.getVerifiedCandidate();
   if (!candidate) {
+    document.querySelector('#signInAgain').hidden = false;
     authStatus.textContent = 'Your verified session is missing or has expired. Verify your email again to continue.';
     authStatus.className = 'status-box error';
     input.disabled = true;
@@ -87,16 +99,13 @@ async function initialize() {
       window.location.replace('./candidate-dashboard.html');
       return;
     }
-    existingPhotoPath = profile?.photoPath || sessionStorage.getItem(`sava:profile-photo:${candidate.id}`) || '';
+    existingPhotoPath = profile?.photoPath || '';
     if (existingPhotoPath) {
-      sessionStorage.setItem(`sava:profile-photo:${candidate.id}`, existingPhotoPath);
       submitButton.disabled = false;
       submitButton.innerHTML = 'Continue with saved photo <span>→</span>';
       showResult('Your saved headshot is ready. Continue or choose a new photo.', 'success');
     }
-  } catch {
-    // A new candidate will not have a saved profile yet.
-  }
+  } catch (error) { accountLoadFailed(error); }
 }
 
 input.addEventListener('change', () => {
@@ -111,7 +120,7 @@ openCameraButton.addEventListener('click', async () => {
   }
   openCameraButton.disabled = true;
   try {
-    cameraStream = await navigator.mediaDevices.getUserMedia({
+    cameraStream = await (await import('./camera-request.mjs')).requestCameraStream({
       video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
       audio: false,
     });
@@ -171,40 +180,36 @@ captureButton.addEventListener('click', async () => {
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
   if (!candidate || submitButton.disabled || (!selectedPhoto && !existingPhotoPath)) return;
+  stopCamera();
   submitButton.disabled = true;
   submitButton.textContent = selectedPhoto ? 'Saving photo…' : 'Continuing…';
+  setUploading(Boolean(selectedPhoto));
   try {
-    let path = existingPhotoPath || `candidate-profiles/${demoMode ? 'demo' : 'local-preview'}/profile`;
     if (selectedPhoto && !previewMode) {
+      const photo = selectedPhoto.size > 4 * 1024 * 1024
+        ? await (await import('./headshot-image.mjs')).prepareHeadshot(selectedPhoto)
+        : selectedPhoto;
       const token = await window.getAccessToken();
       if (!token) throw new Error('Your sign-in expired. Verify your email again, then retry.');
       const data = new FormData();
-      data.append('photo', selectedPhoto, selectedPhoto.name || 'profile-photo.jpg');
-      const response = await fetch(PROFILE_ENDPOINT, {
+      data.append('photo', photo, photo.name || 'profile-photo.jpg');
+      const response = await fetch(PROFILE_ENDPOINT, { signal: AbortSignal.timeout(120000),
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: data,
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload.error || 'Your profile photo could not be saved.');
-      path = payload.path;
     }
-    sessionStorage.setItem(`sava:profile-photo:${candidate.id}`, path);
-    if (!previewMode) {
-      await window.savaPlatform.candidateRequest('saveProfile', {
-        photoPath: path,
-        fullName: `${candidate.user_metadata?.first_name || ''} ${candidate.user_metadata?.last_name || ''}`.trim(),
-        calendarLink: candidate.user_metadata?.calendar_link || '',
-      });
-    }
-    showResult(demoMode ? 'Demo photo ready locally. Continuing…' : 'Profile photo saved. Continuing to your ID photos…', 'success');
-    window.setTimeout(() => window.location.assign(`./id-verification.html${demoMode ? '?demo=1' : ''}`), 500);
+    showResult(demoMode ? 'Demo photo ready locally. Continuing…' : 'Profile photo saved. Continuing to the verification video…', 'success');
+    window.setTimeout(() => window.location.assign(demoMode ? './id-verification.html?demo=1' : './candidate-onboarding.html'), 500);
   } catch (error) {
+    setUploading(false);
     submitButton.disabled = false;
     submitButton.innerHTML = 'Save photo and continue <span>→</span>';
     showResult(error instanceof TypeError
       ? 'The photo service could not be reached. Check your connection and try again.'
-      : error.message || 'Your profile photo could not be saved. Please try again.', 'error');
+      : (['TimeoutError', 'AbortError'].includes(error?.name) ? 'The request took too long. Check your connection and try again. Your saved progress is kept.' : error.message) || 'Your profile photo could not be saved. Please try again.', 'error');
   }
 });
 
@@ -213,4 +218,19 @@ window.addEventListener('beforeunload', () => {
   if (previewUrl) URL.revokeObjectURL(previewUrl);
 });
 
-initialize();
+initialize().catch(accountLoadFailed);
+
+function accountLoadFailed(error) {
+  const status = document.querySelector('#authStatus');
+  status.textContent = error.message || 'Your account could not be checked. Retry to continue.';
+  status.className = 'status-box error';
+  if (/sign.in|expired/i.test(error.message || '')) document.querySelector('#signInAgain').hidden = false;
+  document.querySelector('#retryAccount').hidden = false;
+}
+document.querySelector('#retryAccount').onclick = async () => {
+  const retry = document.querySelector('#retryAccount');
+  retry.disabled = true;
+  retry.hidden = true;
+  try { await initialize(); } catch (error) { accountLoadFailed(error); }
+  finally { retry.disabled = false; }
+};

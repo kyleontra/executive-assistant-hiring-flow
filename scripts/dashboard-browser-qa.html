@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Private local VA dashboard review</title></head>
+<body>
+  <script type="module">
+    if (!['localhost','127.0.0.1'].includes(location.hostname)) throw new Error('Private local review only');
+    window.__dashboardErrors = [];
+    window.addEventListener('error', event => window.__dashboardErrors.push(event.message));
+    window.addEventListener('unhandledrejection', event => window.__dashboardErrors.push(String(event.reason)));
+    const realFetch = window.fetch.bind(window);
+    const page = new DOMParser().parseFromString(await (await realFetch('/candidate-dashboard.html')).text(), 'text/html');
+    page.querySelectorAll('script').forEach(script => script.remove());
+    page.querySelectorAll('[href],[src]').forEach(node => {
+      ['href','src'].forEach(attribute => {
+        if (node.hasAttribute(attribute)) node.setAttribute(attribute,new URL(node.getAttribute(attribute),location.origin + '/candidate-dashboard.html').href);
+      });
+    });
+    page.head.querySelectorAll('link').forEach(link => document.head.append(document.importNode(link,true)));
+    const accountStyles = document.createElement('link');
+    accountStyles.rel = 'stylesheet';
+    accountStyles.href = '/account-menu.css';
+    document.head.append(accountStyles);
+    document.body.className = page.body.className;
+    document.body.replaceChildren(...Array.from(page.body.childNodes, node => document.importNode(node,true)));
+    const label = document.createElement('p');
+    label.textContent = 'Private local preview · Sample data only · Not published';
+    label.style.cssText = 'position:fixed;left:14px;bottom:14px;z-index:1000;padding:8px 11px;border:1px solid #d4deeb;border-radius:8px;background:#fffef3;box-shadow:0 8px 24px #14233a1c;font:700 10px sans-serif;color:#526780;margin:0';
+    document.body.prepend(label);
+    const reviewState = new URLSearchParams(location.search).get('state') === 'active' ? 'active' : 'empty';
+    const roles = [
+      { id: 'sample-assistant', company: 'North & Co', title: 'Executive Assistant', arrangement: 'Remote', type: 'Full-time', location: 'South Africa', status: 'active', pay: '$10–$15 / hour', description: 'Support a growing team with calendar management, inbox organization and client coordination.', responsibilities: ['Manage executive calendars','Keep projects and client communication organized'], skills: ['Scheduling','Communication'] },
+      { id: 'sample-bookkeeper', company: 'Bright Studio', title: 'Bookkeeper', arrangement: 'Remote', type: 'Part-time', location: 'South Africa', status: 'active', pay: '$12–$18 / hour', description: 'Help a small studio stay organized with accurate bookkeeping and monthly reporting.', responsibilities: ['Reconcile accounts','Prepare monthly reports'], skills: ['Xero','Bookkeeping'] },
+      { id: 'sample-support', company: 'Cedar Health', title: 'Customer Support Specialist', arrangement: 'Remote', type: 'Full-time', location: 'South Africa', status: 'active', pay: '$9–$13 / hour', description: 'Create a thoughtful support experience for customers across email and chat.', responsibilities: ['Resolve customer questions','Document recurring product feedback'], skills: ['Customer support','Written communication'] },
+    ];
+    const activeApplications = [
+      { id: 'sample-application', status: 'new', submittedAt: '2026-09-15T10:00:00Z', job: roles[0] },
+      { id: 'sample-application-two', status: 'rejected', submittedAt: '2026-09-13T09:00:00Z', job: roles[1] },
+      { id: 'sample-application-three', status: 'shortlisted', submittedAt: '2026-09-11T08:30:00Z', job: roles[2] },
+    ];
+    const activeConversations = [
+      { id: 'sample-thread', applicationId: 'sample-application', company: roles[0].company, roleName: roles[0].title, updatedAt: '2026-09-17T10:00:00Z', messages: [{ sender: 'employer', body: 'Hi Amy! Your experience looks like a great fit. Are you available for a quick introduction this week?', createdAt: '2026-09-17T10:00:00Z' }, { sender: 'candidate', body: 'Thank you! Yes, I’m available on Thursday or Friday.', createdAt: '2026-09-17T10:15:00Z' }] },
+      { id: 'sample-bookkeeper-thread', applicationId: 'sample-application-two', company: roles[1].company, roleName: roles[1].title, updatedAt: '2026-09-16T14:30:00Z', messages: [{ sender: 'employer', body: 'Thanks for applying. We would like to schedule a 20-minute interview.', createdAt: '2026-09-16T14:30:00Z' }] },
+      { id: 'sample-direct', applicationId: null, company: 'Fieldwork Labs', roleName: 'A new opportunity', updatedAt: '2026-09-16T12:00:00Z', messages: [{ sender: 'employer', body: 'We found your profile and would love to tell you more about our operations team.', createdAt: '2026-09-16T12:00:00Z' }] },
+    ];
+    const data = {
+      profile: { applicationReady: new URLSearchParams(location.search).get('state') !== 'onboarding', resumeRequired: false, verificationStatus: new URLSearchParams(location.search).get('state') === 'onboarding' ? 'draft' : 'verified' },
+      applications: reviewState === 'active' ? activeApplications : [],
+      conversations: reviewState === 'active' ? activeConversations : [],
+    };
+    const sampleUser = { id: 'sample-candidate', email: 'amy@example.com', app_metadata: { account_role: 'candidate' }, user_metadata: { first_name: 'Amy', last_name: 'Mokoena' } };
+    let sampleProfile = {
+      fullName: 'Amy Mokoena', verificationStatus: 'verified',
+      idealJobTitles: ['Executive Assistant', 'Customer Support Specialist'],
+      requestedRateMinUsd: 8, requestedRateMaxUsd: 12,
+      availableHoursPerWeek: 40, location: 'Cape Town, South Africa',
+      startAvailability: 'immediately', preferredJobNote: 'Open to US business hours.',
+      resumeFileName: 'sample-resume.txt', resumeUrl: location.origin + '/scripts/dashboard-sample-resume.txt',
+      photoUrl: location.origin + '/assets/hire-from-sa-logo.jpeg',
+      summary: 'Organized virtual assistant with experience supporting executives, managing schedules and keeping client communication on track.',
+      skills: ['Scheduling','Communication','Google Workspace'],
+    };
+    window.getVerifiedCandidate = async () => sampleUser;
+    window.getVerifiedUser = async () => sampleUser;
+    window.signOutAccount = async () => {};
+    window.getAccessToken = async () => 'local-sample-only';
+    window.savaAuth = { auth: { signOut: async () => {}, onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }) } };
+    window.__dashboardRequests = [];
+    window.savaPlatform = {
+      publicRequest: async () => ({ jobs: roles }),
+      candidateRequest: async (action,payload) => {
+        window.__dashboardRequests.push({ action,payload });
+        if (action === 'candidateDashboard') return structuredClone(data);
+        if (action === 'getProfile') return { profile: structuredClone(sampleProfile) };
+        if (action === 'updateCandidateProfileFacts') { sampleProfile = { ...sampleProfile, ...payload, idealJobTitles: payload.idealJobTitles.split(/[,\n]/).map(role => role.trim()).filter(Boolean), portfolioLinks: payload.portfolioLinks.split(/\r?\n/).map(link => link.trim()).filter(Boolean) }; return { status: 'saved' }; }
+        if (['candidateSendThreadMessage','candidateSendMessage'].includes(action)) return { status: 'sent' };
+        throw new Error('This action is unavailable in the private sample preview.');
+      },
+    };
+    window.fetch = (url,options) => {
+      if (String(url).includes('supabase.co')) {
+        if (String(url).includes('/candidate-onboarding') && JSON.parse(options.body).action === 'status') return Promise.resolve(Response.json({ stage: 'complete', introUrl: '' }));
+        throw new Error('Private preview cannot write to Supabase');
+      }
+      return realFetch(url,options);
+    };
+    document.addEventListener('click', event => {
+      const link = event.target.closest('a');
+      if (link && !link.href.includes('/scripts/dashboard-sample-resume.txt') && !link.href.includes('candidate-dashboard.html?tab=profile')) { event.preventDefault(); alert('Sample preview only — this action is available in the real candidate dashboard.'); }
+    });
+    await import('/account-menu.js');
+    await import('/candidate-dashboard.js');
+  </script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <meta name="description" content="Verified virtual assistant profile on Hire From SA." />
+    <title>Candidate profile — Hire From SA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./brand.css" />
+    <link rel="stylesheet" href="./candidate-public-profile.css" />
+  </head>
+  <body>
+    <header class="public-profile-header">
+      <a class="site-logo-link" href="./home.html"><img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a>
+      <a class="public-profile-hire" href="./employer-login.html?next=.%2Ftalent.html">Find your next hire →</a>
+    </header>
+    <main class="public-profile-shell">
+      <p id="publicProfileStatus" class="public-profile-status" role="status" aria-live="polite">Loading candidate profile…</p>
+      <section id="publicProfile" hidden></section>
+      <section id="publicProfileError" class="public-profile-error" hidden>
+        <p class="public-profile-kicker">PROFILE UNAVAILABLE</p>
+        <h1>This candidate profile is not available.</h1>
+        <p>The link may be incomplete, or the candidate may still be finishing their profile.</p>
+        <a href="./home.html">Return to Hire From SA →</a>
+      </section>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./auth-client.js"></script>
+    <script src="./platform-client.js"></script>
+    <script src="./candidate-public-profile.js"></script>
+  </body>
+</html>

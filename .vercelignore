@@ -1,0 +1,26 @@
+node_modules/
+node_modules 2/
+dist/
+.git/
+.vercel/
+.DS_Store
+design-review/
+outputs/
+candidate-intro.mp4
+supabase/
+scripts/
+signup-preview.html
+signup-preview.css
+signup-preview.mjs
+signup-preview-layout.css
+signup-preview-stages.mjs
+onboarding-demo.html
+onboarding-demo.mjs
+candidate-experience.html
+candidate-experience.js
+candidate-experience.css
+candidate-experience-overrides.css
+flow-preview-build.cjs
+1 Enter Macro.app
+public/videos/*-v1.mp4
+public/videos/*-v1.jpg

@@ -8,10 +8,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="./candidate-portal.css" />
+    <link rel="stylesheet" href="./reset-password.css" />
     <link rel="stylesheet" href="./brand.css" />
+    <link rel="stylesheet" href="./candidate-flow-layout.css" />
   </head>
-  <body class="portal-auth-page">
-    <header class="portal-header"><a class="site-logo-link" href="./jobs.html"><img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a><nav><a href="./jobs.html">Find jobs</a><a href="./index.html">For hirers</a></nav></header>
+  <body class="portal-auth-page onboarding-page">
+    <header class="portal-header"><a class="site-logo-link" href="./home.html"><img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a><nav><a href="./employer-login.html">For hirers</a></nav></header>
     <main class="portal-auth-shell">
       <section class="portal-auth-card">
         <p class="portal-kicker">CANDIDATE PORTAL</p>
@@ -20,6 +22,7 @@
         <form id="candidateLoginForm">
           <label>Email address<input id="loginEmail" type="email" autocomplete="email" required /></label>
           <label>Password<input id="loginPassword" type="password" autocomplete="current-password" minlength="10" required /></label>
+          <p class="portal-forgot"><a href="./reset-password.html?account=candidate">Forgot password?</a></p>
           <p id="loginResult" class="portal-result" aria-live="polite" hidden></p>
           <button id="candidateLoginButton" type="submit">Sign in <span>→</span></button>
         </form>

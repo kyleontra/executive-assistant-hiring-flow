@@ -8,12 +8,16 @@
     "preview": "vite preview",
     "redact:resume": "node scripts/redact-resume.mjs",
     "test:redaction": "node --test scripts/redact-resume.test.mjs",
-    "test:candidate-flow": "node --test scripts/candidate-flow.test.mjs"
+    "test:candidate-flow": "node --test scripts/candidate-flow.test.mjs",
+    "test:dashboard": "node --test scripts/candidate-dashboard.test.mjs",
+    "test:onboarding": "node --test scripts/required-video.test.mjs scripts/onboarding-videos.test.mjs scripts/onboarding-client.test.mjs scripts/id-video-preview.test.mjs",
+    "test:live-onboarding": "node --test scripts/live-onboarding.test.mjs"
   },
   "devDependencies": {
     "vite": "^7.3.6"
   },
   "dependencies": {
+    "@mediapipe/tasks-vision": "1.0.1",
     "fflate": "^0.8.2",
     "unpdf": "^1.8.1",
     "word-extractor": "^1.0.4"

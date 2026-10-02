@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Signup video preview — Hire From SA</title>
+  <link rel="stylesheet" href="./candidate-portal.css" />
+  <link rel="stylesheet" href="./brand.css" />
+  <link rel="stylesheet" href="./onboarding-videos.css" />
+</head>
+<body>
+  <header class="portal-header"><a class="site-logo-link" href="./home.html"><img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a><span>Signup preview</span></header>
+  <main class="portal-shell onboarding-demo">
+    <p class="portal-kicker">TEST SIGNUP · VIDEO STEPS</p>
+    <h1>Your next steps, explained.</h1>
+    <p>This preview simulates identity submission and approval. It does not create an account or upload any personal information.</p>
+    <ol class="onboarding-steps" aria-label="Video steps"><li>After ID submission</li><li>After approval</li><li>Your introduction</li></ol>
+    <section class="onboarding-video" aria-labelledby="demoTitle">
+      <p id="demoStep" class="onboarding-kicker"></p>
+      <h2 id="demoTitle"></h2>
+      <p id="demoDescription"></p>
+      <div id="demoPlayer" class="required-video-player"><p>Loading video…</p></div>
+      <button id="demoContinue" class="onboarding-continue" type="button" disabled>Watch video to continue</button>
+    </section>
+    <section id="demoFinished" class="onboarding-video" hidden><h2>You’re ready.</h2><p>All three guides are complete. In the real signup, the second and third guides become available after the team approves your identity. Recording your own introduction is optional.</p><a href="./onboarding-demo.html">Restart preview →</a></section>
+  </main>
+  <script type="module" src="./onboarding-demo.mjs"></script>
+</body>
+</html>

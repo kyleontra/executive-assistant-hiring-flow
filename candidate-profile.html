@@ -11,8 +11,9 @@
     <link rel="stylesheet" href="./candidate-profile.css" />
     <link rel="stylesheet" href="./candidate-profile-webcam.css" />
     <link rel="stylesheet" href="./brand.css" />
+    <link rel="stylesheet" href="./candidate-flow-layout.css" />
   </head>
-  <body>
+  <body class="onboarding-page">
     <header class="profile-header"><a class="profile-brand site-logo-link" href="./jobs.html"><img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a><span>Candidate profile</span><a href="./jobs.html">Exit</a></header>
     <main class="profile-shell">
       <aside class="profile-aside">
@@ -26,10 +27,10 @@
           <p class="eyebrow blue">APPLICATION READINESS · STEP 1 OF 3</p>
           <h2>Choose a clear headshot.</h2>
           <p class="lead">Use a recent photo with your face clearly visible, neutral lighting, and a simple background.</p>
-          <p id="authStatus" class="status-box" aria-live="polite">Checking your verified account…</p>
+          <p id="authStatus" class="status-box" aria-live="polite">Checking your verified account…</p><button id="retryAccount" type="button" hidden>Retry loading account</button><a id="signInAgain" href="./candidate-login.html?next=./candidate-profile.html" hidden>Sign in again to continue</a>
           <form id="profilePhotoForm" novalidate>
             <div class="photo-source-actions" aria-label="Choose how to add your headshot">
-              <label class="source-button" for="profilePhotoInput">Upload a photo</label>
+              <label class="source-button" for="profilePhotoInput">Upload a headshot</label>
               <button id="openCamera" class="source-button" type="button">Use webcam</button>
             </div>
             <label class="photo-picker" for="profilePhotoInput">
@@ -37,6 +38,10 @@
               <span id="photoPlaceholder" class="photo-placeholder"><b>+</b><strong>Add profile photo</strong><small>Upload a file or take one with your webcam</small></span>
               <img id="profilePhotoPreview" alt="Your professional profile preview" hidden />
             </label>
+            <div id="headshotUploadProgress" class="headshot-upload-progress" role="status" aria-live="assertive" hidden>
+              <span class="headshot-spinner" aria-hidden="true"></span>
+              <span><strong>Uploading your headshot…</strong><small>Please keep this page open.</small></span>
+            </div>
             <section id="cameraPanel" class="camera-panel" hidden>
               <video id="cameraPreview" autoplay playsinline muted></video>
               <canvas id="cameraCanvas" width="720" height="720" hidden></canvas>

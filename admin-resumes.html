@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>Resume Search | Hire From SA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./admin-review.css" />
+    <link rel="stylesheet" href="./admin-resumes.css" />
+    <link rel="stylesheet" href="./brand.css" />
+  </head>
+  <body>
+    <header class="admin-header"><a class="site-logo-link" href="./index.html"><img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a><nav><a href="./applicants.html">Hiring inbox</a><a href="./posted-jobs.html">Posted jobs</a><a class="active" href="./admin-resumes.html">Resume search</a><a href="./admin-review.html">Candidate approvals</a></nav></header>
+    <main class="admin-shell resume-admin-shell">
+      <section id="accessPanel" class="access-card">
+        <p class="eyebrow">PRIVATE ADMIN AREA</p>
+        <h1>Search resumes</h1>
+        <p><a href="./employer-login.html?next=./admin-resumes.html">Sign in with your master account</a> to open the resume database, or enter your private review key below.</p>
+        <form id="accessForm"><label for="adminKey">Review access key</label><div><input id="adminKey" type="password" autocomplete="current-password" required /><button type="submit">Open resume search</button></div><p id="accessError" role="alert"></p></form>
+      </section>
+
+      <section id="resumeDashboard" hidden>
+        <header class="dashboard-heading resume-heading"><div><p class="eyebrow">PRIVATE ADMIN AREA</p><h1>Resume search</h1><p id="resumeSummary">Search every indexed candidate resume by role, software, skill, company, or keyword.</p></div><div class="dashboard-actions"><button id="refreshResumes" class="secondary" type="button">Refresh</button><button id="lockDashboard" class="text-button" type="button">Lock</button></div></header>
+
+        <form id="resumeSearchForm" class="resume-search-form" role="search">
+          <label for="resumeQuery">Search indexed resumes</label>
+          <div class="resume-search-controls">
+            <div class="search-input-wrap"><span aria-hidden="true">⌕</span><input id="resumeQuery" type="search" maxlength="100" placeholder="Try paralegal, Clio, Excel, legal assistant…" autocomplete="off" /></div>
+            <select id="verificationStatus" aria-label="Verification status"><option value="">All statuses</option><option value="draft">Draft</option><option value="pending">Pending</option><option value="verified">Verified</option><option value="rejected">Rejected</option></select>
+            <button id="searchResumes" type="submit">Search resumes</button>
+          </div>
+        </form>
+
+        <details id="candidateExport" class="candidate-export" open>
+          <summary><span>Candidate spreadsheet</span><small>Saved resume information for every candidate</small></summary>
+          <div class="candidate-export-content">
+            <div class="candidate-spreadsheet-toolbar"><label for="candidateSpreadsheetSearch">Search candidates, skills, tools or industries<input id="candidateSpreadsheetSearch" type="search" placeholder="Search the spreadsheet…" autocomplete="off" /></label><button id="refreshCandidateSpreadsheet" type="button" class="secondary">Refresh spreadsheet</button><button id="downloadCandidateExport" type="button" class="secondary" disabled>Download CSV</button></div>
+            <p id="candidateExportStatus" role="status" aria-live="polite"></p>
+            <div id="candidateExportPreview"></div>
+            <details class="candidate-export-settings"><summary>AI prompt and generation</summary>
+            <p>Generate or update saved rows using each candidate’s resume and onboarding answers. Notes include their job preferences, monthly income goal in rands, availability and portfolio links. Current rates and status come from their account. Resume Text shows the saved resume directly and is included in the CSV download.</p>
+            <form id="candidateExportForm">
+              <label for="candidateExportPrompt">AI prompt</label>
+              <textarea id="candidateExportPrompt" rows="7" maxlength="6000" required placeholder="Loading the resume extraction prompt…"></textarea>
+              <div class="candidate-export-actions"><button id="generateCandidateExport" type="submit" disabled>Generate all candidates</button><button id="stopCandidateExport" type="button" class="secondary" hidden>Stop</button><button id="copyCandidateExportPrompt" type="button" class="text-button">Copy prompt</button></div>
+            </form>
+            <div class="candidate-export-connection"><span id="candidateExportConfig" role="status"></span><button id="openCandidateAiKey" type="button" class="text-button">Connect AI securely</button><button id="checkCandidateExportConnection" type="button" class="text-button">Check connection</button></div>
+            </details>
+          </div>
+          <dialog id="candidateAiKeyDialog" class="candidate-ai-key-dialog" aria-labelledby="candidateAiKeyTitle">
+            <header><h2 id="candidateAiKeyTitle">Connect OpenAI securely</h2><button id="closeCandidateAiKey" type="button" aria-label="Close key setup">×</button></header>
+            <p>Paste your OpenAI API key below. It is verified on the server and saved encrypted in Supabase Vault. The saved key is never shown again.</p>
+            <form id="candidateAiKeyForm" autocomplete="off">
+              <label for="candidateAiKeyInput">OpenAI API key</label>
+              <input id="candidateAiKeyInput" type="password" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="303" required placeholder="sk-…" />
+              <p id="candidateAiKeyStatus" role="status" aria-live="polite"></p>
+              <button id="saveCandidateAiKey" type="submit">Save securely to Supabase</button>
+            </form>
+          </dialog>
+        </details>
+
+        <div class="resume-workspace">
+          <section class="resume-results-panel" aria-labelledby="resultsTitle">
+            <header><div><p class="eyebrow">MATCHES</p><h2 id="resultsTitle">Candidates</h2></div><span id="resultCount">0 resumes</span></header>
+            <div id="resumeResults" class="resume-results" aria-live="polite"></div>
+            <p id="resumeEmpty" class="empty-state" hidden></p>
+          </section>
+
+          <section id="resumeDetail" class="resume-detail" aria-live="polite">
+            <div class="detail-placeholder"><span>DOC</span><h2>Select a candidate</h2><p>Click a search result to see their indexed experience and redacted resume.</p></div>
+          </section>
+        </div>
+      </section>
+    </main>
+    <div id="resumeToast" class="toast" role="status"></div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./auth-client.js"></script>
+    <script type="module" src="./admin-resumes.js"></script>
+  </body>
+</html>

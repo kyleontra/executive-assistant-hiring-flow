@@ -1,0 +1,8 @@
+.employer-auth-card{width:min(540px,100%)}
+.employer-auth-card form[hidden]{display:none}
+.auth-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:28px;padding:4px;border-radius:12px;background:#edf2f8}
+.portal-auth-card .auth-tabs button{margin:0;padding:11px;border-radius:9px;background:transparent;color:#68768a;box-shadow:none}
+.portal-auth-card .auth-tabs button.active{background:#fff;color:#14233a;box-shadow:0 4px 14px rgba(30,53,84,.09)}
+.employer-name-fields{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.employer-auth-card .portal-switch{margin-top:24px}
+@media(max-width:520px){.employer-name-fields{grid-template-columns:1fr}}

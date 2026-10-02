@@ -10,15 +10,17 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="./video-review.css" />
     <link rel="stylesheet" href="./brand.css" />
+    <link rel="stylesheet" href="./onboarding-videos.css" />
+    <link rel="stylesheet" href="./candidate-flow-layout.css" />
   </head>
-  <body>
+  <body class="onboarding-page">
     <header class="video-header"><a href="./jobs.html" class="video-brand site-logo-link"><img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a><span>Private ID review</span><a href="./jobs.html">Exit</a></header>
     <main class="video-shell">
-      <aside class="video-aside"><p class="eyebrow">BEFORE YOU APPLY</p><h1>Finish your ID review.</h1><p>Your headshot and ID photos are saved. Record one short video to finish these steps and start applying.</p><div class="flow-steps"><span>✓</span><b>Headshot</b><span>✓</span><b>ID photos</b><span class="active">3</span><b>Short video</b></div></aside>
+      <aside class="video-aside"><p class="eyebrow">BEFORE YOU APPLY</p><h1>Record your ID video.</h1><p>Your headshot and ID photos are saved. Record a short private video, then watch the platform guide and complete your contract.</p><div class="flow-steps"><span>✓</span><b>Headshot</b><span>✓</span><b>ID photos</b><span class="active">3</span><b>Short video</b></div></aside>
       <section class="video-main">
         <section id="recordPanel" class="video-card">
           <p class="eyebrow blue">APPLICATION READINESS · STEP 3 OF 3</p><h2>Record a 10-second ID video.</h2><p class="lead">State your full name and where you are from, then hold the front of your South African ID in the frame.</p>
-          <p id="authStatus" class="status-box" aria-live="polite">Checking your verified account…</p>
+          <p id="authStatus" class="status-box" aria-live="polite">Checking your verified account…</p><button id="retryAccount" type="button" hidden>Retry loading account</button><a id="signInAgain" href="./candidate-login.html?next=./verification.html" hidden>Sign in again to continue</a>
           <div class="camera-stage">
             <canvas id="cameraCanvas" width="720" height="405" aria-label="Camera preview"></canvas>
             <video id="cameraPreview" autoplay playsinline muted></video>
@@ -28,14 +30,15 @@
             <div id="recordingScript" class="recording-script" aria-live="polite" hidden><span id="scriptStep"></span><b id="scriptText"></b></div>
           </div>
           <div id="cameraResult" class="status-box" aria-live="polite" hidden></div>
-          <div class="camera-actions"><button id="startCamera" class="primary-action" disabled>Turn on camera &amp; microphone</button><button id="recordId" class="secondary-action" disabled>Start 10-second recording</button><button id="submitReview" class="primary-action" disabled>Send for review <span>→</span></button></div>
+          <div class="camera-actions"><button id="startCamera" class="primary-action" disabled>Turn on camera &amp; microphone</button><button id="recordId" class="secondary-action" disabled>Start 10-second recording</button><button id="submitReview" class="primary-action" disabled>Save video and continue <span>→</span></button></div>
+          <div class="video-upload-divider"><span>or</span></div>
+          <label class="video-upload" for="videoUpload"><b>Upload a video instead</b><span>Use an MP4 or WebM file up to 4 MB if your camera is unavailable.</span><input id="videoUpload" type="file" accept="video/mp4,video/webm,.mp4,.webm" /></label>
           <p class="help-text">This preview is only for checking your recording. Your submitted video is stored privately for the review team; applicants are not given a download link.</p>
         </section>
-        <section id="completePanel" class="video-card complete" hidden><div class="complete-mark">✓</div><p class="eyebrow blue">SUBMISSION RECEIVED</p><h2>Your ID review is in queue.</h2><p class="lead">Your profile, ID photos, and video were linked to your verified account and submitted for private manual review.</p><div class="summary-card"><div><span>Email</span><b id="summaryEmail">Confirmed</b></div><div><span>Profile photo</span><b>Submitted</b></div><div><span>ID photos</span><b>Submitted</b></div><div><span>ID video</span><b>Submitted</b></div><div><span>Reference</span><b id="reviewReference">Pending</b></div></div><a id="completeNextLink" class="primary-action link-button" href="./jobs.html">Continue application <span>→</span></a></section>
       </section>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./auth-client.js"></script>
-    <script src="./verification.js"></script>
+    <script type="module" src="./verification.js"></script>
   </body>
 </html>

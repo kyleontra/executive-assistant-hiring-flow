@@ -21,7 +21,7 @@ const savedResume = document.querySelector('#savedResume');
 const savedResumeName = document.querySelector('#savedResumeName');
 const openResume = document.querySelector('#openResume');
 const params = new URLSearchParams(window.location.search);
-const demoMode = params.get('demo') === '1';
+const demoMode = ['localhost', '127.0.0.1'].includes(window.location.hostname) && params.get('demo') === '1';
 let candidate = null;
 let profile = null;
 let selectedResume = null;
@@ -33,6 +33,7 @@ function nextDestination() {
 }
 
 function showResult(message, type) {
+  if (type === 'error' && /sign.in|expired/i.test(message)) document.querySelector('#signInAgain').hidden = false;
   result.textContent = message;
   result.hidden = false;
   result.className = `status-box ${type}`;
@@ -59,6 +60,7 @@ async function initialize() {
     ? { id: 'demo-candidate', email: 'demo@hirefromsa.com', user_metadata: { first_name: 'Demo', last_name: 'Candidate' } }
     : await window.getVerifiedCandidate();
   if (!candidate) {
+    document.querySelector('#signInAgain').hidden = false;
     window.location.replace(`./candidate-login.html?next=${encodeURIComponent('./candidate-resume.html')}`);
     return;
   }
@@ -68,9 +70,7 @@ async function initialize() {
   try {
     ({ profile } = await window.savaPlatform.candidateRequest('getProfile'));
     renderExisting();
-  } catch {
-    profile = null;
-  }
+  } catch (error) { accountLoadFailed(error); }
 }
 
 input.addEventListener('change', () => {
@@ -98,45 +98,41 @@ form.addEventListener('submit', async (event) => {
     return;
   }
   saveButton.disabled = true;
+  input.disabled = true;
   saveButton.textContent = 'Connecting resume…';
   try {
-    let resumePath = 'demo-candidate/resume.txt';
-    let resumeFileName = `${selectedResume.name.replace(/\.[^.]+$/, '') || 'resume'}.txt`;
     if (!demoMode) {
-      const experience = profile?.experience || [];
-      await window.savaPlatform.candidateRequest('saveProfile', {
-        experience,
-        resumePath: profile?.resumePath || '',
-        resumeFileName: profile?.resumeFileName || '',
-        fullName: `${candidate.user_metadata?.first_name || ''} ${candidate.user_metadata?.last_name || ''}`.trim(),
-        calendarLink: candidate.user_metadata?.calendar_link || '',
-      });
       const token = await window.getAccessToken();
       if (!token) throw new Error('Your sign-in expired. Verify your email again, then retry.');
       const data = new FormData();
       data.append('resume', selectedResume, selectedResume.name);
-      const response = await fetch(RESUME_ENDPOINT, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: data });
+      const response = await fetch(RESUME_ENDPOINT, { signal: AbortSignal.timeout(120000), method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: data });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload.error || 'Your resume could not be saved.');
-      resumePath = payload.path;
-      resumeFileName = payload.fileName;
-      await window.savaPlatform.candidateRequest('saveProfile', {
-        experience,
-        resumePath,
-        resumeFileName,
-        fullName: `${candidate.user_metadata?.first_name || ''} ${candidate.user_metadata?.last_name || ''}`.trim(),
-        calendarLink: candidate.user_metadata?.calendar_link || '',
-      });
     }
-    sessionStorage.setItem(`sava:resume-path:${candidate.id}`, resumePath);
-    sessionStorage.setItem(`sava:resume-name:${candidate.id}`, resumeFileName);
     showResult(demoMode ? 'Demo resume connected locally. Continuing…' : 'Resume connected to your account. Continuing…', 'success');
     window.setTimeout(() => window.location.assign(nextDestination()), 500);
   } catch (error) {
+    input.disabled = false;
     saveButton.disabled = false;
     saveButton.innerHTML = 'Connect resume and continue <span>→</span>';
-    showResult(error instanceof TypeError ? 'The resume service could not be reached. Check your connection and try again.' : error.message || 'Your resume could not be saved.', 'error');
+    showResult(error instanceof TypeError ? 'The resume service could not be reached. Check your connection and try again.' : (['TimeoutError', 'AbortError'].includes(error?.name) ? 'The request took too long. Check your connection and try again. Your saved progress is kept.' : error.message) || 'Your resume could not be saved.', 'error');
   }
 });
 
-initialize();
+initialize().catch(accountLoadFailed);
+
+function accountLoadFailed(error) {
+  const status = document.querySelector('#authStatus');
+  status.textContent = error.message || 'Your account could not be checked. Retry to continue.';
+  status.className = 'status-box error';
+  if (/sign.in|expired/i.test(error.message || '')) document.querySelector('#signInAgain').hidden = false;
+  document.querySelector('#retryAccount').hidden = false;
+}
+document.querySelector('#retryAccount').onclick = async () => {
+  const retry = document.querySelector('#retryAccount');
+  retry.disabled = true;
+  retry.hidden = true;
+  try { await initialize(); } catch (error) { accountLoadFailed(error); }
+  finally { retry.disabled = false; }
+};

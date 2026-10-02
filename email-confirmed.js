@@ -6,6 +6,19 @@ const verifyButton = document.querySelector('#verifyCode');
 const resendButton = document.querySelector('#resendCode');
 
 emailInput.value = new URLSearchParams(window.location.search).get('email') || sessionStorage.getItem('sava-verification-email') || '';
+const requestedAccount = new URLSearchParams(window.location.search).get('account') || sessionStorage.getItem('sava-account-role') || 'candidate';
+
+function verifiedDestination(user) {
+  if (user?.app_metadata?.account_role === 'employer' || requestedAccount === 'employer') {
+    return sessionStorage.getItem('sava-employer-next') || './talent.html';
+  }
+  return './candidate-resume.html';
+}
+
+if (requestedAccount === 'employer') {
+  document.querySelector('#verificationIntro').textContent = 'One quick confirmation, then you can search candidates and start hiring.';
+  document.querySelector('#verificationSteps').innerHTML = '<span>✓</span><b>Account created</b><span>2</span><b>Confirm email</b><span>3</span><b>Search talent</b>';
+}
 
 function showResult(message, type) {
   result.textContent = message;
@@ -27,8 +40,9 @@ form.addEventListener('submit', async (event) => {
     const { error } = await window.savaAuth.auth.verifyOtp({ email, token, type: 'email' });
     if (error) throw error;
     sessionStorage.removeItem('sava-verification-email');
-    showResult('Email verified. Add your resume to finish setting up your account…', 'success');
-    window.location.assign('./candidate-resume.html');
+    showResult(requestedAccount === 'employer' ? 'Email verified. Opening your hirer workspace…' : 'Email verified. Add your resume to finish setting up your account…', 'success');
+    sessionStorage.removeItem('sava-account-role');
+    window.location.assign(requestedAccount === 'employer' ? (sessionStorage.getItem('sava-employer-next') || './talent.html') : './candidate-resume.html');
   } catch (error) {
     showResult(error.message || 'That code could not be verified. Request a new code and try again.', 'error');
     verifyButton.disabled = false;
@@ -37,8 +51,9 @@ form.addEventListener('submit', async (event) => {
 });
 
 // Confirmation links establish the session through the existing auth client.
-window.getVerifiedCandidate().then((user) => {
-  if (user) window.location.replace('./candidate-resume.html');
+const getVerifiedAccount = window.getVerifiedUser || window.getVerifiedCandidate;
+getVerifiedAccount().then((user) => {
+  if (user) window.location.replace(verifiedDestination(user));
 });
 
 resendButton.addEventListener('click', async () => {

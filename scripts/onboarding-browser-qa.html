@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Local onboarding QA</title>
+  <link rel="stylesheet" href="/brand.css">
+  <link rel="stylesheet" href="/onboarding-videos.css">
+  <link rel="stylesheet" href="/candidate-flow-layout.css">
+  <link rel="stylesheet" href="/candidate-onboarding.css">
+</head>
+<body class="journey-page onboarding-page">
+  <header class="journey-header"><a class="site-logo-link" href="/home.html"><img class="site-logo" src="/assets/hire-from-sa-logo.jpeg" alt="Hire From SA"></a><span>Local QA only</span></header>
+  <main class="journey-main" id="onboardingRoot"></main>
+  <script type="module">
+    if (!['localhost', '127.0.0.1'].includes(location.hostname)) throw new Error('Local QA only');
+    const realFetch = window.fetch.bind(window);
+    window.getVerifiedCandidate = async () => ({ id: 'local-qa-candidate' });
+    window.getAccessToken = async () => 'local-qa-only';
+    let guideFailures = new URLSearchParams(location.search).get('failGuide') === '1' ? 3 : 0;
+    const state = { stage: new URLSearchParams(location.search).get('stage') || 'intro', introSaved: false, surveyStep: 1, preferences: {} };
+    window.fetch = (url, options) => {
+      if (String(url).includes('supabase.co/functions/v1/candidate-onboarding')) {
+        if (options?.body instanceof FormData) throw new Error('Local QA does not upload to Supabase');
+        const body = JSON.parse(options.body);
+        if (body.action === 'completeGuide' && guideFailures-- > 0) return Promise.resolve(Response.json({ error: 'Simulated guide save outage. Retry without rewatching.' }, { status: 503 }));
+        if (body.action === 'completeGuide') state.stage = 'recording';
+        if (body.action === 'saveCareerSurvey') { state.preferences = { ...state.preferences, ...body }; state.surveyStep = 2; }
+        if (body.action === 'savePreferences') { state.preferences = { ...state.preferences, ...body }; state.stage = 'intro'; }
+        return Promise.resolve(Response.json(state));
+      }
+      return realFetch(url, options);
+    };
+    await import('/candidate-onboarding.mjs');
+  </script>
+</body>
+</html>

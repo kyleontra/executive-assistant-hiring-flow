@@ -18,7 +18,7 @@ form.addEventListener('submit', async (event) => {
   try {
     // The existing registration endpoint supports account-only JSON requests.
     // Keep its email verification logic unchanged; resume upload is a later step.
-    const response = await fetch(REGISTER_ENDPOINT, {
+    const response = await fetch(REGISTER_ENDPOINT, { signal: AbortSignal.timeout(120000),
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -35,7 +35,7 @@ form.addEventListener('submit', async (event) => {
   } catch (error) {
     submitButton.disabled = false;
     submitButton.innerHTML = 'Create account <span>→</span>';
-    formResult.textContent = error instanceof TypeError ? 'We could not reach the account service. Check your connection and try again.' : error.message || 'Your account could not be created. Please try again.';
+    formResult.textContent = error instanceof TypeError ? 'We could not reach the account service. Check your connection and try again.' : (['TimeoutError', 'AbortError'].includes(error?.name) ? 'The request took too long. Check your connection and try again. Your saved progress is kept.' : error.message) || 'Your account could not be created. Please try again.';
     formResult.className = 'form-result show error';
   }
 });

@@ -1,3 +1,14 @@
 node_modules/
 dist/
 .DS_Store
+.vercel
+.env*
+
+# Local dependencies, generated review artifacts and tooling
+node_modules 2/
+supabase/.temp/
+outputs/
+design-review/
+1 Enter Macro.app/
+type_1_enter_100_times.applescript
+candidate-profile*.png

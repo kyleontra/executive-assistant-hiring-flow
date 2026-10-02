@@ -1,5 +1,10 @@
+import { parsePortfolioLinks, publicPortfolioLinks } from '../_shared/portfolio-links.mjs';
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { MASTER_TOKEN_PATTERN, masterAccount, masterUser, masterWorkspaceHash } from '../_shared/master-access.mjs';
 import { candidateAccess } from '../_shared/candidate-access.mjs';
+import { onboardingStage } from '../_shared/onboarding-state.mjs';
+import { indexResume, resumeIndexColumns, RESUME_INDEX_VERSION } from '../_shared/resume-index.mjs';
+import { longerExperience } from '../_shared/experience-tenure.mjs';
 
 const PRIMARY_ORIGIN = 'https://www.hirefromsa.com';
 const ALLOWED_ORIGINS = new Set([
@@ -11,6 +16,7 @@ const ALLOWED_ORIGINS = new Set([
   'null',
 ]);
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const SHARE_SLUG_PATTERN = /^[0-9a-f]{32}$/;
 const APPLICATION_STATUSES = new Set(['new', 'shortlisted', 'interviewing', 'rejected', 'hired']);
 const REFERRAL_SOURCES = new Set(['search', 'social', 'friend', 'job-board', 'other']);
 const REFERRAL_BYPASS_HASH = '17f0d6e758b103e5845dad735e30b2379ac3b7895976c71ce8b97e6bd5fd27dd';
@@ -30,6 +36,15 @@ function headers(request: Request) {
 
 function reply(request: Request, body: Record<string, unknown>, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: headers(request) });
+}
+
+async function saveCandidateReply(admin: ReturnType<typeof createClient>, threadId: string, candidateId: string, body: string) {
+  const { data: message, error } = await admin.from('candidate_messages').insert({ thread_id: threadId, sender: 'candidate', body }).select('id, sender, body, created_at').single();
+  if (error) throw error;
+  const { error: touchError } = await admin.from('candidate_message_threads').update({ updated_at: message.created_at }).eq('id', threadId).eq('candidate_id', candidateId);
+  // The message is already durable. A failed list timestamp must not invite a duplicate send.
+  if (touchError) console.error('Candidate message saved; thread timestamp update failed:', touchError);
+  return { id: message.id, sender: message.sender, body: message.body, createdAt: message.created_at };
 }
 
 function clean(value: unknown, maxLength: number) {
@@ -83,7 +98,7 @@ function normalizeAnswers(value: unknown, questions: Array<{ text: string; type:
   return answers.some((answer) => !answer) ? null : answers;
 }
 
-function normalizeExperience(value: unknown) {
+function normalizeExperience(value: unknown, requireDescription = true) {
   if (!Array.isArray(value)) return [];
   return value.slice(0, 30).map((item) => {
     const record = item && typeof item === 'object' ? item as Record<string, unknown> : {};
@@ -96,7 +111,7 @@ function normalizeExperience(value: unknown) {
       description: clean(record.description, 10000),
       preference: clean(record.preference, 30),
     };
-  }).filter((entry) => entry.jobTitle && entry.companyName && entry.startDate && entry.description);
+  }).filter((entry) => entry.jobTitle && entry.companyName && entry.startDate && (!requireDescription || entry.description));
 }
 
 function experienceYears(experience: Array<Record<string, unknown>>) {
@@ -118,6 +133,15 @@ function profileSummary(experience: Array<Record<string, unknown>>) {
   const role = clean(newest.jobTitle, 180);
   const company = clean(newest.companyName, 120);
   return role ? `${role}${company ? ` at ${company}` : ''}.` : 'Candidate profile submitted for employer review.';
+}
+
+function publicCandidateSummary(profile: Record<string, unknown>, role: string, years: number) {
+  const indexed = clean(profile.resume_summary, 500).replace(/\s+/g, ' ');
+  if (indexed && !/\[[^\]]*REDACTED\]/i.test(indexed)) return indexed;
+  const written = clean(profile.summary, 1000).replace(/\s+/g, ' ');
+  if (written && !/^(candidate profile submitted|verified candidate)/i.test(written)) return written;
+  const skills = cleanList(profile.resume_skills, 3, 80);
+  return [years ? `${years}+ years of relevant experience.` : '', skills.length ? `Key skills include ${skills.join(', ')}.` : ''].filter(Boolean).join(' ') || `Experience in ${role}.`;
 }
 
 function jobResponse(row: Record<string, unknown>) {
@@ -143,11 +167,23 @@ function jobResponse(row: Record<string, unknown>) {
   };
 }
 
+// Only returns a candidate-consented introduction video. Callers still decide
+// whether the candidate profile itself is visible.
+async function candidateIntroUrl(admin: ReturnType<typeof createClient>, candidateId: string) {
+  if (!candidateId) return '';
+  const { data, error } = await admin.from('candidate_onboarding').select('intro_path, intro_consent_at').eq('user_id', candidateId).maybeSingle();
+  if (error) throw error;
+  return data?.intro_path && data.intro_consent_at
+    ? await signedAsset(admin, 'candidate-introductions', data.intro_path)
+    : '';
+}
+
 async function candidateUser(request: Request, admin: ReturnType<typeof createClient>) {
   const token = tokenFrom(request);
   if (!token) return null;
   const { data: { user }, error } = await admin.auth.getUser(token);
-  return error || !user?.email_confirmed_at ? null : user;
+  const accountRole = user?.app_metadata?.account_role;
+  return error || !user?.email_confirmed_at || (accountRole && accountRole !== 'candidate') ? null : user;
 }
 
 async function authenticatedUser(request: Request, admin: ReturnType<typeof createClient>) {
@@ -157,10 +193,14 @@ async function authenticatedUser(request: Request, admin: ReturnType<typeof crea
   return error ? null : user;
 }
 
-async function rejectCandidateEmployerAccess(request: Request, admin: ReturnType<typeof createClient>) {
+async function employerUser(request: Request, admin: ReturnType<typeof createClient>) {
+  const token = tokenFrom(request);
+  if (MASTER_TOKEN_PATTERN.test(token || '')) {
+    const account = await masterAccount(admin, token);
+    return account ? masterUser(account) : null;
+  }
   const user = await authenticatedUser(request, admin);
-  if (!user) return null;
-  return reply(request, { error: 'Assistant accounts cannot post jobs or use the hirer workspace.' }, 403);
+  return user?.email_confirmed_at && user.app_metadata?.account_role === 'employer' ? user : null;
 }
 
 async function ensureEmployer(admin: ReturnType<typeof createClient>, body: Record<string, unknown>) {
@@ -168,7 +208,9 @@ async function ensureEmployer(admin: ReturnType<typeof createClient>, body: Reco
   const editToken = clean(body.editToken, 160);
   const companyName = clean(body.companyName, 120) || 'Your company';
   if (!UUID_PATTERN.test(employerId) || editToken.length < 32) return { error: 'Hirer workspace access is missing or invalid.' };
-  const tokenHash = await sha256(editToken);
+  const tokenHash = MASTER_TOKEN_PATTERN.test(editToken)
+    ? await masterWorkspaceHash(admin, editToken, employerId) : await sha256(editToken);
+  if (!tokenHash) return { error: 'Your session has expired. Sign in again.' };
   const { data: existing, error } = await admin.from('hirer_workspaces').select('id, edit_token_hash, company_name').eq('id', employerId).maybeSingle();
   if (error) throw error;
   if (existing && existing.edit_token_hash !== tokenHash) return { error: 'This browser cannot access that hirer workspace.' };
@@ -191,6 +233,46 @@ async function signedAsset(admin: ReturnType<typeof createClient>, bucket: strin
   return error ? '' : data?.signedUrl || '';
 }
 
+async function ensureResumeExperience(admin: ReturnType<typeof createClient>, profile: Record<string, unknown>) {
+  if (!profile?.resume_path || profile.resume_index_version == null || Number(profile.resume_index_version) >= RESUME_INDEX_VERSION) return;
+  const { data: resume, error: downloadError } = await admin.storage.from(RESUME_BUCKET).download(String(profile.resume_path));
+  if (downloadError || !resume) { console.error('Stored resume could not be read for experience:', profile.user_id, downloadError); return; }
+  const values = resumeIndexColumns(indexResume(await resume.text()));
+  const { error: updateError } = await admin.from('candidate_profiles').update(values).eq('user_id', profile.user_id);
+  if (updateError) { console.error('Resume experience could not be saved:', profile.user_id, updateError); return; }
+  Object.assign(profile, values);
+}
+
+async function backfillResumeIndexes(admin: ReturnType<typeof createClient>) {
+  const { data: pending, error } = await admin.from('candidate_profiles')
+    .select('user_id, resume_path, resume_index_version')
+    .neq('resume_path', '')
+    .lt('resume_index_version', RESUME_INDEX_VERSION)
+    .limit(500);
+  if (error) throw error;
+  const profiles = pending || [];
+  let indexed = 0;
+  for (let offset = 0; offset < profiles.length; offset += 5) {
+    const batch = profiles.slice(offset, offset + 5);
+    const results = await Promise.all(batch.map(async (profile) => {
+      const { data: resume, error: downloadError } = await admin.storage.from(RESUME_BUCKET).download(String(profile.resume_path));
+      if (downloadError || !resume) {
+        console.error('Stored resume could not be indexed:', profile.user_id, downloadError);
+        return false;
+      }
+      const values = resumeIndexColumns(indexResume(await resume.text()));
+      const { error: updateError } = await admin.from('candidate_profiles').update(values).eq('user_id', profile.user_id);
+      if (updateError) {
+        console.error('Resume index could not be saved:', profile.user_id, updateError);
+        return false;
+      }
+      return true;
+    }));
+    indexed += results.filter(Boolean).length;
+  }
+  return indexed;
+}
+
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response('ok', { headers: headers(request) });
   if (request.method !== 'POST') return reply(request, { error: 'Method not allowed.' }, 405);
@@ -207,9 +289,54 @@ Deno.serve(async (request) => {
       return reply(request, { jobs: (data || []).map(jobResponse) });
     }
 
+    if (action === 'publicCandidateProfile') {
+      const shareSlug = clean(body.shareSlug, 32).toLowerCase();
+      if (!SHARE_SLUG_PATTERN.test(shareSlug)) return reply(request, { error: 'Candidate profile not found.' }, 404);
+      const { data: profile, error } = await admin.from('candidate_profiles').select('*').eq('share_slug', shareSlug).maybeSingle();
+      if (error) throw error;
+      if (!profile || !candidateAccess(profile).applicationReady) return reply(request, { error: 'Candidate profile not found.' }, 404);
+      await ensureResumeExperience(admin, profile);
+      const manualExperience = longerExperience(normalizeExperience(profile.experience));
+      const resumeExperience = longerExperience(normalizeExperience(profile.resume_experience, false));
+      const experience = (manualExperience.length ? manualExperience : resumeExperience).slice(0, 20).map((entry) => ({
+        jobTitle: entry.jobTitle,
+        companyName: entry.companyName,
+        startDate: entry.startDate,
+        endDate: entry.endDate,
+        currentRole: entry.currentRole,
+        description: entry.description,
+      }));
+      const primaryRole = profile.resume_job_titles?.[0] || experience[0]?.jobTitle || 'Remote professional';
+      const relevantYears = Math.max(Number(profile.relevant_years || 0), Number(profile.resume_years_experience || 0));
+      return reply(request, { profile: {
+        name: profile.full_name || 'Hire From SA candidate',
+        primaryRole,
+        summary: publicCandidateSummary(profile, primaryRole, relevantYears),
+        relevantYears,
+        requestedRateMinUsd: profile.requested_rate_min_usd == null ? null : Number(profile.requested_rate_min_usd),
+        requestedRateMaxUsd: profile.requested_rate_max_usd == null ? null : Number(profile.requested_rate_max_usd),
+        availableHoursPerWeek: profile.available_hours_per_week,
+        location: profile.location || '',
+        idealJobTitles: cleanList(profile.ideal_job_titles, 5, 80),
+        portfolioLinks: publicPortfolioLinks(profile.portfolio_links),
+        startAvailability: profile.start_availability || '',
+        experience,
+        experienceSource: manualExperience.length ? 'candidate' : 'resume',
+        jobTitles: cleanList(profile.resume_job_titles, 12, 180),
+        skills: profile.resume_skills || [],
+        software: profile.resume_software || [],
+        industries: profile.resume_industries || [],
+        education: cleanList(profile.resume_education, 12, 240),
+        certifications: cleanList(profile.resume_certifications, 12, 240),
+        languages: profile.resume_languages || [],
+        photoUrl: await signedAsset(admin, BUCKET, String(profile.profile_photo_path || '')),
+        introUrl: await candidateIntroUrl(admin, String(profile.user_id || '')),
+        verified: true,
+      } });
+    }
+
     if (action === 'createJob') {
-      const candidateBlock = await rejectCandidateEmployerAccess(request, admin);
-      if (candidateBlock) return candidateBlock;
+      if (!await employerUser(request, admin)) return reply(request, { error: 'Sign in with an employer account to post a job.' }, 401);
       const access = await ensureEmployer(admin, body);
       if (access.error) return reply(request, { error: access.error }, 403);
       const title = clean(body.title, 180);
@@ -252,9 +379,31 @@ Deno.serve(async (request) => {
       return reply(request, { job: jobResponse(saved), status: 'published' }, existing ? 200 : 201);
     }
 
+    if (action === 'deleteJob') {
+      if (!await employerUser(request, admin)) return reply(request, { error: 'Sign in with an employer account to delete a job.' }, 401);
+      const access = await ensureEmployer(admin, body);
+      if (access.error) return reply(request, { error: access.error }, 403);
+      const jobId = clean(body.jobId, 80);
+      if (!jobId) return reply(request, { error: 'Choose a job to delete.' }, 400);
+
+      const { data: job, error: readError } = await admin.from('hiring_jobs').select('id, employer_id').eq('id', jobId).maybeSingle();
+      if (readError) throw readError;
+      if (!job) return reply(request, { error: 'That job could not be found.' }, 404);
+      if (job.employer_id !== access.employer.id) return reply(request, { error: 'That job belongs to a different hirer workspace.' }, 403);
+
+      const { data: deleted, error: deleteError } = await admin.from('hiring_jobs')
+        .delete()
+        .eq('id', jobId)
+        .eq('employer_id', access.employer.id)
+        .select('id')
+        .maybeSingle();
+      if (deleteError) throw deleteError;
+      if (!deleted) return reply(request, { error: 'That job could not be deleted.' }, 409);
+      return reply(request, { status: 'deleted', jobId: deleted.id });
+    }
+
     if (action === 'employerDashboard') {
-      const candidateBlock = await rejectCandidateEmployerAccess(request, admin);
-      if (candidateBlock) return candidateBlock;
+      if (!await employerUser(request, admin)) return reply(request, { error: 'Sign in with an employer account to open the hirer workspace.' }, 401);
       const access = await ensureEmployer(admin, body);
       if (access.error) return reply(request, { error: access.error }, 403);
       const { data: jobs, error: jobsError } = await admin.from('hiring_jobs').select('*').eq('employer_id', access.employer.id).order('created_at', { ascending: false });
@@ -294,7 +443,9 @@ Deno.serve(async (request) => {
             relevantYears: Number(profile.relevant_years || 0),
             summary: profile.summary || 'Candidate profile submitted for review.',
             verificationStatus: profile.verification_status || 'draft',
+            shareSlug: profile.share_slug || '',
             photoUrl: await signedAsset(admin, BUCKET, String(profile.profile_photo_path || '')),
+            introUrl: await candidateIntroUrl(admin, String(profile.user_id || '')),
             resumeFileName: profile.resume_file_name || '',
             resumeUrl: await signedAsset(admin, RESUME_BUCKET, String(profile.resume_path || '')),
           },
@@ -304,9 +455,57 @@ Deno.serve(async (request) => {
       return reply(request, { jobs: (jobs || []).map(jobResponse), applications: applicationResults });
     }
 
+    if (action === 'searchCandidates') {
+      if (!await employerUser(request, admin)) return reply(request, { error: 'Sign in with an employer account to search candidates.' }, 401);
+      const access = await ensureEmployer(admin, body);
+      if (access.error) return reply(request, { error: access.error }, 403);
+      const query = clean(body.query, 100).toLowerCase();
+      const requestedLimit = Number(body.limit);
+      const limit = Number.isFinite(requestedLimit) ? Math.max(1, Math.min(50, Math.floor(requestedLimit))) : 30;
+      const indexed = await backfillResumeIndexes(admin);
+      const { data: profiles, error } = await admin.rpc('search_candidate_resumes', {
+        search_query: query,
+        result_limit: limit,
+      });
+      if (error) throw error;
+      const candidates = await Promise.all((profiles || []).map(async (profile) => {
+        const manualExperience = longerExperience(normalizeExperience(profile.experience));
+        const resumeExperience = longerExperience(normalizeExperience(profile.resume_experience, false));
+        const experience = (manualExperience.length ? manualExperience : resumeExperience).slice(0, 5).map((entry) => ({
+          jobTitle: entry.jobTitle,
+          companyName: entry.companyName,
+          startDate: entry.startDate,
+          endDate: entry.endDate,
+          currentRole: entry.currentRole,
+          description: entry.description,
+        }));
+        return {
+          id: profile.user_id,
+          name: profile.full_name || 'Candidate',
+          primaryRole: profile.resume_job_titles?.[0] || experience[0]?.jobTitle || 'Remote professional',
+          relevantYears: Math.max(Number(profile.relevant_years || 0), Number(profile.resume_years_experience || 0)),
+          summary: profile.resume_summary || profile.summary || 'Verified candidate profile.',
+          experience,
+          jobTitles: profile.resume_job_titles || [],
+          software: profile.resume_software || [],
+          skills: profile.resume_skills || [],
+          industries: profile.resume_industries || [],
+          companies: profile.resume_companies || [],
+          education: profile.resume_education || [],
+          certifications: profile.resume_certifications || [],
+          languages: profile.resume_languages || [],
+          keywords: profile.resume_keywords || [],
+          searchRank: Number(profile.search_rank || 0),
+          resumeIndexedAt: profile.resume_indexed_at || null,
+          photoUrl: await signedAsset(admin, BUCKET, String(profile.profile_photo_path || '')),
+            introUrl: await candidateIntroUrl(admin, String(profile.user_id || '')),
+        };
+      }));
+      return reply(request, { candidates, query, count: candidates.length, resumesIndexed: indexed });
+    }
+
     if (action === 'updateApplication') {
-      const candidateBlock = await rejectCandidateEmployerAccess(request, admin);
-      if (candidateBlock) return candidateBlock;
+      if (!await employerUser(request, admin)) return reply(request, { error: 'Sign in with an employer account to update applicants.' }, 401);
       const access = await ensureEmployer(admin, body);
       if (access.error) return reply(request, { error: access.error }, 403);
       const applicationId = clean(body.applicationId, 36);
@@ -325,6 +524,39 @@ Deno.serve(async (request) => {
 
     const user = await candidateUser(request, admin);
     if (!user) return reply(request, { error: 'Sign in with your verified candidate account to continue.' }, 401);
+
+    if (action === 'updateCandidateProfileFacts') {
+      const rateMinRaw = String(body.requestedRateMinUsd ?? '').trim();
+      const rateMaxRaw = String(body.requestedRateMaxUsd ?? '').trim();
+      const hoursRaw = String(body.availableHoursPerWeek ?? '').trim();
+      const location = clean(body.location, 120);
+      const roles = typeof body.idealJobTitles === 'string' ? body.idealJobTitles.split(/[,\n]/).map((role: string) => role.trim().replace(/\s+/g, ' ')).filter(Boolean) : [];
+      const startAvailability = clean(body.startAvailability, 20);
+      const note = clean(body.preferredJobNote, 400);
+      const rateMin = rateMinRaw ? Number(rateMinRaw) : null;
+      const rateMax = rateMaxRaw ? Number(rateMaxRaw) : null;
+      const hours = hoursRaw ? Number(hoursRaw) : null;
+      if ((rateMin === null) !== (rateMax === null) ||
+          (rateMin !== null && (!Number.isFinite(rateMin) || rateMin <= 0 || rateMin > 1000 || !/^\d+(?:\.\d{1,2})?$/.test(rateMinRaw))) ||
+          (rateMax !== null && (!Number.isFinite(rateMax) || rateMax < rateMin! || rateMax > 1000 || !/^\d+(?:\.\d{1,2})?$/.test(rateMaxRaw))) ||
+          (hours !== null && (!Number.isInteger(hours) || hours < 1 || hours > 80)) ||
+          String(body.location ?? '').trim().length > 120 || roles.length > 5 || roles.some((role: string) => role.length > 80) ||
+          !['', 'immediately', 'two_weeks', 'one_month', 'flexible'].includes(startAvailability) || String(body.preferredJobNote ?? '').trim().length > 400) {
+        return reply(request, { error: 'Enter up to five ideal roles, valid USD hourly rates, weekly hours from 1 to 80, and a location under 120 characters.' }, 400);
+      }
+      let portfolioLinks;
+      try { portfolioLinks = parsePortfolioLinks(body.portfolioLinks); }
+      catch (error) { return reply(request, { error: error.message }, 400); }
+      const values = { ...(body.portfolioLinks !== undefined ? { portfolio_links: portfolioLinks } : {}), requested_rate_min_usd: rateMin, requested_rate_max_usd: rateMax, available_hours_per_week: hours, location,
+        ...(body.idealJobTitles !== undefined ? { ideal_job_titles: roles } : {}),
+        ...(body.startAvailability !== undefined ? { start_availability: startAvailability } : {}),
+        ...(body.preferredJobNote !== undefined ? { preferred_job_note: note } : {}),
+        updated_at: new Date().toISOString() };
+      const { data: profile, error } = await admin.from('candidate_profiles').update(values).eq('user_id', user.id).select('user_id').maybeSingle();
+      if (error) throw error;
+      if (!profile) return reply(request, { error: 'Your candidate profile could not be found.' }, 404);
+      return reply(request, { status: 'saved' });
+    }
 
     if (action === 'submitReferral') {
       const source = clean(body.source, 40);
@@ -349,18 +581,24 @@ Deno.serve(async (request) => {
         bypassVerification,
         resumeRequired: !clean(profile.resume_path, 500),
         verificationStatus: profile.verification_status,
+        shareSlug: profile.share_slug || '',
       });
     }
 
     if (action === 'saveProfile' || action === 'submitApplication') {
       const submittedExperience = normalizeExperience(body.experience);
-      const existingProfileResult = await admin.from('candidate_profiles').select('experience, profile_photo_path, resume_path, resume_file_name, verification_status, verification_bypass').eq('user_id', user.id).maybeSingle();
+      const existingProfileResult = await admin.from('candidate_profiles').select('experience, profile_photo_path, resume_path, resume_file_name, verification_status, verification_bypass, onboarding_preferences_required, preferences_completed_at').eq('user_id', user.id).maybeSingle();
       if (existingProfileResult.error) throw existingProfileResult.error;
       const existingProfile = existingProfileResult.data || {};
       if (action === 'submitApplication') {
         const access = candidateAccess(existingProfile);
         if (access.resumeRequired) return reply(request, { error: 'Upload a resume before applying.', code: 'RESUME_REQUIRED' }, 403);
+        if (existingProfile.verification_status === 'pending' && !existingProfile.verification_bypass) return reply(request, { error: 'Your identity review is pending. We will email you when it is approved.', code: 'VERIFICATION_PENDING' }, 403);
         if (!access.verificationComplete) return reply(request, { error: 'Finish up next steps: add your headshot, ID photos, and video before applying.', code: 'VERIFICATION_REQUIRED' }, 403);
+        if (!access.applicationReady) return reply(request, { error: 'Complete your job preferences before applying.', code: 'ONBOARDING_REQUIRED' }, 403);
+        const { data: onboarding, error: onboardingError } = await admin.from('candidate_onboarding').select('*').eq('user_id', user.id).maybeSingle();
+        if (onboardingError) throw onboardingError;
+        if (onboardingStage(existingProfile, onboarding || {}) !== 'complete') return reply(request, { error: 'Finish your approved-candidate video and introduction step before applying.', code: 'ONBOARDING_REQUIRED' }, 403);
       }
       const existingExperience = normalizeExperience(existingProfile.experience);
       const experience = submittedExperience.length ? submittedExperience : existingExperience;
@@ -372,14 +610,18 @@ Deno.serve(async (request) => {
       const resumeFileName = (action === 'saveProfile' ? clean(body.resumeFileName, 255) : '') || existingProfile.resume_file_name || '';
       // Only connect files uploaded into this candidate's private storage folder.
       if (photoPath && photoPath !== existingProfile.profile_photo_path) {
-        if (photoPath !== `candidate-profiles/${user.id}/profile`) return reply(request, { error: 'Upload your own headshot before connecting it.' }, 400);
-        const { data: photos, error } = await admin.storage.from(BUCKET).list(`candidate-profiles/${user.id}`, { limit: 10 });
-        if (error || !photos?.some((file) => file.name === 'profile')) return reply(request, { error: 'Upload your headshot before connecting it.' }, 400);
+        const folder = `candidate-profiles/${user.id}`;
+        const name = photoPath.startsWith(`${folder}/`) ? photoPath.slice(folder.length + 1) : '';
+        if (!/^profile(?:-[0-9a-f-]+\.(?:jpg|png|webp))?$/.test(name)) return reply(request, { error: 'Upload your own headshot before connecting it.' }, 400);
+        const { data: photos, error } = await admin.storage.from(BUCKET).list(folder, { limit: 10, search: name });
+        if (error) throw error;
+        if (!photos?.some((file) => file.name === name)) return reply(request, { error: 'Upload your headshot before connecting it.' }, 400);
       }
       if (resumePath && resumePath !== existingProfile.resume_path) {
         if (resumePath !== `${user.id}/resume.txt`) return reply(request, { error: 'Upload your own resume before connecting it.' }, 400);
-        const { data: resumes, error } = await admin.storage.from(RESUME_BUCKET).list(user.id, { limit: 10 });
-        if (error || !resumes?.some((file) => file.name === 'resume.txt')) return reply(request, { error: 'Upload your resume before connecting it.' }, 400);
+        const { data: resumes, error } = await admin.storage.from(RESUME_BUCKET).list(user.id, { limit: 10, search: 'resume.txt' });
+        if (error) throw error;
+        if (!resumes?.some((file) => file.name === 'resume.txt')) return reply(request, { error: 'Upload your resume before connecting it.' }, 400);
       }
       const profile = {
         user_id: user.id,
@@ -417,27 +659,51 @@ Deno.serve(async (request) => {
     if (action === 'getProfile') {
       const { data: profile, error } = await admin.from('candidate_profiles').select('*').eq('user_id', user.id).maybeSingle();
       if (error) throw error;
+      if (profile) await ensureResumeExperience(admin, profile);
+      const access = candidateAccess(profile);
+      if (access.applicationReady) {
+        const { data: progress, error: progressError } = await admin.from('candidate_onboarding').select('*').eq('user_id', user.id).maybeSingle();
+        if (progressError) throw progressError;
+        access.applicationReady = onboardingStage(profile, progress || {}) === 'complete';
+      }
+      const enteredDisplayExperience = profile ? longerExperience(normalizeExperience(profile.experience)) : [];
+      const resumeDisplayExperience = profile ? longerExperience(normalizeExperience(profile.resume_experience, false)) : [];
       return reply(request, { profile: profile ? {
         userId: profile.user_id,
         email: profile.email,
         fullName: profile.full_name,
         calendarLink: profile.calendar_link,
         experience: profile.experience || [],
+        resumeExperience: normalizeExperience(profile.resume_experience, false),
+        displayExperience: enteredDisplayExperience.length ? enteredDisplayExperience : resumeDisplayExperience,
+        displayExperienceSource: enteredDisplayExperience.length ? 'candidate' : 'resume',
         relevantYears: Number(profile.relevant_years || 0),
-        summary: profile.summary,
+        requestedRateMinUsd: profile.requested_rate_min_usd == null ? null : Number(profile.requested_rate_min_usd),
+        requestedRateMaxUsd: profile.requested_rate_max_usd == null ? null : Number(profile.requested_rate_max_usd),
+        availableHoursPerWeek: profile.available_hours_per_week,
+        location: profile.location || '',
+        idealJobTitles: cleanList(profile.ideal_job_titles, 5, 80),
+        portfolioLinks: publicPortfolioLinks(profile.portfolio_links),
+        startAvailability: profile.start_availability || '',
+        preferredJobNote: profile.preferred_job_note || '',
+        shareSlug: profile.share_slug || '',
+        summary: profile.resume_summary || profile.summary,
         photoPath: profile.profile_photo_path,
+        photoUrl: await signedAsset(admin, BUCKET, String(profile.profile_photo_path || '')),
+        skills: profile.resume_skills || [],
+        software: profile.resume_software || [],
         resumePath: profile.resume_path,
         resumeFileName: profile.resume_file_name,
         resumeUrl: await signedAsset(admin, RESUME_BUCKET, String(profile.resume_path || '')),
         verificationStatus: profile.verification_status,
         referralCompleted: Boolean(profile.referral_source),
         verificationBypass: Boolean(profile.verification_bypass),
-        ...candidateAccess(profile),
+        ...access,
       } : null });
     }
 
     if (action === 'candidateDashboard') {
-      const { data: profile, error: profileError } = await admin.from('candidate_profiles').select('resume_path, resume_file_name, referral_source, verification_bypass, profile_photo_path, verification_status').eq('user_id', user.id).maybeSingle();
+      const { data: profile, error: profileError } = await admin.from('candidate_profiles').select('resume_path, resume_file_name, referral_source, verification_bypass, profile_photo_path, verification_status, share_slug').eq('user_id', user.id).maybeSingle();
       if (profileError) throw profileError;
       const { data: applications, error } = await admin.from('job_applications').select('*').eq('candidate_id', user.id).order('submitted_at', { ascending: false });
       if (error) throw error;
@@ -448,8 +714,15 @@ Deno.serve(async (request) => {
         if (jobsError) throw jobsError;
         jobs = data || [];
       }
-      const { data: threads, error: threadError } = await admin.from('candidate_message_threads').select('id, application_id, role_name, updated_at').eq('candidate_id', user.id).order('updated_at', { ascending: false });
+      const { data: threads, error: threadError } = await admin.from('candidate_message_threads').select('id, employer_id, application_id, role_name, updated_at').eq('candidate_id', user.id).order('updated_at', { ascending: false });
       if (threadError) throw threadError;
+      const employerIds = [...new Set((threads || []).map((thread) => thread.employer_id).filter(Boolean))];
+      let employers: Array<Record<string, unknown>> = [];
+      if (employerIds.length) {
+        const { data, error: employerError } = await admin.from('hirer_workspaces').select('id, company_name').in('id', employerIds);
+        if (employerError) throw employerError;
+        employers = data || [];
+      }
       const threadIds = (threads || []).map((thread) => thread.id);
       let messages: Array<Record<string, unknown>> = [];
       if (threadIds.length) {
@@ -458,12 +731,16 @@ Deno.serve(async (request) => {
         messages = data || [];
       }
       const jobMap = new Map(jobs.map((job) => [job.id, job]));
+      const applicationMap = new Map((applications || []).map((application) => [application.id, application]));
+      const employerMap = new Map(employers.map((employer) => [employer.id, employer.company_name]));
       const threadMap = new Map((threads || []).map((thread) => [thread.application_id, thread]));
       return reply(request, { profile: {
         resumeFileName: profile?.resume_file_name || '',
         resumeUrl: await signedAsset(admin, RESUME_BUCKET, String(profile?.resume_path || '')),
         resumePath: profile?.resume_path || '',
         photoPath: profile?.profile_photo_path || '',
+        photoUrl: await signedAsset(admin, BUCKET, String(profile?.profile_photo_path || '')),
+        shareSlug: profile?.share_slug || '',
         verificationStatus: profile?.verification_status || 'draft',
         ...candidateAccess(profile),
         referralCompleted: Boolean(profile?.referral_source),
@@ -478,7 +755,29 @@ Deno.serve(async (request) => {
           job: jobResponse(jobMap.get(application.job_id) || {}),
           messages: thread ? messages.filter((message) => message.thread_id === thread.id).map((message) => ({ id: message.id, sender: message.sender, body: message.body, createdAt: message.created_at })) : [],
         };
+      }), conversations: (threads || []).map((thread) => {
+        const application = applicationMap.get(thread.application_id);
+        const job = application ? jobMap.get(application.job_id) : null;
+        return {
+          id: thread.id,
+          applicationId: thread.application_id,
+          company: job?.company_name || employerMap.get(thread.employer_id) || 'Hirer',
+          roleName: thread.role_name || job?.title || 'Conversation',
+          updatedAt: thread.updated_at,
+          messages: messages.filter((message) => message.thread_id === thread.id).map((message) => ({ id: message.id, sender: message.sender, body: message.body, createdAt: message.created_at })),
+        };
       }) });
+    }
+
+    if (action === 'candidateSendThreadMessage') {
+      const threadId = clean(body.threadId, 36);
+      const messageBody = clean(body.message, 2000);
+      if (!UUID_PATTERN.test(threadId) || !messageBody) return reply(request, { error: 'Choose a conversation and write a message before sending.' }, 400);
+      const { data: thread, error } = await admin.from('candidate_message_threads').select('id').eq('id', threadId).eq('candidate_id', user.id).maybeSingle();
+      if (error) throw error;
+      if (!thread) return reply(request, { error: 'Conversation not found.' }, 404);
+      const message = await saveCandidateReply(admin, thread.id, user.id, messageBody);
+      return reply(request, { status: 'sent', threadId: thread.id, message }, 201);
     }
 
     if (action === 'candidateSendMessage') {
@@ -511,11 +810,8 @@ Deno.serve(async (request) => {
         if (createError) throw createError;
         thread = created;
       }
-      const { error: sendError } = await admin.from('candidate_messages').insert({ thread_id: thread.id, sender: 'candidate', body: messageBody });
-      if (sendError) throw sendError;
-      const { error: touchError } = await admin.from('candidate_message_threads').update({ updated_at: new Date().toISOString() }).eq('id', thread.id);
-      if (touchError) throw touchError;
-      return reply(request, { status: 'sent' }, 201);
+      const message = await saveCandidateReply(admin, thread.id, user.id, messageBody);
+      return reply(request, { status: 'sent', threadId: thread.id, message }, 201);
     }
 
     return reply(request, { error: 'Unknown platform action.' }, 400);

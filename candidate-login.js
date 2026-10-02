@@ -7,6 +7,12 @@ function loginDestination() {
   return next && next.startsWith('./') ? next : './candidate-dashboard.html';
 }
 
+if (new URLSearchParams(window.location.search).get('reset') === 'success') {
+  loginResult.textContent = 'Password reset successfully. Sign in with your new password.';
+  loginResult.className = 'portal-result success';
+  loginResult.hidden = false;
+}
+
 async function resolvedDestination() {
   try {
     const { profile } = await window.savaPlatform.candidateRequest('getProfile');
@@ -24,11 +30,15 @@ loginForm.addEventListener('submit', async (event) => {
   loginButton.textContent = 'Signing in…';
   loginResult.hidden = true;
   try {
-    const { error } = await window.savaAuth.auth.signInWithPassword({
+    const { data, error } = await window.savaAuth.auth.signInWithPassword({
       email: document.querySelector('#loginEmail').value.trim().toLowerCase(),
       password: document.querySelector('#loginPassword').value,
     });
     if (error) throw error;
+    if (data.user?.app_metadata?.account_role !== 'candidate') {
+      await window.savaAuth.auth.signOut();
+      throw new Error('That is an employer account. Use the employer sign-in from Post a Job.');
+    }
     window.location.assign(await resolvedDestination());
   } catch (error) {
     if (error.code === 'email_not_confirmed') {

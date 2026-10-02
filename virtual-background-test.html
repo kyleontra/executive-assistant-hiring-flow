@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Virtual background test — Hire From SA</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./virtual-background-test.css" />
+  <script type="module" src="./virtual-background-test.mjs"></script>
+</head>
+<body>
+  <main class="test-shell">
+    <header class="test-heading">
+      <p class="eyebrow">HIRE FROM SA · VIDEO TEST</p>
+      <h1>Try a virtual background</h1>
+      <p>Choose your camera or the demo clip to preview the Hire From SA background. Record a short sample to see how the finished video looks.</p>
+    </header>
+    <div class="test-layout">
+      <section class="preview-card" aria-label="Video preview">
+        <div class="video-frame">
+          <video id="livePreview" autoplay muted playsinline aria-label="Live video preview"></video>
+          <p id="previewPlaceholder">Choose a source to begin.</p>
+          <span id="backgroundBadge" class="background-badge" hidden></span>
+        </div>
+        <div id="sourceComparison" class="source-comparison" hidden>
+          <video id="sourcePreview" muted playsinline aria-label="Original video without effects"></video>
+          <p><b>Original video · no effect</b><span>Compare this with the large preview above. If your face is covered here too, the camera feed is the issue.</span></p>
+        </div>
+        <p id="testStatus" class="test-status" role="status" aria-live="polite">Your camera and sample recordings stay in this browser. Nothing is uploaded.</p>
+      </section>
+      <section class="controls-card" aria-label="Video test controls">
+        <h2>1. Choose a source</h2>
+        <div class="source-buttons">
+          <button id="useCamera" type="button">Use my camera</button>
+          <button id="useDemo" type="button" class="secondary">Try demo clip</button>
+        </div>
+        <h2>2. Choose a background</h2>
+        <label for="backgroundMode">Background effect</label>
+        <select id="backgroundMode">
+          <option value="brand" selected>Hire From SA background</option>
+          <option value="blur">Blur my background</option>
+          <option value="blue">Blue studio</option>
+          <option value="warm">Warm studio</option>
+          <option value="custom">My own image</option>
+          <option value="none">No effect</option>
+        </select>
+        <label id="customImageLabel" class="custom-image" for="customImage" hidden>Background image (JPG, PNG, or WebP, up to 5 MB)
+          <input id="customImage" type="file" accept="image/jpeg,image/png,image/webp" />
+        </label>
+        <button id="applyBackground" type="button" class="secondary" disabled>Apply background</button>
+        <h2>3. Record a sample</h2>
+        <div class="record-buttons">
+          <button id="startRecording" type="button" disabled>Record test</button>
+          <button id="stopRecording" type="button" class="secondary" disabled>Stop &amp; review</button>
+        </div>
+        <p id="recordTimer" class="record-timer"></p>
+        <button id="stopSource" type="button" class="text-button" disabled>Turn off source</button>
+      </section>
+    </div>
+    <section id="recordedCard" class="recorded-card" hidden>
+      <div><p class="eyebrow">YOUR TEST RECORDING</p><h2>Review your sample</h2><p>Play it back to check the background. You can download it if you want to keep a copy.</p></div>
+      <video id="recordedPreview" controls playsinline aria-label="Recorded test video"></video>
+      <a id="downloadRecording" download="virtual-background-test.webm">Download sample</a>
+    </section>
+  </main>
+</body>
+</html>

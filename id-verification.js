@@ -6,10 +6,12 @@ const form = document.querySelector('#photoForm');
 const submitButton = document.querySelector('#submitPhotos');
 const result = document.querySelector('#photoResult');
 const authStatus = document.querySelector('#authStatus');
-const demoMode = new URLSearchParams(window.location.search).get('demo') === '1';
+const demoMode = ['localhost', '127.0.0.1'].includes(window.location.hostname) && new URLSearchParams(window.location.search).get('demo') === '1';
 let verified = false;
+let uploading = false;
 
 function showResult(message, type) {
+  if (type === 'error' && /sign.in|expired/i.test(message)) document.querySelector('#signInAgain').hidden = false;
   result.textContent = message;
   result.hidden = false;
   result.className = `status-box ${type}`;
@@ -22,7 +24,7 @@ function validPhoto(input) {
 }
 
 function updateSubmit() {
-  submitButton.disabled = !(verified && validPhoto(document.querySelector('#frontPhoto')) && validPhoto(document.querySelector('#backPhoto')) && document.querySelector('#photoConsent').checked);
+  submitButton.disabled = !(verified && !uploading && validPhoto(document.querySelector('#frontPhoto')) && validPhoto(document.querySelector('#backPhoto')) && document.querySelector('#photoConsent').checked);
 }
 
 function setPreview(input, preview) {
@@ -50,6 +52,7 @@ async function requireVerifiedAccount() {
   }
   const user = await window.getVerifiedCandidate();
   if (!user) {
+    document.querySelector('#signInAgain').hidden = false;
     verified = false;
     authStatus.textContent = 'Confirm your email first. Open the Supabase confirmation email, then return to this page.';
     authStatus.className = 'status-box error';
@@ -67,10 +70,10 @@ async function requireVerifiedAccount() {
       window.location.replace('./candidate-dashboard.html');
       return;
     }
-    if (savedProfile?.photoPath) sessionStorage.setItem(`sava:profile-photo:${user.id}`, savedProfile.photoPath);
   } catch (error) {
-    authStatus.textContent = error.message || 'Your profile could not be checked. Please refresh and try again.';
+    authStatus.textContent = (['TimeoutError', 'AbortError'].includes(error?.name) ? 'The request took too long. Check your connection and try again. Your saved progress is kept.' : error.message) || 'Your profile could not be checked. Please refresh and try again.';
     authStatus.className = 'status-box error';
+    document.querySelector('#retryAccount').hidden = false;
     return;
   }
   const profilePhotoPath = savedProfile?.photoPath;
@@ -90,35 +93,53 @@ document.querySelector('#photoConsent').addEventListener('change', updateSubmit)
 
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
-  if (!form.reportValidity() || submitButton.disabled) return;
+  if (uploading || !form.reportValidity() || submitButton.disabled) return;
   if (demoMode) {
     submitButton.disabled = true;
     showResult('Demo ID photos checked locally. Nothing was uploaded. Continuing to the video test…', 'success');
     window.setTimeout(() => window.location.assign('./verification.html?demo=1'), 500);
     return;
   }
-  const token = await window.getAccessToken();
-  if (!token) { showResult('Your sign-in expired. Confirm your email again, then retry.', 'error'); return; }
-  const formData = new FormData();
-  formData.append('front', document.querySelector('#frontPhoto').files[0]);
-  formData.append('back', document.querySelector('#backPhoto').files[0]);
-  const verifiedUser = await window.getVerifiedCandidate();
-  formData.append('profilePhotoPath', verifiedUser ? sessionStorage.getItem(`sava:profile-photo:${verifiedUser.id}`) || '' : '');
+  uploading = true;
   submitButton.disabled = true;
   submitButton.textContent = 'Saving photos…';
+  const inputs = ['frontPhoto', 'backPhoto', 'photoConsent'].map(id => document.querySelector(`#${id}`));
+  inputs.forEach(input => { input.disabled = true; });
   try {
-    const response = await fetch(PHOTO_ENDPOINT, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: formData });
+    const token = await window.getAccessToken();
+    if (!token) throw new Error('Your sign-in expired. Sign in again, then retry.');
+    const formData = new FormData();
+    formData.append('front', document.querySelector('#frontPhoto').files[0]);
+    formData.append('back', document.querySelector('#backPhoto').files[0]);
+    const response = await fetch(PHOTO_ENDPOINT, { signal: AbortSignal.timeout(120000), method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: formData });
     const payload = await response.json();
-    if (!response.ok) throw new Error(payload.error || 'The ID photos could not be saved.');
-    sessionStorage.setItem(`sava:id-review:${verifiedUser.id}`, payload.reference);
+    if (!response.ok || !/^SA-[A-Z0-9]{8}$/.test(payload.reference || '')) throw new Error(payload.error || 'The ID photos could not be saved.');
     showResult('ID photos saved privately. Continuing to the video check…', 'success');
     window.location.assign(`./verification.html?review=${encodeURIComponent(payload.reference)}`);
   } catch (error) {
-    submitButton.disabled = false;
     submitButton.innerHTML = 'Save ID photos and continue <span>→</span>';
-    showResult(error.message || 'The ID photos could not be saved. Please try again.', 'error');
+    showResult(['TimeoutError', 'AbortError'].includes(error?.name) ? 'The request took too long. Check your connection and retry.' : error.message || 'The ID photos could not be saved. Please try again.', 'error');
+  } finally {
+    uploading = false;
+    inputs.forEach(input => { input.disabled = false; });
+    updateSubmit();
   }
 });
 
-if (!demoMode) window.savaAuth.auth.onAuthStateChange(() => { window.setTimeout(requireVerifiedAccount, 0); });
-requireVerifiedAccount();
+if (!demoMode) window.savaAuth.auth.onAuthStateChange(() => { window.setTimeout(() => requireVerifiedAccount().catch(accountLoadFailed), 0); });
+requireVerifiedAccount().catch(accountLoadFailed);
+
+function accountLoadFailed(error) {
+  const status = document.querySelector('#authStatus');
+  status.textContent = error.message || 'Your account could not be checked. Retry to continue.';
+  status.className = 'status-box error';
+  if (/sign.in|expired/i.test(error.message || '')) document.querySelector('#signInAgain').hidden = false;
+  document.querySelector('#retryAccount').hidden = false;
+}
+document.querySelector('#retryAccount').onclick = async () => {
+  const retry = document.querySelector('#retryAccount');
+  retry.disabled = true;
+  retry.hidden = true;
+  try { await requireVerifiedAccount(); } catch (error) { accountLoadFailed(error); }
+  finally { retry.disabled = false; }
+};

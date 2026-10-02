@@ -553,7 +553,7 @@ async function bindApplicants() {
         const answers = application.answers || [];
         const photo = candidate.photoUrl || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=240&h=240&q=75';
         const years = Number(candidate.relevantYears || 0);
-        return `<button class="simple-candidate" data-application-id="${escapeHtml(application.id)}" data-job="${escapeHtml(application.jobId)}" data-status="${escapeHtml(application.status)}" data-name="${escapeHtml(candidate.name)}" data-role="${escapeHtml(application.job.title)}" data-experience="${years} years experience" data-match="${Number(application.match || 0)}" data-summary="${escapeHtml(candidate.summary)}" data-photo="${escapeHtml(photo)}" data-resume="${escapeHtml(candidate.resumeUrl || '')}" data-resume-name="${escapeHtml(candidate.resumeFileName || '')}" data-answers="${escapeHtml(JSON.stringify(answers))}" data-answer1="${escapeHtml(answers[0]?.answer || '')}" data-answer2="${escapeHtml(answers[1]?.answer || '')}" data-answer3="${escapeHtml(answers[2]?.answer || '')}"><img src="${escapeHtml(photo)}" alt="" /><span class="candidate-identity"><b>${escapeHtml(candidate.name)}</b><small>${escapeHtml(application.job.title)} · ${years} years</small></span><span class="candidate-overview">${escapeHtml(candidate.summary)}</span><strong class="match-badge">${Number(application.match || 0)}% match</strong><span class="candidate-arrow" aria-hidden="true">→</span></button>`;
+        return `<button class="simple-candidate" data-application-id="${escapeHtml(application.id)}" data-job="${escapeHtml(application.jobId)}" data-status="${escapeHtml(application.status)}" data-name="${escapeHtml(candidate.name)}" data-role="${escapeHtml(application.job.title)}" data-experience="${years} years experience" data-match="${Number(application.match || 0)}" data-summary="${escapeHtml(candidate.summary)}" data-photo="${escapeHtml(photo)}" data-resume="${escapeHtml(candidate.resumeUrl || '')}" data-resume-name="${escapeHtml(candidate.resumeFileName || '')}" data-intro="${escapeHtml(candidate.introUrl || '')}" data-answers="${escapeHtml(JSON.stringify(answers))}" data-answer1="${escapeHtml(answers[0]?.answer || '')}" data-answer2="${escapeHtml(answers[1]?.answer || '')}" data-answer3="${escapeHtml(answers[2]?.answer || '')}"><img src="${escapeHtml(photo)}" alt="" /><span class="candidate-identity"><b>${escapeHtml(candidate.name)}</b><small>${escapeHtml(application.job.title)} · ${years} years</small></span><span class="candidate-overview">${escapeHtml(candidate.summary)}</span><strong class="match-badge">${Number(application.match || 0)}% match</strong><span class="candidate-arrow" aria-hidden="true">→</span></button>`;
       }).join('');
       candidateList.insertAdjacentHTML('afterbegin', rows);
     }
@@ -735,6 +735,7 @@ async function bindApplicants() {
   }
 
   function messagingIdentity() {
+    if (window.masterSessionToken?.()) return window.savaPlatform.employerIdentity();
     try {
       const saved = JSON.parse(localStorage.getItem(messagingIdentityKey) || 'null');
       if (saved?.employerId && saved?.editToken) return saved;
@@ -877,6 +878,14 @@ async function bindApplicants() {
     $('#profileExperience').textContent = candidate.dataset.experience;
     $('#profileMatch').textContent = `${candidate.dataset.match}% match`;
     $('#profileSummary').textContent = candidate.dataset.summary;
+    const introSection = $('#profileIntroSection');
+    if (introSection) {
+      const introVideo = $('#profileIntroVideo');
+      introVideo.pause();
+      introSection.hidden = !candidate.dataset.intro;
+      if (candidate.dataset.intro) introVideo.src = candidate.dataset.intro;
+      else introVideo.removeAttribute('src');
+    }
     const resumeSection = $('#profileResumeSection');
     const hasResume = Boolean(candidate.dataset.resume);
     resumeSection.hidden = !hasResume;
@@ -895,6 +904,7 @@ async function bindApplicants() {
   }
 
   function closeProfile() {
+    $('#profileIntroVideo')?.pause();
     profilePanel.hidden = true;
     document.body.classList.remove('profile-open');
   }
@@ -994,9 +1004,7 @@ async function bindApplicants() {
       messageBody.value = '';
       messageStatus.textContent = emailNotification === 'sent'
         ? 'Sent. Candidate notified by email.'
-        : emailNotification === 'failed'
-          ? 'Sent, but the email notification failed.'
-          : 'Sent just now.';
+        : 'Sent just now.';
       if (pendingInterviewCandidate === selectedCandidate) {
         await setCandidateStatus(selectedCandidate, 'interviewing');
         pendingInterviewCandidate = null;

@@ -452,7 +452,6 @@ button, input { font: inherit; }
 }
 
 @media (max-width: 820px) {
-  .post-link { display: none; }
   .home-hero { min-height: 650px; }
   .hero-content { padding-top: 142px; }
   .activity-pill { min-width: 195px; }
@@ -472,8 +471,8 @@ button, input { font: inherit; }
   .home-header { height: 66px; padding: 0 16px; }
   .home-header .site-logo { height: 37px !important; max-width: 138px; }
   .header-actions { gap: 12px; }
-  .candidate-login-link { display: none; }
-  .header-cta { min-height: 38px; padding: 0 14px; font-size: 11px; }
+  .candidate-login-link { font-size: 10px; }
+  .header-cta { min-height: 38px; padding: 0 13px; font-size: 11px; }
   .home-hero { min-height: 690px; }
   .hero-content { width: calc(100% - 28px); padding: 132px 0 60px; }
   .activity-one { top: 27px; left: 50%; transform: translateX(-50%) rotate(-1deg); }

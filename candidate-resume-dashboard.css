@@ -53,6 +53,44 @@
 .portal-referral { margin:24px 0; font-size:12px; }
 .portal-referral a { color:#66748a; }
 
+.applications-gate {
+  min-height: calc(100vh - 210px);
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 28px;
+  text-align: center;
+}
+
+.applications-gated .portal-header { display: none; }
+.applications-gated .portal-shell { margin-top: 0; margin-bottom: 0; }
+.applications-gated .applications-gate { min-height: 100vh; }
+
+.applications-gate[hidden] { display: none; }
+
+.applications-gate h1 {
+  max-width: 720px;
+  margin: 0;
+  font: 800 clamp(34px, 6vw, 62px)/1.08 "Manrope", sans-serif;
+  letter-spacing: -0.055em;
+}
+
+.applications-gate a {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 52px;
+  padding: 14px 22px;
+  border-radius: 10px;
+  background: #14233a;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.applications-gate a span { font-size: 18px; }
+
 @media (max-width: 720px) {
   .portal-resume-card {
     align-items: flex-start;

@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f7f9fc" />
+    <title>Search talent — Hire From SA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./employer-simple.css" />
+    <link rel="stylesheet" href="./talent.css" />
+    <link rel="stylesheet" href="./brand.css" />
+  </head>
+  <body class="simple-employer-page talent-page">
+    <header class="simple-header">
+      <a class="simple-brand site-logo-link" href="./home.html"><img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a>
+      <nav>
+        <a class="active" href="./talent.html">Talent</a>
+        <a href="./admin-resumes.html" data-master-resume hidden>Resume database</a>
+        <a href="./applicants.html">Hiring inbox</a>
+        <a href="./posted-jobs.html">Posted jobs</a>
+        <a class="talent-post-cta" href="./index.html">Post a job</a>
+      </nav>
+    </header>
+
+    <main class="talent-shell">
+      <section class="talent-heading">
+        <div>
+          <p class="simple-kicker">TALENT NETWORK</p>
+          <h1>Find the experience you need.</h1>
+          <p>Search indexed resumes by job title, software, skill, industry, company, education, certification, language, or keyword.</p>
+          <a class="master-resume-cta" href="./admin-resumes.html" data-master-resume hidden>Open resume database <span aria-hidden="true">→</span></a>
+        </div>
+      </section>
+
+      <form id="talentSearchForm" class="talent-search" role="search">
+        <span aria-hidden="true">⌕</span>
+        <label class="talent-visually-hidden" for="talentSearch">Search candidates</label>
+        <input id="talentSearch" type="search" placeholder="Try “paralegal”, “Clio”, “Excel”, or “legal research”" autocomplete="off" />
+        <button type="submit">Search candidates</button>
+      </form>
+
+      <div class="talent-suggestions" aria-label="Suggested searches">
+        <span>Popular searches</span>
+        <button type="button" data-query="Paralegal">Paralegal</button>
+        <button type="button" data-query="Executive Assistant">Executive Assistant</button>
+        <button type="button" data-query="Customer Support">Customer Support</button>
+        <button type="button" data-query="Operations">Operations</button>
+      </div>
+
+      <section class="talent-results-heading">
+        <div><h2 id="talentResultTitle">Available candidates</h2><p id="talentResultSummary">Loading verified profiles…</p></div>
+        <button id="clearTalentSearch" type="button" hidden>Clear search</button>
+      </section>
+
+      <div id="talentStatus" class="talent-status" role="status">Searching the talent network…</div>
+      <section id="talentResults" class="talent-results" aria-live="polite"></section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./auth-client.js"></script>
+    <script src="./employer-auth.js"></script>
+    <script src="./platform-client.js"></script>
+    <script src="./talent.js"></script>
+  </body>
+</html>

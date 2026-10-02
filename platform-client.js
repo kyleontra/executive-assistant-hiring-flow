@@ -2,6 +2,9 @@ const HIRING_PLATFORM_ENDPOINT = 'https://jyxamdvvnoylaxolhlht.supabase.co/funct
 const EMPLOYER_IDENTITY_KEY = 'sava-employer-messaging-identity';
 
 function platformEmployerIdentity() {
+  const masterToken = window.masterSessionToken?.();
+  const masterWorkspace = sessionStorage.getItem('hirefromsa:master-workspace');
+  if (masterToken && masterWorkspace) return { employerId: masterWorkspace, editToken: masterToken };
   try {
     const saved = JSON.parse(localStorage.getItem(EMPLOYER_IDENTITY_KEY) || 'null');
     if (saved?.employerId && saved?.editToken) return saved;
@@ -14,6 +17,7 @@ function platformEmployerIdentity() {
 
 async function platformRequest(action, payload = {}, token = '') {
   const response = await fetch(HIRING_PLATFORM_ENDPOINT, {
+    signal: AbortSignal.timeout(30000),
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

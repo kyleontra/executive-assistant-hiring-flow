@@ -26,7 +26,8 @@ function toast(message) {
 }
 
 async function reviewRequest(action, payload = {}) {
-  const response = await fetch(ADMIN_REVIEW_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action, adminKey, ...payload }) });
+  const token = window.masterSessionToken?.();
+  const response = await fetch(ADMIN_REVIEW_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify({ action, adminKey, ...payload }) });
   const result = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(result.error || 'The review service could not complete that request.');
   return result;
@@ -77,7 +78,8 @@ function renderReviews() {
       <div class="candidate-summary"><div><span>Relevant experience</span><b>${Number(candidate.relevantYears || 0).toFixed(1)} years</b></div><p>${escapeHtml(candidate.summary)}</p></div>
       ${fileMarkup(review)}
       <details><summary>View full experience</summary><div class="experience-list">${experienceMarkup(candidate.experience)}</div></details>
-      <footer><button class="reject" type="button" data-action="reject" ${rejected || !review.hasProfile || !review.hasSubmission ? 'disabled' : ''}>Reject</button><button type="button" data-action="accept" ${!review.ready || !review.hasProfile || accepted ? 'disabled' : ''}>${accepted ? 'Accepted ✓' : !review.hasSubmission ? 'Documents required' : !review.hasProfile ? 'Profile unavailable' : review.ready ? 'Accept candidate' : 'Video required'}</button></footer>
+      ${accepted ? `<p role="status">${candidate.approvalEmailSent ? 'Approval email submitted to the mail service.' : 'Approval email has not been sent.'}${candidate.approvalEmailError ? ` ${escapeHtml(candidate.approvalEmailError)}` : ''}</p>${!candidate.approvalEmailSent && review.hasProfile ? '<button type="button" data-action="resend-email">Send approval email</button>' : ''}` : ''}
+      <footer><button class="reject" type="button" data-action="reject" ${rejected || !review.hasProfile || !review.hasSubmission ? 'disabled' : ''}>Reject</button><button type="button" data-action="accept" ${!review.ready || !review.hasProfile || accepted ? 'disabled' : ''}>${accepted ? 'Accepted ✓' : !review.hasSubmission ? 'Documents required' : !review.hasProfile ? 'Active candidate profile required' : review.ready ? 'Accept candidate' : 'Video required'}</button></footer>
     </article>`;
   }).join('');
   reviewEmpty.hidden = visible.length > 0;
@@ -131,8 +133,9 @@ reviewList.addEventListener('click', async (event) => {
   button.disabled = true;
   try {
     const accepting = button.dataset.action === 'accept';
-    await reviewRequest(accepting ? 'acceptReview' : 'rejectReview', { reference: card.dataset.reference });
-    toast(accepting ? 'Candidate accepted' : 'Candidate rejected');
+    const resending = button.dataset.action === 'resend-email';
+    const result = await reviewRequest(resending ? 'resendApprovalEmail' : accepting ? 'acceptReview' : 'rejectReview', { reference: card.dataset.reference });
+    toast(result.emailError ? `Candidate approved, but email needs attention: ${result.emailError}` : resending ? 'Approval email submitted' : accepting ? 'Candidate accepted · approval email submitted' : 'Candidate rejected');
     await loadReviews();
   } catch (error) {
     toast(error.message);
@@ -143,8 +146,8 @@ reviewList.addEventListener('click', async (event) => {
 acceptAllButton.addEventListener('click', async () => {
   acceptAllButton.disabled = true;
   try {
-    const { accepted } = await reviewRequest('acceptAll');
-    toast(`${accepted} candidate${accepted === 1 ? '' : 's'} accepted`);
+    const { accepted, emailFailures = 0 } = await reviewRequest('acceptAll');
+    toast(`${accepted} candidate${accepted === 1 ? '' : 's'} accepted${emailFailures ? ` · ${emailFailures} approval email(s) need retrying` : ' · approval emails submitted'}`);
     await loadReviews();
   } catch (error) {
     toast(error.message);
@@ -153,7 +156,10 @@ acceptAllButton.addEventListener('click', async () => {
 });
 
 document.querySelector('#refreshReviews').addEventListener('click', () => loadReviews().catch((error) => toast(error.message)));
-document.querySelector('#lockDashboard').addEventListener('click', () => {
+document.querySelector('#lockDashboard').addEventListener('click', async () => {
+  if (window.masterSessionToken?.()) {
+    try { await window.signOutAccount(); } catch (error) { toast(error.message); return; }
+  }
   sessionStorage.removeItem(ADMIN_SESSION_KEY);
   adminKey = '';
   adminKeyInput.value = '';
@@ -161,4 +167,4 @@ document.querySelector('#lockDashboard').addEventListener('click', () => {
   accessPanel.hidden = false;
 });
 
-if (adminKey) unlock().catch(() => { accessPanel.hidden = false; reviewDashboard.hidden = true; });
+if (adminKey || window.masterSessionToken?.()) unlock().catch(() => { accessPanel.hidden = false; reviewDashboard.hidden = true; });

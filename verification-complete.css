@@ -1,0 +1,16 @@
+.video-card.complete video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 16px;
+  background: #12213a;
+  object-fit: contain;
+}
+.video-card.complete video::-webkit-media-controls { display: none !important; }
+
+.identity-video-only .video-header,
+.identity-video-only .video-aside { display: none; }
+.identity-video-only .video-shell { display: block; min-height: 100svh; }
+.identity-video-only .video-main { min-height: 100svh; align-content: start; padding: clamp(24px, 5vw, 56px); }
+.identity-video-only .video-card.complete { width: min(980px, 100%); }
+.identity-video-only .video-card.complete h2 { margin: 0 0 clamp(24px, 4vw, 42px); font-size: clamp(34px, 6vw, 64px); line-height: 1.03; }

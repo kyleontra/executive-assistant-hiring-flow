@@ -42,7 +42,6 @@ Deno.serve(async (request) => {
     const formData = await request.formData();
     const front = formData.get('front');
     const back = formData.get('back');
-    const profilePhotoPath = typeof formData.get('profilePhotoPath') === 'string' ? String(formData.get('profilePhotoPath')) : '';
     const frontType = imageType(front); const backType = imageType(back);
     if (!(front instanceof File) || !(back instanceof File) || !ALLOWED_TYPES.has(frontType) || !ALLOWED_TYPES.has(backType) || front.size === 0 || back.size === 0 || front.size > MAX_PHOTO_BYTES || back.size > MAX_PHOTO_BYTES) return reply(request, { error: 'Send front and back ID photos as JPG, PNG, WebP, HEIC, or HEIF files no larger than 8 MB each.' }, 400);
 
@@ -50,9 +49,20 @@ Deno.serve(async (request) => {
     const admin = createClient(Deno.env.get('SUPABASE_URL')!, secretKey);
     const { data: { user }, error: userError } = await admin.auth.getUser(tokenFrom(request));
     if (userError || !user?.email_confirmed_at) return reply(request, { error: 'Confirm your email before submitting ID photos.' }, 401);
-    if (profilePhotoPath !== `candidate-profiles/${user.id}/profile`) return reply(request, { error: 'Add your professional profile photo before submitting ID photos.' }, 400);
-    const { data: photos, error: photosError } = await admin.storage.from(BUCKET).list(`candidate-profiles/${user.id}`, { limit: 10 });
-    if (photosError || !photos?.some((file) => file.name === 'profile')) return reply(request, { error: 'Upload your headshot before submitting ID photos.' }, 400);
+    if (user.app_metadata?.account_role !== 'candidate') return reply(request, { error: 'A candidate account is required.' }, 403);
+    // The saved account record is authoritative. Browser storage may still contain
+    // an earlier headshot, and new uploads use unique filenames rather than /profile.
+    const { data: profile, error: profileError } = await admin.from('candidate_profiles')
+      .select('profile_photo_path, verification_status, verification_bypass').eq('user_id', user.id).maybeSingle();
+    if (profileError) throw profileError;
+    if (profile?.verification_status === 'verified' || profile?.verification_bypass) return reply(request, { error: 'Your identity is already approved. Return to your account to continue.' }, 409);
+    const profilePhotoPath = String(profile?.profile_photo_path || '');
+    const photoFolder = `candidate-profiles/${user.id}`;
+    const photoName = profilePhotoPath.startsWith(`${photoFolder}/`) ? profilePhotoPath.slice(photoFolder.length + 1) : '';
+    if (!/^profile(?:-[0-9a-f-]+\.(?:jpg|png|webp))?$/.test(photoName)) return reply(request, { error: 'Add your professional profile photo before submitting ID photos.' }, 400);
+    const { data: photos, error: photosError } = await admin.storage.from(BUCKET).list(photoFolder, { limit: 10, search: photoName });
+    if (photosError) throw photosError;
+    if (!photos?.some((file) => file.name === photoName)) return reply(request, { error: 'Your saved headshot could not be found. Upload it again before submitting ID photos.' }, 400);
     const reference = `SA-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
     const folder = `pending/${reference}`;
     const uploads = [
@@ -65,6 +75,22 @@ Deno.serve(async (request) => {
     const record = JSON.stringify({ reviewReference: reference, userId: user.id, firstName: user.user_metadata.first_name || '', lastName: user.user_metadata.last_name || '', email: user.email || '', profilePhotoPath, submittedAt: new Date().toISOString() });
     const { error: recordError } = await admin.storage.from(BUCKET).upload(`${folder}/candidate.json`, new Blob([record], { type: 'application/json' }), { contentType: 'application/json', cacheControl: '0', upsert: false });
     if (recordError) { await admin.storage.from(BUCKET).remove([...uploads.map(({ path }) => path), `${folder}/candidate.json`]); throw recordError; }
+    const { error: progressError } = await admin.from('candidate_onboarding').upsert({
+      user_id: user.id,
+      review_reference: reference,
+      identity_photos_uploaded_at: new Date().toISOString(),
+      identity_video_uploaded_at: null,
+      identity_completed_at: null,
+      platform_completed_at: null,
+      contract_accepted_at: null,
+      contract_name: null,
+      contract_version: null,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'user_id' });
+    if (progressError) {
+      await admin.storage.from(BUCKET).remove([...uploads.map(({ path }) => path), `${folder}/candidate.json`]);
+      throw progressError;
+    }
     return reply(request, { reference, status: 'photos_saved' }, 201);
   } catch (error) {
     console.error('ID photo upload failed:', error);

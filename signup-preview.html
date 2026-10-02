@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Full signup preview — Hire From SA</title>
+  <link rel="stylesheet" href="./signup-preview.css" />
+</head>
+<body>
+  <header class="preview-toolbar">
+    <div><strong>Hire From SA · Flow preview</strong><p>No email, password, uploads, or account needed.</p></div>
+    <nav aria-label="Preview navigation">
+      <button id="previousPage" type="button">← Back</button>
+      <label><span class="sr-only">Choose a page</span><select id="previewPage"></select></label>
+      <button id="nextPage" type="button">Next page →</button>
+    </nav>
+  </header>
+  <p id="previewContext" class="preview-context" role="status"></p>
+  <iframe id="pagePreview" title="Candidate page preview" sandbox="allow-same-origin allow-scripts" allow="camera; microphone; autoplay" referrerpolicy="no-referrer"></iframe>
+  <script type="module" src="./signup-preview.mjs"></script>
+</body>
+</html>

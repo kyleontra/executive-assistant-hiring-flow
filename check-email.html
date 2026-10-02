@@ -10,19 +10,22 @@
     <link rel="stylesheet" href="./candidate-signup.css" />
     <link rel="stylesheet" href="./candidate-next-steps.css" />
     <link rel="stylesheet" href="./brand.css" />
+    <link rel="stylesheet" href="./candidate-flow-layout.css" />
   </head>
-  <body>
-    <header class="signup-header"><a class="site-logo-link" href="./home.html"><img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a><a href="./jobs.html">Browse jobs</a></header>
+  <body class="onboarding-page">
+    <header class="signup-header"><a class="site-logo-link" href="./home.html"><img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a><a href="./home.html">Home</a></header>
     <main class="next-steps-shell inbox-shell">
       <section class="next-steps-card inbox-card">
         <span class="inbox-icon" aria-hidden="true">✉</span>
         <p class="eyebrow blue">ACCOUNT CREATED</p>
         <h1>Check your inbox.</h1>
-        <p class="lead">Please check your inbox and click the link for next steps.</p>
+        <p class="lead">We sent you a six-digit code. Use it to confirm your email and continue setting up your account.</p>
         <a class="next-steps-primary" href="./email-confirmed.html">Enter verification code <span>→</span></a>
         <p class="next-steps-help">Received a six-digit code? Use it to confirm your email. Check Spam or Promotions if the email hasn’t arrived.</p>
         <a class="next-steps-secondary" href="./email-confirmed.html">Resend or use a different email</a>
       </section>
     </main>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./auth-client.js"></script>
   </body>
 </html>

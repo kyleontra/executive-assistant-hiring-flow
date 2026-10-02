@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Virtual background browser check</title></head>
+<body>
+  <video id="source" src="/videos/video-intro-v2.mp4" muted playsinline autoplay width="640"></video>
+  <video id="output" muted playsinline autoplay width="640"></video>
+  <pre id="result">Starting</pre>
+  <script type="module">
+    import { createVirtualBackground } from '/virtual-background.mjs';
+    const source = document.querySelector('#source');
+    const output = document.querySelector('#output');
+    const result = document.querySelector('#result');
+    let effectError = '';
+    const mode = new URLSearchParams(location.search).get('mode') || 'blue';
+    try {
+      await source.play();
+      const imageFile = mode === 'custom' ? new File([await (await fetch('/videos/video-intro-v2.jpg')).blob()], 'background.jpg', { type: 'image/jpeg' }) : null;
+      const effect = await createVirtualBackground({ video: source, cameraStream: new MediaStream(), mode, imageFile, onError(error) { effectError = error.message; result.textContent = 'ERROR: ' + effectError; } });
+      output.srcObject = effect.stream;
+      await output.play();
+      const chunks = [];
+      const recorder = new MediaRecorder(effect.stream, { mimeType: 'video/webm' });
+      recorder.ondataavailable = event => { if (event.data.size) chunks.push(event.data); };
+      const complete = new Promise(resolve => { recorder.onstop = resolve; });
+      recorder.start();
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      recorder.stop();
+      await complete;
+      const size = new Blob(chunks).size;
+      result.textContent = `READY ${mode}: ${effect.canvas.width}x${effect.canvas.height}, recorded ${size} bytes, video tracks ${effect.stream.getVideoTracks().length}`;
+      window.addEventListener('pagehide', () => effect.stop(), { once: true });
+    } catch (error) { result.textContent = 'ERROR: ' + (effectError || error.message); }
+  </script>
+</body></html>

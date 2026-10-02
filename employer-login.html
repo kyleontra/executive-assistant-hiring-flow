@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Employer sign in — Hire From SA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./candidate-portal.css" />
+    <link rel="stylesheet" href="./employer-login.css" />
+    <link rel="stylesheet" href="./reset-password.css" />
+    <link rel="stylesheet" href="./brand.css" />
+  </head>
+  <body class="portal-auth-page">
+    <header class="portal-header">
+      <a class="site-logo-link" href="./home.html"><img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a>
+      <nav><a href="./candidate-login.html">Candidate sign in</a></nav>
+    </header>
+    <main class="portal-auth-shell employer-auth-shell">
+      <section class="portal-auth-card employer-auth-card">
+        <p class="portal-kicker">HIRER WORKSPACE</p>
+        <h1>Find your next hire.</h1>
+        <p>Approved hirers can sign in to search candidates, post roles, and manage applicants.</p>
+
+        <p id="employerAccountNotice" class="portal-result error" aria-live="polite" hidden></p>
+
+        <form id="employerLoginForm">
+          <label>Email address or username<input id="employerLoginEmail" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required /></label>
+          <label>Password<input id="employerLoginPassword" type="password" autocomplete="current-password" minlength="10" required /></label>
+          <p class="portal-forgot"><a href="./reset-password.html?account=employer">Forgot password?</a></p>
+          <p id="employerLoginResult" class="portal-result" aria-live="polite" hidden></p>
+          <button id="employerLoginButton" type="submit">Sign in <span>→</span></button>
+        </form>
+
+        <p class="portal-switch">Hirer accounts are invite-only. Looking for work? <a href="./candidate-login.html">Candidate sign in</a> or <a href="./candidate-signup.html">create a candidate account</a>.</p>
+      </section>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./auth-client.js"></script>
+    <script src="./employer-login.js"></script>
+  </body>
+</html>

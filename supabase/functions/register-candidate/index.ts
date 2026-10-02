@@ -1,5 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { createRedactedResume } from '../_shared/resume-redaction.js';
+import { indexResume, resumeIndexColumns } from '../_shared/resume-index.mjs';
 
 const RESUME_BUCKET = 'candidate-resumes';
 const MAX_RESUME_BYTES = 10 * 1024 * 1024;
@@ -139,6 +140,14 @@ Deno.serve(async (request) => {
     }
     createdUserId = data.user.id;
 
+    // Fail closed if hosted Auth is ever configured to auto-confirm email.
+    // A new account must not survive registration until the user verifies it.
+    if (data.session) {
+      await admin.auth.admin.deleteUser(data.user.id);
+      createdUserId = '';
+      return reply(request, { error: 'Email verification is temporarily unavailable. Please try again shortly.' }, 503);
+    }
+
     const { error: roleError } = await admin.auth.admin.updateUserById(data.user.id, {
       app_metadata: { ...(data.user.app_metadata || {}), account_role: 'candidate' },
     });
@@ -146,6 +155,7 @@ Deno.serve(async (request) => {
 
     if (resume) {
       uploadedPath = `${data.user.id}/resume.txt`;
+      const resumeIndex = indexResume(await redactedResume!.text());
       const { error: uploadError } = await admin.storage.from(RESUME_BUCKET).upload(uploadedPath, redactedResume!, {
         cacheControl: '0',
         contentType: 'text/plain;charset=utf-8',
@@ -164,6 +174,7 @@ Deno.serve(async (request) => {
         profile_photo_path: '',
         resume_path: uploadedPath,
         resume_file_name: safeTextFileName(resume.name),
+        ...resumeIndexColumns(resumeIndex),
         verification_status: 'draft',
         updated_at: new Date().toISOString(),
       }, { onConflict: 'user_id' });

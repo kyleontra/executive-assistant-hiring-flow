@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f5f8fc" />
+    <title>My account — Hire From SA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./account.css" />
+    <link rel="stylesheet" href="./brand.css" />
+  </head>
+  <body class="account-page">
+    <header class="account-header">
+      <a class="site-logo-link" href="./home.html"><img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a>
+      <nav id="accountHeaderNav"><a href="./home.html">Home</a></nav>
+    </header>
+
+    <main class="account-shell">
+      <p id="accountStatus" class="account-status" role="status">Loading your account…</p>
+      <section id="accountContent" hidden>
+        <header class="account-profile-hero">
+          <span id="accountAvatar" class="account-avatar" aria-hidden="true">SA</span>
+          <div><p id="accountRole" class="account-kicker">MY ACCOUNT</p><h1 id="accountName">My account</h1><p id="accountEmail"></p></div>
+          <span id="accountVerified" class="account-verified">✓ Email verified</span>
+        </header>
+
+        <div class="account-grid">
+          <section class="account-card">
+            <p class="account-kicker">PROFILE</p>
+            <h2>Account details</h2>
+            <dl><div><dt>Name</dt><dd id="accountDetailName">—</dd></div><div id="companyDetail" hidden><dt>Company</dt><dd id="accountCompany">—</dd></div><div><dt>Email</dt><dd id="accountDetailEmail">—</dd></div><div><dt>Account type</dt><dd id="accountType">—</dd></div></dl>
+          </section>
+
+          <section class="account-card account-progress-card">
+            <p class="account-kicker">CONTINUITY</p>
+            <h2 id="accountProgressTitle">Your workspace</h2>
+            <p id="accountProgressCopy">Your account and workspace are connected across Hire From SA.</p>
+            <div id="accountProgressDetails" class="account-progress-details"></div>
+          </section>
+        </div>
+
+        <section class="account-actions-card">
+          <div><p class="account-kicker">QUICK LINKS</p><h2>Continue where you left off.</h2></div>
+          <div id="accountActions" class="account-actions"></div>
+        </section>
+
+        <button id="accountSignOut" class="account-signout" type="button">Sign out</button>
+      </section>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./auth-client.js"></script>
+    <script src="./platform-client.js"></script>
+    <script src="./account.js"></script>
+  </body>
+</html>

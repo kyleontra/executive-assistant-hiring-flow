@@ -32,6 +32,7 @@ type MessageNotification = {
   roleName: string;
   messageBody: string;
 };
+type ApprovalNotification = { type: 'verification_approved'; recipient: string; candidateName: string; };
 
 function escapeHtml(value: string) {
   return value.replace(/[&<>'"]/g, (character) => ({
@@ -55,7 +56,7 @@ function clean(value: unknown, maxLength: number) {
 }
 
 function emailCopy(action: string) {
-  if (action === 'recovery') {
+  if (action === 'recovery' || action === 'magiclink') {
     return {
       subject: 'Reset your Hire From SA password',
       heading: 'Reset your password',
@@ -203,6 +204,14 @@ async function sendCandidateMessageEmail(notification: MessageNotification) {
   );
 }
 
+async function sendApprovalEmail(notification: ApprovalNotification) {
+  const recipient = clean(notification.recipient, 254).toLowerCase();
+  if (!recipient || !recipient.includes('@')) throw new Error('The approval notification is missing a recipient.');
+  const name = escapeHtml(clean(notification.candidateName, 120).split(/\s+/)[0] || 'there');
+  const content = `<!doctype html><html lang="en"><body style="font-family:Arial,sans-serif;color:#12213a;padding:32px;max-width:560px;margin:auto"><h1>Congrats on getting approved!</h1><p>Hi ${name}, your identity has been verified and your Hire From SA account is approved.</p><p>Sign in to watch the next-steps video and choose whether to record an introduction for employers.</p><p><a href="https://www.hirefromsa.com/candidate-login.html?next=.%2Fcandidate-onboarding.html" style="display:inline-block;background:#246fe5;color:#fff;padding:14px 20px;border-radius:8px;text-decoration:none">Complete your next steps</a></p></body></html>`;
+  await sendGraphEmail(recipient, 'Your Hire From SA account is approved — next steps', content);
+}
+
 Deno.serve(async (request) => {
   if (request.method !== 'POST') return new Response('not allowed', { status: 400 });
   if (!tenantId || !clientId || !clientSecret || !initialRefreshToken || !senderAddress) {
@@ -213,13 +222,14 @@ Deno.serve(async (request) => {
     const suppliedInternalKey = request.headers.get('x-internal-email-key') || '';
     if (suppliedInternalKey) {
       if (!sameSecret(suppliedInternalKey, internalServiceKey)) return Response.json({ error: 'Unauthorized.' }, { status: 401 });
-      const notification = await request.json() as MessageNotification | { type: 'health_check' };
+      const notification = await request.json() as MessageNotification | ApprovalNotification | { type: 'health_check' };
       if (notification.type === 'health_check') {
         await getGraphToken();
         return Response.json({ configured: true });
       }
-      if (notification.type !== 'message_notification') return Response.json({ error: 'Unknown internal email type.' }, { status: 400 });
-      await sendCandidateMessageEmail(notification);
+      if (notification.type === 'verification_approved') await sendApprovalEmail(notification);
+      else if (notification.type === 'message_notification') await sendCandidateMessageEmail(notification);
+      else return Response.json({ error: 'Unknown internal email type.' }, { status: 400 });
       return Response.json({ sent: true });
     }
     if (!hookSecret) return Response.json({ error: { http_code: 500, message: 'Auth email hook is not configured.' } }, { status: 500 });

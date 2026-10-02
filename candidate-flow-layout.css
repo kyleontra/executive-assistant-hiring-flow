@@ -1,0 +1,223 @@
+/* Compact onboarding layouts retain content and allow scrolling when text is enlarged. */
+html { min-height: 100%; }
+body { min-height: 100vh; }
+[hidden] { display: none !important; }
+body > header { height: 52px !important; min-height: 52px !important; padding: 0 32px !important; }
+body > header .site-logo { max-height: 36px; width: auto; }
+.signup-shell,.profile-shell,.upload-shell,.resume-shell,.video-shell { min-height: calc(100vh - 52px); grid-template-columns: minmax(280px,34%) 1fr; }
+.signup-aside,.profile-aside,.upload-aside,.resume-aside,.video-aside { min-height: 0; padding: 32px; display: flex; flex-direction: column; justify-content: center; }
+.signup-aside h1,.profile-aside h1,.upload-aside h1,.resume-aside h1,.video-aside h1 { font-size: clamp(30px,3vw,42px); margin: 12px 0; }
+.signup-points,.flow-steps { margin-top: 24px; }
+.signup-main,.profile-main,.upload-main,.resume-main,.video-main { padding: 18px 28px; }
+.signup-card,.profile-card,.upload-card,.resume-card,.video-card { width: min(620px,100%); }
+h2 { font-size: 28px; margin: 8px 0; }
+.lead { line-height: 1.45; }
+.status-box { margin-top: 12px; padding: 8px 10px; }
+form,.signup-card form { margin-top: 14px; }
+.signup-card label { margin-top: 12px; }
+.signup-card button { margin-top: 16px; }
+.photo-picker { width: 150px; height: 150px; }
+.photo-source-actions { margin-bottom: 12px; }
+.photo-tips { margin: 12px 0; }
+.photo-grid { margin-top: 14px; }
+.photo-drop { min-height: 150px; }
+.consent { margin: 12px 0; }
+.camera-stage { min-height: 190px; height: 190px; margin-top: 12px; }
+.camera-actions { gap: 8px; }
+.camera-actions > button { margin-top: 10px; padding: 0 12px; }
+.help-text { margin-top: 9px; }
+.resume-picker { padding: 16px; }
+.resume-privacy-note { font-size: 12px; line-height: 1.45; }
+.portal-auth-shell,.next-steps-shell,.referral-shell { min-height: calc(100vh - 52px); padding: 18px; }
+.portal-auth-card,.next-steps-card,.referral-card { padding: 24px 30px; }
+.portal-auth-card h1,.next-steps-card h1,.referral-card h1 { font-size: 34px; margin: 8px 0; }
+.portal-auth-card form { margin-top: 20px; gap: 12px; }
+.portal-auth-card>p { margin-top: 10px; line-height: 1.45; }
+.portal-auth-card input { padding: 11px 13px; }
+.portal-auth-card button { padding: 13px; }
+.verification-checklist { margin: 14px 0; }
+.verification-checklist li { padding: 10px 0; }
+.verification-checklist h2 { font-size: 16px; }
+.next-steps-help { margin: 12px 0; line-height: 1.45; }
+.next-steps-primary { min-height: 44px; }
+.next-steps-secondary { margin-top: 12px; }
+.inbox-icon { margin-bottom: 16px; width: 48px; height: 48px; }
+.inbox-card .next-steps-primary { margin-top: 20px; }
+.referral-card .lead { margin: 10px 0 20px; }
+.portal-shell { margin: 24px auto; }
+.portal-heading { margin-bottom: 20px; }
+.portal-heading h1 { font-size: 36px; }
+.portal-empty { padding: 24px; }
+.portal-empty h2 { font-size: 24px; }
+.portal-empty p { margin-bottom: 12px; }
+
+/* Each guide accompanies a single, distinct stage in the candidate journey. */
+.journey-page { background: #f4f7fc; color: #14233a; font-family: 'DM Sans',Arial,sans-serif; }
+.journey-header { display: flex; justify-content: space-between; align-items: center; background: #fff; border-bottom: 1px solid #dce4ef; font-size: 13px; }
+.journey-header b { letter-spacing: -.4px; font-size: 18px; }
+.journey-header span { color: #637189; }
+.journey-main { min-height: calc(100vh - 52px); padding: 18px 36px; display: grid; align-content: center; max-width: 1200px; margin: auto; }
+.journey-heading { margin-bottom: 18px; }
+.journey-kicker { margin: 0 0 8px; color: #246fe5; font-size: 11px; font-weight: 800; letter-spacing: 1.4px; }
+.journey-page h1 { margin: 0; font: 800 34px/1.12 Manrope,Arial,sans-serif; letter-spacing: -1.3px; }
+.journey-page h2 { font: 800 21px/1.2 Manrope,Arial,sans-serif; letter-spacing: -.5px; }
+.journey-page h3 { margin: 0 0 10px; font-size: 16px; }
+.journey-heading>p:last-child { margin: 10px 0 0; color: #637189; line-height: 1.45; font-size: 14px; }
+.journey-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+.journey-panel { padding: 20px; border: 1px solid #dce4ef; border-radius: 14px; background: #fff; }
+.journey-panel p,.journey-panel li { font-size: 14px; line-height: 1.5; color: #637189; }
+.journey-panel p { margin: 8px 0 12px; }
+.journey-panel ul { margin: 12px 0; padding-left: 20px; }
+.journey-panel li+li { margin-top: 8px; }
+.journey-video { display: block; width: 100%; aspect-ratio: 16/9; max-height: none; background: #102039; border-radius: 12px; object-fit: contain; }
+.journey-caption { display: flex; justify-content: space-between; gap: 12px; margin: 10px 0 0; font-size: 12px; color: #637189; }
+.journey-action { display: inline-flex; width: auto; min-height: 42px; height: auto; align-items: center; justify-content: center; margin: 12px 8px 0 0; padding: 12px 18px; border: 0; border-radius: 8px; background: #14233a; color: #fff; font: 700 13px 'DM Sans',Arial,sans-serif; text-decoration: none; cursor: pointer; }
+.journey-action.secondary { background: #edf3fd; color: #245696; }
+.journey-note { padding: 10px 12px; border-radius: 8px; background: #edf4ff; }
+.journey-status { display: inline-flex; margin-bottom: 12px; padding: 7px 10px; border-radius: 20px; background: #e7f6ec; color: #287447; font-size: 12px; font-weight: 700; }
+.journey-script { padding: 12px 14px; border-left: 3px solid #246fe5; background: #f4f7fc; }
+.journey-single { width: min(620px,100%); margin: auto; }
+.journey-record { min-height: 220px; display: grid; place-content: center; text-align: center; background: #14233a; color: #fff; border-radius: 12px; }
+.journey-record p { color: #b8c7df; }
+.verification-lock { text-align: center; padding: 14px 8px; }
+.verification-lock-icon { display: grid; width: 54px; height: 54px; margin: 0 auto 18px; place-items: center; border-radius: 50%; background: #e7f6ec; color: #287447; font-size: 24px; font-weight: 800; }
+.verification-lock h2 { margin: 0 0 10px; }
+.verification-lock p { max-width: 500px; margin: 8px auto 0; }
+@media(max-width:820px) {
+  body > header { padding: 0 18px !important; }
+  .signup-shell,.profile-shell,.upload-shell,.resume-shell,.video-shell { grid-template-columns: 1fr; align-content: center; }
+  .signup-aside,.profile-aside,.upload-aside,.resume-aside,.video-aside { padding: 16px 22px; }
+  .signup-aside h1,.profile-aside h1,.upload-aside h1,.resume-aside h1,.video-aside h1 { font-size: 27px; margin: 8px 0; }
+  .signup-aside>p:last-of-type,.profile-aside>p:last-of-type,.upload-aside>p:last-of-type,.resume-aside>p:last-of-type,.video-aside>p:last-of-type { max-width: none; margin: 0; font-size: 12px; }
+  .flow-steps,.signup-points { display: none; }
+  .signup-main,.profile-main,.upload-main,.resume-main,.video-main { padding: 16px 22px; }
+  .journey-main { padding: 20px; }
+  .journey-columns { grid-template-columns: 1fr; gap: 16px; }
+  .journey-page h1 { font-size: 28px; }
+  .journey-heading { margin-bottom: 14px; }
+  .journey-panel { padding: 16px; }
+  .journey-panel p,.journey-panel li { font-size: 13px; }
+}
+@media(max-width:560px) {
+  .photo-tips { grid-template-columns: repeat(3,1fr); }
+  .photo-tips li { padding: 7px; text-align: center; }
+  .photo-source-actions,.photo-grid,.two-fields { grid-template-columns: 1fr 1fr; }
+  .photo-drop { min-height: 120px; padding: 12px; }
+  .camera-actions { display: grid; grid-template-columns: 1fr 1fr; }
+  .camera-actions > button { width: auto; font-size: 10px; }
+  .camera-actions > button:last-child { grid-column: 1 / -1; }
+  .camera-stage { min-height: 145px; height: 145px; }
+  .portal-auth-card,.next-steps-card,.referral-card { padding: 22px; }
+}
+
+.camera-stage.live,.camera-stage.recorded { height: auto; min-height: 0; max-height: 240px; }
+.camera-stage.live canvas,.camera-stage.recorded video { max-height: 240px; object-fit: contain; }
+.video-upload-divider { display: flex; align-items: center; gap: 10px; margin: 18px 0 12px; color: #8996a9; font-size: 11px; }
+.video-upload-divider::before,.video-upload-divider::after { content: ""; height: 1px; flex: 1; background: #e0e6ef; }
+.video-upload { display: grid; gap: 5px; padding: 13px 14px; border: 1px solid #d7e1ee; border-radius: 8px; background: #fff; color: #263a56; cursor: pointer; }
+.video-upload b { font-size: 12px; }
+.video-upload span { color: #718096; font-size: 11px; line-height: 1.45; }
+.video-upload input { margin-top: 5px; max-width: 100%; font: inherit; font-size: 11px; }
+
+/* Shared candidate-onboarding design system. Deliberately excludes the dashboard. */
+.onboarding-page {
+  --ink: #14233a;
+  --muted: #52647c;
+  --line: #dce4ef;
+  --blue: #246fe5;
+  background: #f4f7fc;
+  color: var(--ink);
+  font-family: 'DM Sans', Arial, sans-serif;
+}
+.onboarding-page > header { height: 64px !important; min-height: 64px !important; background: #fff; border-bottom: 1px solid var(--line); }
+.onboarding-page > header a:not(.site-logo-link), .onboarding-page > header nav a { font-size: 13px; font-weight: 700; color: #52647c; text-decoration: none; }
+.onboarding-page :is(.signup-shell,.profile-shell,.upload-shell,.resume-shell,.video-shell) { min-height: calc(100svh - 64px); grid-template-columns: minmax(280px,34%) minmax(0,1fr); }
+.onboarding-page :is(.signup-aside,.profile-aside,.upload-aside,.resume-aside,.video-aside) { padding: 40px clamp(24px,3vw,48px); background: linear-gradient(150deg,#155fcf,#438bff); }
+.onboarding-page :is(.signup-aside,.profile-aside,.upload-aside,.resume-aside,.video-aside) h1 { font: 800 clamp(30px,3vw,42px)/1.16 Manrope,Arial,sans-serif; letter-spacing: -1.4px; }
+.onboarding-page :is(.signup-aside,.profile-aside,.upload-aside,.resume-aside,.video-aside) > p:last-of-type { font-size: 15px; line-height: 1.65; }
+.onboarding-page :is(.signup-main,.profile-main,.upload-main,.resume-main,.video-main) { padding: 40px clamp(24px,4vw,64px); min-width: 0; }
+.onboarding-page :is(.signup-card,.profile-card,.upload-card,.resume-card,.video-card) { width: min(620px,100%); }
+.onboarding-page :is(.portal-auth-shell,.next-steps-shell,.referral-shell) { min-height: calc(100svh - 64px); padding: 40px 24px; }
+.onboarding-page :is(.portal-auth-card,.next-steps-card,.referral-card) { width: min(560px,100%); padding: 32px; border: 1px solid var(--line); border-radius: 16px; background: #fff; box-shadow: 0 12px 36px #14233a06; }
+.onboarding-page :is(.portal-auth-card,.next-steps-card,.referral-card) h1 { font: 800 32px/1.2 Manrope,Arial,sans-serif; letter-spacing: -1px; }
+.onboarding-page h2 { line-height: 1.25; letter-spacing: -.8px; }
+.onboarding-page :is(.lead,.portal-auth-card>p:not(.portal-kicker),.resume-privacy-note,.next-steps-help) { font-size: 15px; line-height: 1.6; color: var(--muted); }
+.onboarding-page :is(.eyebrow,.portal-kicker,.journey-kicker) { font-size: 11px; font-weight: 700; line-height: 1.5; letter-spacing: 1.3px; }
+.onboarding-page :is(.signup-points,.flow-steps) b { font-size: 13px; }
+.onboarding-page :is(.signup-card,.portal-auth-card) label { font-size: 13px; line-height: 1.5; }
+.onboarding-page input:not([type=checkbox]):not([type=radio]):not([type=file]) { min-height: 48px; width: 100%; border: 1px solid #bccbdd; border-radius: 10px; background: #fff; padding: 12px 14px; color: var(--ink); font: 400 16px 'DM Sans',Arial,sans-serif; }
+.onboarding-page :is(button,.primary-action,.source-button,.next-steps-primary,.journey-action,.confirmation-link) { min-height: 48px; height: auto; border-radius: 10px; padding: 12px 18px; font-size: 14px; line-height: 1.5; font-weight: 700; white-space: normal; }
+.onboarding-page :is(button,.primary-action,.next-steps-primary,.journey-action):not(:disabled):not(.secondary):not(.secondary-action):not(.secondary-button):not(.source-button):not(.reset-secondary):not(.reset-link-button):not(.onboarding-play) { background: var(--ink); color: #fff; }
+.onboarding-page :is(button,.journey-action):disabled { cursor: not-allowed; opacity: 1; background: #e1e7f0; color: #596b83; }
+.onboarding-page :is(a,button,input,label:has(input[type=file])):focus-visible { outline: 3px solid #246fe5; outline-offset: 4px; }
+.onboarding-page label:has(input[type=file]):focus-within { outline: 3px solid #246fe5; outline-offset: 4px; }
+.onboarding-page :is(.status-box,.form-result,.portal-result,.field-help,.help-text,.journey-status-line,.code-help) { font-size: 13px; line-height: 1.6; }
+.onboarding-page .photo-picker { width: 176px; height: 176px; }
+.onboarding-page :is(.photo-placeholder small,.photo-tips li) { font-size: 12px; line-height: 1.5; }
+.onboarding-page .photo-tips li { padding: 10px; }
+.onboarding-page .photo-drop { min-height: 190px; border-radius: 12px; }
+.onboarding-page .consent { font-size: 13px; line-height: 1.6; }
+.onboarding-page .camera-stage { height: auto; min-height: 0; max-height: none; aspect-ratio: 16/9; border-radius: 12px; }
+.onboarding-page .camera-stage :is(canvas,video) { width: 100%; height: 100%; max-height: none; object-fit: contain; }
+.onboarding-page .camera-actions { display: flex; flex-wrap: wrap; }
+.onboarding-page .camera-actions > button { flex: 1 1 140px; padding: 12px; }
+.onboarding-page .video-upload :is(b,span,input) { font-size: 13px; }
+.onboarding-page .video-upload input { width: 100%; }
+.onboarding-page .journey-main { min-height: calc(100svh - 64px); padding: 40px 32px; }
+.onboarding-page .journey-heading { margin-bottom: 28px; max-width: 900px; }
+.onboarding-page .journey-main:has(> .journey-single) { max-width: 824px; }
+.onboarding-page .journey-single { width: 100%; }
+.onboarding-page.journey-page h1 { font-size: clamp(28px,3vw,36px); line-height: 1.25; letter-spacing: -1px; }
+.onboarding-page .journey-heading>p:last-child { font-size: 15px; line-height: 1.6; }
+.onboarding-page .journey-heading>p:last-child:empty { display: none; }
+.onboarding-page .journey-columns { grid-template-columns: minmax(0,1.15fr) minmax(0,1fr); gap: 28px; }
+.onboarding-page .journey-panel { border-radius: 16px; padding: 24px; min-width: 0; }
+.onboarding-page .journey-panel :is(p,li) { font-size: 15px; line-height: 1.6; }
+.onboarding-page :is(.journey-panel .journey-script,.intro-consent,.contract-consent,.contract-field,.intro-upload-label) { font-size: 14px; }
+.onboarding-page .intro-screen { display: block; width: 100%; height: 100%; max-height: none; }
+.onboarding-page .intro-preview-frame { overflow: hidden; }
+.onboarding-page .intro-buttons { gap: 8px; }
+.onboarding-page .journey-caption { font-size: 13px; line-height: 1.5; }
+.onboarding-page :is(h1,h2) { text-wrap: balance; }
+.onboarding-page .contract-link-card .contract-label { font-size: 11px; line-height: 1.5; }
+.onboarding-page .required-video-player > p { font-size: 14px; line-height: 1.6; color: var(--muted); }
+.onboarding-page .required-video-player progress { appearance: none; height: 6px; border: 0; border-radius: 6px; overflow: hidden; background: #dce4ef; color: var(--blue); }
+.onboarding-page .required-video-player progress::-webkit-progress-bar { background: #dce4ef; border-radius: 6px; }
+.onboarding-page .required-video-player progress::-webkit-progress-value { background: var(--blue); border-radius: 6px; }
+.onboarding-page .required-video-player progress::-moz-progress-bar { background: var(--blue); border-radius: 6px; }
+.onboarding-page .photo-drop :is(strong,b) { font-size: 14px; }
+.onboarding-page .photo-drop :is(small,span) { font-size: 13px; }
+.onboarding-page .resume-picker strong { font-size: 14px; }
+.onboarding-page .resume-picker small { font-size: 12px; line-height: 1.5; }
+.onboarding-page .consent p { font-size: 13px; line-height: 1.6; }
+.onboarding-page .camera-placeholder p { font-size: 13px; line-height: 1.6; }
+.onboarding-page .intro-buttons .journey-action { margin-top: 0; }
+.onboarding-page .intro-buttons { margin-top: 12px; }
+.onboarding-page .journey-action { margin-right: 0; }
+.onboarding-page .journey-action + .journey-action { margin-left: 6px; }
+.onboarding-page.identity-video-only .journey-main { min-height: 100svh; }
+@media(max-width:820px) {
+  .onboarding-page :is(.signup-shell,.profile-shell,.upload-shell,.resume-shell,.video-shell) { grid-template-columns: minmax(0,1fr); align-content: start; }
+  .onboarding-page :is(.signup-aside,.profile-aside,.upload-aside,.resume-aside,.video-aside) { padding: 28px 24px; }
+  .onboarding-page :is(.signup-aside,.profile-aside,.upload-aside,.resume-aside,.video-aside) h1 { font-size: 28px; letter-spacing: -.8px; }
+  .onboarding-page :is(.signup-main,.profile-main,.upload-main,.resume-main,.video-main) { padding: 28px 24px; }
+  .onboarding-page .journey-main { padding: 32px 24px; }
+  .onboarding-page .journey-columns { grid-template-columns: minmax(0,1fr); gap: 24px; }
+}
+@media(max-width:560px) {
+  .onboarding-page :is(.portal-auth-shell,.next-steps-shell,.referral-shell) { padding: 24px 16px; }
+  .onboarding-page :is(.portal-auth-card,.next-steps-card,.referral-card) { padding: 24px; }
+  .onboarding-page :is(.portal-auth-card,.next-steps-card,.referral-card) h1 { font-size: 28px; }
+  .onboarding-page .two-fields { grid-template-columns: 1fr; gap: 0; }
+  .onboarding-page #verificationForm button { display: flex; width: 100%; margin: 12px 0 0; }
+  .onboarding-page .photo-grid { grid-template-columns: 1fr; }
+  .onboarding-page .photo-drop { min-height: 160px; }
+  .onboarding-page .photo-tips { grid-template-columns: 1fr; gap: 6px; }
+  .onboarding-page .photo-tips li { padding: 8px 12px; text-align: left; }
+  .onboarding-page .photo-source-actions { grid-template-columns: 1fr; }
+  .onboarding-page .journey-panel { padding: 20px; }
+  .onboarding-page .journey-caption { flex-wrap: wrap; gap: 4px 12px; }
+  .onboarding-page :is(.journey-action,.intro-buttons button,.next-steps-primary) { width: 100%; }
+  .onboarding-page .journey-action + .journey-action { margin-left: 0; }
+  .onboarding-page .contract-link-card { padding: 18px; }
+}

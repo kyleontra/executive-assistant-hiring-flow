@@ -48,10 +48,26 @@ Deno.serve(async (request) => {
     const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
     const { data: { user }, error: userError } = await admin.auth.getUser(tokenFrom(request));
     if (userError || !user?.email_confirmed_at) return reply(request, { error: 'Confirm your email before adding a profile photo.' }, 401);
+    if (user.app_metadata?.account_role !== 'candidate') return reply(request, { error: 'A candidate account is required.' }, 403);
 
-    const path = `candidate-profiles/${user.id}/profile`;
-    const { error: uploadError } = await admin.storage.from(BUCKET).upload(path, photo, { cacheControl: '3600', contentType: type, upsert: true });
+    const { data: profile, error: profileError } = await admin.from('candidate_profiles')
+      .select('profile_photo_path, resume_path').eq('user_id', user.id).maybeSingle();
+    if (profileError) throw profileError;
+    if (!profile?.resume_path) return reply(request, { error: 'Connect your resume before adding a headshot.' }, 403);
+
+    const extension = type === 'image/png' ? 'png' : type === 'image/webp' ? 'webp' : 'jpg';
+    const path = `candidate-profiles/${user.id}/profile-${crypto.randomUUID()}.${extension}`;
+    const storage = admin.storage.from(BUCKET);
+    const { error: uploadError } = await storage.upload(path, photo, { cacheControl: '3600', contentType: type, upsert: false });
     if (uploadError) throw uploadError;
+    const { data: updated, error: updateError } = await admin.from('candidate_profiles')
+      .update({ profile_photo_path: path, updated_at: new Date().toISOString() })
+      .eq('user_id', user.id).select('user_id').maybeSingle();
+    if (updateError || !updated) {
+      await storage.remove([path]);
+      if (updateError) throw updateError;
+      return reply(request, { error: 'Your profile could not be updated. Please try again.' }, 500);
+    }
     return reply(request, { path, status: 'profile_photo_saved' }, 201);
   } catch (error) {
     console.error('Profile photo upload failed:', error);

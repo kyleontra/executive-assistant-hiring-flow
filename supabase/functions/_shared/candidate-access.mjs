@@ -1,9 +1,9 @@
 // These values come from the private profile record, never request metadata.
-// "pending" is set only after the server accepts the ID photos and video.
+// Submission is not approval: pending candidates remain paused after signing.
 export function candidateAccess(profile = {}) {
   const resumeRequired = !profile?.resume_path;
   const verificationComplete = Boolean(profile?.verification_bypass)
-    || profile?.verification_status === 'verified'
-    || (profile?.verification_status === 'pending' && Boolean(profile?.profile_photo_path));
-  return { resumeRequired, verificationComplete, applicationReady: !resumeRequired && verificationComplete };
+    || profile?.verification_status === 'verified';
+  const preferencesComplete = !profile?.onboarding_preferences_required || Boolean(profile?.preferences_completed_at);
+  return { resumeRequired, verificationComplete, applicationReady: !resumeRequired && verificationComplete && preferencesComplete };
 }

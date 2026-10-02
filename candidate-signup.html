@@ -12,14 +12,15 @@
     <link rel="stylesheet" href="./candidate-signup-overrides.css" />
     <link rel="stylesheet" href="./candidate-flow.css" />
     <link rel="stylesheet" href="./brand.css" />
+    <link rel="stylesheet" href="./candidate-flow-layout.css" />
   </head>
-  <body>
-    <header class="signup-header"><a class="signup-brand site-logo-link" href="./jobs.html"><img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a><a href="./jobs.html">Exit</a></header>
+  <body class="onboarding-page">
+    <header class="signup-header"><a class="signup-brand site-logo-link" href="./home.html"><img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a><a href="./home.html">Exit</a></header>
     <main class="signup-shell">
       <aside class="signup-aside">
         <p class="eyebrow">APPLY TO SOUTH AFRICA ROLES</p>
         <h1>Your next role starts here.</h1>
-        <p>Create your account, confirm your email, and add your resume. Then explore jobs from your candidate account.</p>
+        <p>Create your account, confirm your email, and add your resume. Then complete verification to get ready to apply.</p>
         <div class="signup-points"><span>1</span><b>Create account</b><span>2</span><b>Confirm email</b><span>3</span><b>Add resume</b></div>
       </aside>
       <section class="signup-main">
@@ -41,6 +42,8 @@
         </div>
       </section>
     </main>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./auth-client.js"></script>
     <script src="./candidate-signup.js"></script>
   </body>
 </html>

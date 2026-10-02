@@ -1,0 +1,33 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Local candidate export UI check</title></head><body>
+<script type="module">
+  if (!['127.0.0.1','localhost'].includes(location.hostname)) throw Error('Local UI check only');
+  const fetchOriginal = window.fetch.bind(window);
+  const liveApi = new URLSearchParams(location.search).get('api');
+  if (liveApi && (new URL(liveApi).hostname !== '127.0.0.1' || new URL(liveApi).protocol !== 'http:')) throw Error('Local verification API only');
+  const page = new DOMParser().parseFromString(await (await fetchOriginal('/admin-resumes.html')).text(),'text/html');
+  page.querySelectorAll('script').forEach(node=>node.remove());
+  page.querySelectorAll('[href],[src]').forEach(node=>['href','src'].forEach(attribute=>{if(node.hasAttribute(attribute))node.setAttribute(attribute,new URL(node.getAttribute(attribute),location.origin+'/admin-resumes.html'));}));
+  page.head.querySelectorAll('link').forEach(node=>document.head.append(document.importNode(node,true)));
+  document.body.replaceChildren(...Array.from(page.body.childNodes,node=>document.importNode(node,true)));
+  window.masterSessionToken=()=> 'local-ui-check';
+  window.__exportErrors=[];
+  window.addEventListener('error',event=>window.__exportErrors.push(event.message));
+  window.addEventListener('unhandledrejection',event=>window.__exportErrors.push(String(event.reason)));
+  const ids=['00000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000003'];
+  const rows=ids.map((candidateId,i)=>({candidateId,name:'UI test candidate '+(i+1),status:'Verified',rate:'$5–$9/hr (USD)',country:'',resumeText:i!==1?'Executive Assistant\nSouth Africa\nCalendar management, Slack and Excel.':'' ,notes:'',skills:[],tools:[],industries:[],resumeAvailable:i!==1,generated:false,error:''}));
+  window.fetch=async(url,options)=>{
+    if(!String(url).includes('supabase.co'))return fetchOriginal(url,options);
+    if (liveApi) return fetchOriginal(liveApi,{...options,headers:{'Content-Type':'application/json'}});
+    const body=JSON.parse(options.body);
+    if(body.action==='searchResumes')return Response.json({candidates:[]});
+    if(body.action==='candidateSpreadsheetConfig')return Response.json({configured:true,canConfigure:true,prompt:'Extract factual skills, tools, industries and notes from each resume. Leave missing information blank.'});
+    if(body.action==='candidateSpreadsheetPage')return Response.json({rows,nextCursor:null});
+    if(body.action==='generateCandidateSpreadsheetRow'){
+      if(body.candidateId===ids[2])return Response.json({error:'UI test: simulated AI failure'},{status:502});
+      return Response.json({row:{...rows[0],country:'South Africa',notes:'UI test extracted resume notes.',skills:['Scheduling'],tools:['Slack','Excel'],industries:['Healthcare'],generated:true}});
+    }
+    throw Error('Unavailable in the local UI check');
+  };
+  document.querySelector('#candidateExport').open=true;
+  await import('/admin-resumes.js');
+</script></body></html>

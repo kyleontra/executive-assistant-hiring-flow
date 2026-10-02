@@ -57,9 +57,15 @@ async function initialize() {
     return;
   }
 
-  await window.savaLoadJobs?.();
-  const jobs = window.savaJobBoard?.() || [];
-  job = jobs.find((item) => item.id === requestedJob) || jobs[0];
+  let jobs;
+  try {
+    ({ jobs = [] } = await window.savaPlatform.publicRequest('listJobs'));
+  } catch (error) {
+    showResult(error.message || 'This role could not be loaded. Return to your dashboard and try again.', 'error');
+    submitButton.disabled = true;
+    return;
+  }
+  job = jobs.find((item) => item.id === requestedJob && item.status === 'active');
   if (!job) {
     showResult('This job is no longer available.', 'error');
     submitButton.disabled = true;
@@ -118,4 +124,7 @@ form.addEventListener('submit', async (event) => {
   }
 });
 
-initialize();
+initialize().catch(error => {
+  submitButton.disabled = true;
+  showResult(error.message || 'Your account could not be loaded. Refresh the page and try again.', 'error');
+});

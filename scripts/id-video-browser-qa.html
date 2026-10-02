@@ -1,0 +1,23 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Local ID video check</title></head><body>
+<script type="module">
+if (!['localhost','127.0.0.1'].includes(location.hostname) || new URLSearchParams(location.search).get('demo') !== '1') throw new Error('Local demo only');
+const html = new DOMParser().parseFromString(await (await fetch('/verification.html')).text(),'text/html');
+html.querySelectorAll('script').forEach(node=>node.remove());
+const base=document.createElement('base');base.href=location.origin+'/';document.head.prepend(base);
+html.head.querySelectorAll('link').forEach(node=>document.head.append(node.cloneNode(true)));
+document.body.className=html.body.className;document.body.innerHTML=html.body.innerHTML;
+const script=document.createElement('script');script.src='/verification.js';document.body.append(script);
+await new Promise(resolve=>script.onload=resolve);
+const button=document.createElement('button');button.textContent='Generate local test recording';document.querySelector('.video-card').prepend(button);
+button.onclick=()=>{
+  button.disabled=true;
+  const canvas=document.createElement('canvas');canvas.width=640;canvas.height=360;
+  const ctx=canvas.getContext('2d');let tick=0;
+  const draw=()=>{ctx.fillStyle='#246fe5';ctx.fillRect(0,0,640,360);ctx.fillStyle='white';ctx.font='28px sans-serif';ctx.fillText('Local test video — no candidate data',50,160);ctx.fillRect((tick++*5)%600,220,40,40);};draw();
+  const stream=canvas.captureStream(24);const timer=setInterval(draw,40);
+  const type=preferredRecorderType();const recorder=new MediaRecorder(stream,type?{mimeType:type}:{});const chunks=[];
+  recorder.ondataavailable=event=>chunks.push(event.data);
+  recorder.onstop=()=>{clearInterval(timer);stream.getTracks().forEach(track=>track.stop());showRecordedVideo(new Blob(chunks,{type:recorder.mimeType}));button.disabled=false;};
+  recorder.start();setTimeout(()=>recorder.stop(),1000);
+};
+</script></body></html>

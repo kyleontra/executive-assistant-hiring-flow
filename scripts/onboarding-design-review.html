@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Private onboarding design review</title></head>
+<body><p>Loading local design review…</p>
+<script type="module">
+  // Local-only rendering of the real production templates. No account or writes.
+  if (!['127.0.0.1', 'localhost'].includes(location.hostname)) throw new Error('Local review only');
+  const params = new URLSearchParams(location.search);
+  const page = params.get('page') || 'candidate-signup';
+  const allowed = ['candidate-signup','check-email','email-confirmed','candidate-resume','referral','candidate-next-steps','candidate-profile','id-verification','verification','candidate-onboarding','candidate-login','reset-password'];
+  if (!allowed.includes(page)) throw new Error('Unknown review page');
+  const realFetch = window.fetch.bind(window);
+  const template = new DOMParser().parseFromString(await (await realFetch(`/${page}.html`)).text(), 'text/html');
+  template.querySelectorAll('script').forEach(node => node.remove());
+  const base = document.createElement('base'); base.href = `${location.origin}/`; document.head.prepend(base);
+  for (const link of template.head.querySelectorAll('link')) document.head.append(link.cloneNode(true));
+  document.title = template.title;
+  document.body.className = template.body.className;
+  document.body.innerHTML = template.body.innerHTML;
+  window.fetch = (url, options) => {
+    if (String(url).includes('supabase.co/functions/v1/candidate-onboarding')) {
+      const action = JSON.parse(options?.body || '{}').action;
+      if (action !== 'status') return Promise.reject(new Error('Read-only design review'));
+      return Promise.resolve(Response.json({stage: params.get('stage'), surveyStep: Number(params.get('survey') || 1), introSaved: false}));
+    }
+    if (!new URL(url, location.href).href.startsWith(location.origin)) return Promise.reject(new Error('External calls disabled in design review'));
+    return realFetch(url, options);
+  };
+  document.addEventListener('submit', event => event.preventDefault(), true);
+  document.addEventListener('click', event => { if (event.target.closest('a')) event.preventDefault(); }, true);
+  if (page === 'candidate-onboarding') {
+    window.getVerifiedCandidate = async () => ({id:'local-design-review'});
+    window.getAccessToken = async () => 'local-design-review';
+    await import('/candidate-onboarding.mjs');
+    await new Promise(resolve => {
+      const check = () => document.querySelector('.journey-heading, .identity-thanks') ? resolve() : setTimeout(check, 50);
+      check();
+    });
+  } else {
+    document.querySelectorAll('#authStatus').forEach(node => node.hidden = true);
+    if (page === 'candidate-next-steps') {
+      document.querySelector('#nextStepsStatus').textContent = 'Your progress is saved as you complete each step.';
+      document.querySelector('#continueVerification').hidden = false;
+    }
+    if (page === 'verification') document.querySelector('#startCamera').disabled = false;
+    if (params.get('state') === 'reset-code') {
+      document.querySelector('#requestResetForm').hidden = true;
+      document.querySelector('#completeResetForm').hidden = false;
+      document.querySelector('#resetEmailSummary').textContent = 'your account email';
+    }
+  }
+  await document.fonts.ready;
+  document.documentElement.dataset.reviewReady = 'true';
+</script></body></html>

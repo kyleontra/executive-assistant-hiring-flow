@@ -1,0 +1,21 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Local saved ID progress QA</title></head><body>
+<script type="module">
+if (!['localhost','127.0.0.1'].includes(location.hostname)) throw new Error('Local review only');
+const realFetch = window.fetch.bind(window);
+const template = new DOMParser().parseFromString(await (await realFetch('/verification.html')).text(),'text/html');
+template.querySelectorAll('script').forEach(node=>node.remove());
+const base=document.createElement('base');base.href=location.origin+'/';document.head.prepend(base);
+for (const link of template.head.querySelectorAll('link')) document.head.append(link.cloneNode(true));
+document.body.className=template.body.className;document.body.innerHTML=template.body.innerHTML;
+window.getVerifiedCandidate=async()=>({id:'local-qa',email:'fixture@example.invalid'});
+window.getAccessToken=async()=>'local-only';window.savaAuth={auth:{onAuthStateChange(){}}};
+window.fetch=(url,options)=>{
+  if(String(url).includes('supabase.co/functions/v1/candidate-onboarding')) {
+    if(JSON.parse(options.body).action!=='status') throw Error('Read only');
+    return Promise.resolve(Response.json({stage:'verification',reviewReference:'SA-ABCDEF12'}));
+  }
+  if(!new URL(url,location.href).href.startsWith(location.origin)) throw Error('External calls blocked');
+  return realFetch(url,options);
+};
+await import('/verification.js');
+</script></body></html>

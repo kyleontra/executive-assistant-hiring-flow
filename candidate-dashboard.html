@@ -3,27 +3,59 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>My applications — Hire From SA</title>
+    <title>VA dashboard — Hire From SA</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="./candidate-portal.css" />
     <link rel="stylesheet" href="./candidate-resume-dashboard.css" />
     <link rel="stylesheet" href="./brand.css" />
+    <link rel="stylesheet" href="./onboarding-videos.css" />
+    <link rel="stylesheet" href="./candidate-flow-layout.css" />
+    <link rel="stylesheet" href="./candidate-dashboard.css" />
+    <link rel="stylesheet" href="./account-menu.css" data-sava-account-styles />
   </head>
-  <body>
-    <header class="portal-header"><a class="site-logo-link" href="./jobs.html"><img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a><nav><a href="./jobs.html">Find jobs</a><a class="active" href="./candidate-dashboard.html">My applications</a><button id="candidateSignOut" type="button">Sign out</button></nav></header>
+  <body class="va-dashboard-page">
+    <header class="portal-header va-dashboard-header">
+      <a class="site-logo-link" href="./home.html"><img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a>
+      <nav class="va-header-nav" aria-label="VA dashboard navigation">
+        <div class="va-tabs" role="tablist" aria-label="VA dashboard">
+          <button id="tab-jobs" class="va-primary-tab" type="button" role="tab" data-dashboard-tab="jobs" aria-controls="panel-jobs" aria-selected="false" tabindex="-1">Apply for Jobs</button>
+          <button id="tab-messages" type="button" role="tab" data-dashboard-tab="messages" aria-controls="panel-messages" aria-selected="false" tabindex="-1">Messages <span id="messageCount" class="va-count">0</span></button>
+          <button id="tab-applications" type="button" role="tab" data-dashboard-tab="applications" aria-controls="panel-applications" aria-selected="true">Applications <span id="applicationCount" class="va-count">0</span></button>
+        </div>
+      </nav>
+    </header>
     <main class="portal-shell">
-      <section class="portal-heading"><div><p class="portal-kicker">CANDIDATE PORTAL</p><h1>My applications</h1><p id="candidateWelcome">Track every application and keep interview conversations in one place.</p></div><a href="./jobs.html">Browse open roles <span>→</span></a></section>
-      <section id="candidateNextSteps" class="portal-resume-card" hidden><div><p class="portal-kicker">BEFORE YOU APPLY</p><h2>Finish up next steps</h2><p>You can browse jobs now. Add your headshot, ID photos, and video when you’re ready to apply.</p></div><div class="portal-resume-actions"><a href="./candidate-next-steps.html">Finish up next steps →</a></div></section>
-      <section id="candidateResumeCard" class="portal-resume-card" aria-label="Your connected resume"><div><p class="portal-kicker">YOUR PROFILE</p><h2 id="candidateResumeTitle">Checking your resume…</h2><p id="candidateResumeDetail">Your connected resume can be shared with hirers when you apply.</p></div><div class="portal-resume-actions"><a id="candidateOpenResume" href="#" target="_blank" rel="noopener" hidden>Open resume</a><a id="candidateManageResume" href="./candidate-resume.html?next=./candidate-dashboard.html">Add or replace resume</a></div></section>
-      <p id="portalStatus" class="portal-status" aria-live="polite">Loading your applications…</p>
-      <section id="candidateApplications" class="portal-applications" aria-label="Your applications"></section>
-      <p class="portal-referral"><a href="./referral.html">Tell us where you heard about Hire From SA</a></p>
+      <p id="portalStatus" class="portal-status" role="status" aria-live="polite">Loading your dashboard…</p>
+      <button id="dashboardRetry" class="va-button" type="button" hidden>Try again</button>
+      <section id="candidateGate" class="applications-gate" hidden>
+        <h1>Before you apply, finish up next steps.</h1>
+        <a href="./candidate-onboarding.html">Finish up next steps <span>→</span></a>
+      </section>
+      <section id="candidateReady" hidden>
+        <section id="panel-messages" role="tabpanel" aria-labelledby="tab-messages" tabindex="0" hidden><div class="va-section-heading va-section-toolbar"><div><h2>Messages</h2><p>Keep your conversations with hirers in one place.</p></div><button id="refreshInbox" type="button" class="va-button secondary">Refresh</button></div><p id="inboxStatus" role="status" aria-live="polite" hidden></p><div id="candidateMessages"></div></section>
+        <section id="panel-applications" role="tabpanel" aria-labelledby="tab-applications" tabindex="0"><div class="va-section-heading"><h2>Your applications</h2><p>Follow the roles you’ve applied to and what happens next.</p></div><div id="candidateApplications" class="portal-applications"></div></section>
+        <section id="panel-profile" role="tabpanel" aria-label="My Profile" tabindex="0" hidden><div class="va-section-heading va-section-toolbar"><div><h2>My Profile</h2><p>Your details, introduction and resume, all together.</p></div><button id="refreshProfile" type="button" class="va-button secondary">Refresh</button></div><p id="profilePhotoStatus" class="va-photo-status" role="status" aria-live="polite" hidden></p><div id="candidateProfile"></div></section>
+        <section id="panel-jobs" role="tabpanel" aria-labelledby="tab-jobs" tabindex="0" hidden>
+          <div class="va-section-heading"><h2>Find your next role</h2><p>Search open roles, compare the details and apply with your saved profile.</p></div>
+          <div class="va-job-searchbar">
+            <label class="va-search-label">Search roles<input id="jobSearch" type="search" placeholder="Search by role, company or skill…" /></label>
+            <label>Work setup<select id="jobArrangement"><option value="">All work setups</option></select></label>
+            <label>Job type<select id="jobType"><option value="">All job types</option></select></label>
+          </div>
+          <p id="jobsStatus" role="status" aria-live="polite"></p>
+          <div class="va-job-browser">
+            <div id="candidateJobs" class="va-job-list" aria-label="Open roles"></div>
+            <aside id="candidateJobDetail" class="va-job-detail" aria-live="polite"></aside>
+          </div>
+          <button id="jobsRetry" class="va-button" type="button" hidden>Reload roles</button>
+        </section>
+      </section>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./auth-client.js"></script>
     <script src="./platform-client.js"></script>
-    <script src="./candidate-dashboard.js"></script>
+    <script type="module" src="./candidate-dashboard.js"></script>
   </body>
 </html>

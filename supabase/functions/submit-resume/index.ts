@@ -1,5 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { createRedactedResume } from '../_shared/resume-redaction.js';
+import { indexResume, resumeIndexColumns } from '../_shared/resume-index.mjs';
 
 const BUCKET = 'candidate-resumes';
 const LEGACY_REDACTED_BUCKET = 'candidate-redacted-resumes';
@@ -87,9 +88,11 @@ Deno.serve(async (request) => {
 
     const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
     const { data: { user }, error: userError } = await admin.auth.getUser(tokenFrom(request));
-    if (userError || !user?.email_confirmed_at) return reply(request, { error: 'Confirm your email before connecting a resume.' }, 401);
+    if (userError || !user?.email_confirmed_at || user.app_metadata?.account_role !== 'candidate') return reply(request, { error: 'Sign in with your verified candidate account before connecting a resume.' }, 401);
 
     const path = `${user.id}/resume.txt`;
+    const fileName = safeTextFileName(resume.name);
+    const resumeIndex = indexResume(await redactedResume.text());
     const { error: uploadError } = await admin.storage.from(BUCKET).upload(path, redactedResume, {
       cacheControl: '0',
       contentType: 'text/plain;charset=utf-8',
@@ -100,9 +103,39 @@ Deno.serve(async (request) => {
     await admin.storage.from(BUCKET).remove(oldPaths);
     await admin.storage.from(LEGACY_REDACTED_BUCKET).remove([`${user.id}/resume-redacted.txt`]);
 
+    const profileValues = {
+      resume_path: path,
+      resume_file_name: fileName,
+      ...resumeIndexColumns(resumeIndex),
+      updated_at: new Date().toISOString(),
+    };
+    const { data: savedProfile, error: profileError } = await admin.from('candidate_profiles')
+      .update(profileValues)
+      .eq('user_id', user.id)
+      .select('user_id')
+      .maybeSingle();
+    if (profileError) throw profileError;
+    if (!savedProfile) {
+      const firstName = String(user.user_metadata?.first_name || '').trim();
+      const lastName = String(user.user_metadata?.last_name || '').trim();
+      const { error: insertError } = await admin.from('candidate_profiles').insert({
+        user_id: user.id,
+        email: String(user.email || '').toLowerCase(),
+        full_name: `${firstName} ${lastName}`.trim() || String(user.email || 'Candidate'),
+        ...profileValues,
+      });
+      if (insertError) throw insertError;
+    }
+
     return reply(request, {
       path,
-      fileName: safeTextFileName(resume.name),
+      fileName,
+      index: {
+        jobTitles: resumeIndex.jobTitles,
+        software: resumeIndex.software,
+        skills: resumeIndex.skills,
+        industries: resumeIndex.industries,
+      },
       status: 'resume_saved',
     }, 201);
   } catch (error) {
