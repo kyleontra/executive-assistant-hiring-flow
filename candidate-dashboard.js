@@ -64,6 +64,7 @@ function showPhotoStatus(message, error = false) {
 }
 async function uploadProfilePhoto(file) {
   if (photoUploading || !file) return;
+  if (dashboardDemo) { demoProfile.photoUrl = URL.createObjectURL(file); profileLoaded = false; await loadProfile(); showPhotoStatus('Preview only: photo shown on this page, nothing was uploaded.'); return; }
   const button = document.querySelector('#changeProfilePhoto');
   photoUploading = true;
   if (button) button.disabled = true;
@@ -129,7 +130,7 @@ function switchTab(tab, updateUrl = true) {
     window.history.replaceState(null, '', '?' + params.toString());
   }
   if (!dashboardData) return;
-  if (tab === 'profile' && !dashboardDemo && (!profileLoaded || Date.now() - profileLoadedAt > 45 * 60 * 1000)) loadProfile();
+  if (tab === 'profile' && (!profileLoaded || Date.now() - profileLoadedAt > 45 * 60 * 1000)) loadProfile();
   if (tab === 'jobs' && !jobsLoaded) loadJobs();
   if (tab === 'messages' && Date.now() - lastInboxRefresh > 30000) refreshInbox();
 }
@@ -266,75 +267,152 @@ async function refreshInbox() {
   } catch (error) { status.hidden = false; status.textContent = error.message || 'Could not refresh messages. Your existing conversations and draft are still here.'; }
   finally { inboxLoading = false; }
 }
+// My Profile: the approved public profile layout (photo, bio next to video, 4 boxes, experience, skills) with edit controls.
+const demoProfile = {
+  fullName: 'Thandi Jacobs', verificationStatus: 'verified', relevantYears: 4, idealJobTitles: ['Executive Assistant', 'Bookkeeping Assistant', 'Customer Support'],
+  requestedRateMinUsd: 5, requestedRateMaxUsd: 7, availableHoursPerWeek: 40, location: 'Cape Town, South Africa', startAvailability: 'two_weeks',
+  summary: 'My name is Thandi and I am an Executive Assistant with 4 years of experience working with companies in real estate, healthcare and professional services. I am looking for full-time executive assistant or operations roles, am available to start within two weeks, can work U.S. hours and speak fluent English.',
+  displayExperienceSource: 'resume',
+  displayExperience: [
+    { jobTitle: 'Executive Assistant', companyName: 'Coastline Properties', startDate: '2023-02', currentRole: true, description: 'Manage the CEO calendar, inbox and travel, prepare board packs and keep a 12-person team on schedule.' },
+    { jobTitle: 'Patient Coordinator', companyName: 'Sea Point Medical', startDate: '2021-03', endDate: '2023-01', description: 'Booked and confirmed 60+ appointments a day and handled patient billing questions.' },
+    { jobTitle: 'Admin Assistant', companyName: 'Mokoena & Partners', startDate: '2020-01', endDate: '2021-02', description: 'Filed client documents, captured invoices in Xero and answered the front desk phones.' },
+  ],
+  skills: ['Calendar management', 'Inbox management', 'Travel booking', 'Bookkeeping', 'Customer service', 'Meeting notes'],
+  software: ['Google Workspace', 'Microsoft Office', 'Slack', 'Xero', 'Zoom', 'Notion'],
+  portfolioLinks: [], preferredJobNote: '', shareSlug: '0123456789abcdef0123456789abcdef', resumeFileName: 'Thandi-Jacobs-Resume.pdf', resumeUrl: '',
+};
+const startLabels = { immediately: 'Available now', two_weeks: 'Starts within 2 weeks', one_month: 'Starts within a month', flexible: 'Flexible start' };
+function profileRate(profile) {
+  const min = Number(profile.requestedRateMinUsd), max = Number(profile.requestedRateMaxUsd);
+  if (!(min > 0 && max >= min)) return '';
+  const money = value => '$' + value.toLocaleString('en-US', { maximumFractionDigits: 2 });
+  return money(min) + (max > min ? '–' + money(max) : '') + '/hr';
+}
+function profileYears(profile) {
+  const years = Math.max(0, Number(profile.relevantYears) || 0);
+  return years ? (years < 1 ? 'Under 1 year' : Math.floor(years) + (Math.floor(years) === 1 ? ' year' : ' years')) : '';
+}
+function profileFact(label, value, color, note = '') {
+  return '<button type="button" class="vp-fact ' + color + '" data-edit-profile><small>' + label + '</small><b>' + portalEscape(value || 'Add') + '</b>' + (note ? '<span>' + portalEscape(note) + '</span>' : '') + '</button>';
+}
+function profileSelect(name, value, options) {
+  return '<select name="' + name + '">' + options.map(([key, label]) => '<option value="' + key + '"' + (value === key ? ' selected' : '') + '>' + label + '</option>').join('') + '</select>';
+}
+function renderProfile(profile, intro) {
+  const root = document.querySelector('#candidateProfile');
+  const name = profile.fullName || [candidate?.user_metadata?.first_name, candidate?.user_metadata?.last_name].filter(Boolean).join(' ') || 'Your profile';
+  const firstName = name.split(/\s+/)[0];
+  const initials = name.split(/\s+/).slice(0, 2).map(part => part[0]).join('').toUpperCase();
+  const photo = dashboardDemo && String(profile.photoUrl || '').startsWith('blob:') ? profile.photoUrl : safeAssetUrl(profile.photoUrl);
+  const resume = safeAssetUrl(profile.resumeUrl);
+  const approved = profile.verificationStatus === 'verified' || profile.verificationBypass;
+  const ideal = (profile.idealJobTitles || []).slice(0, 5);
+  const experience = Array.isArray(profile.displayExperience) ? profile.displayExperience.filter(role => role?.jobTitle && role?.companyName) : [];
+  const role = ideal[0] || experience[0]?.jobTitle || 'Virtual Assistant';
+  const years = profileYears(profile);
+  const rate = profileRate(profile);
+  const hours = Number.isInteger(Number(profile.availableHoursPerWeek)) && Number(profile.availableHoursPerWeek) > 0 ? profile.availableHoursPerWeek + ' hrs/week' : '';
+  const skills = (profile.skills || []).slice(0, 20);
+  const software = (profile.software || []).slice(0, 20);
+  const links = (profile.portfolioLinks || []).map(safeAssetUrl).filter(Boolean).slice(0, 5);
+  const shareSlug = /^[0-9a-f]{32}$/.test(profile.shareSlug || '') ? profile.shareSlug : '';
+  const shareUrl = shareSlug ? new URL('/candidate-public-profile.html?profile=' + encodeURIComponent(shareSlug), window.location.origin || 'https://www.hirefromsa.com').href : '';
+  const checklist = [
+    [photo, 'Add a photo', 'photo'], [intro, 'Record your intro video', 'video'], [rate, 'Add your rate', 'edit'], [hours, 'Add your weekly hours', 'edit'],
+    [ideal.length, 'Add the jobs you want', 'edit'], [profile.location, 'Add your location', 'edit'], [profile.resumeFileName, 'Upload your resume', 'resume'],
+  ];
+  const missing = checklist.filter(([done]) => !done);
+  const percent = Math.round((checklist.length - missing.length) / checklist.length * 100);
+  const missingChip = ([, label, kind]) => kind === 'photo' ? '<button type="button" data-pick-photo>' + label + '</button>' : kind === 'video' ? (approved ? '<a href="./candidate-onboarding.html?manage=1">' + label + '</a>' : '') : kind === 'resume' ? '<a href="./candidate-resume.html?next=.%2Fcandidate-dashboard.html%3Ftab%3Dprofile">' + label + '</a>' : '<button type="button" data-edit-profile>' + label + '</button>';
+  const strength = missing.length ? '<section class="vp-strength"><div class="vp-strength-top"><b>Your profile is ' + percent + '% complete</b><span>Complete profiles get more replies from hirers.</span></div><div class="vp-bar"><i style="width:' + percent + '%"></i></div><div class="vp-missing">' + missing.map(missingChip).join('') + '</div></section>' : '';
+  const roleRows = experience.map((item, index) => '<article class="vp-role' + (index > 2 ? ' vp-extra-role' : '') + '"' + (index > 2 ? ' hidden' : '') + '><h4>' + portalEscape(item.jobTitle) + '</h4><small>' + portalEscape([item.companyName, [workDateLabel(item.startDate), item.currentRole ? 'Present' : workDateLabel(item.endDate)].filter(Boolean).join(' – ')].filter(Boolean).join('  ·  ')) + '</small>' + (item.description ? '<p>' + portalEscape(item.description) + '</p>' : '') + '</article>').join('');
+  const resumeLink = '<a class="vp-link" href="./candidate-resume.html?next=.%2Fcandidate-dashboard.html%3Ftab%3Dprofile">' + (profile.resumeFileName ? 'Replace resume' : 'Upload resume') + '</a>';
+  const tags = list => '<div class="vp-tags">' + list.map(item => '<span>' + portalEscape(item) + '</span>').join('') + '</div>';
+  root.innerHTML = `
+    <div class="vp-top"><div><h1>My Profile</h1><p>This is what hirers see when they open your profile.</p></div>
+      ${shareUrl ? `<div class="vp-top-actions"><a class="vp-btn secondary" href="${portalEscape(shareUrl)}" target="_blank" rel="noopener noreferrer">View as a hirer ↗</a><button type="button" class="vp-btn" data-share-profile="${portalEscape(shareUrl)}">Copy profile link</button><input id="candidateShareUrl" class="vp-share-input" type="text" readonly value="${portalEscape(shareUrl)}" aria-label="Your shareable profile link" tabindex="-1" /></div>` : ''}
+    </div>
+    <span id="candidateShareStatus" class="vp-share-status" role="status" aria-live="polite"></span>
+    ${strength}
+    <article class="vp-card">
+      <header class="vp-hero">
+        <div class="vp-avatar-wrap"><span class="vp-avatar">${photo ? '<img src="' + portalEscape(photo) + '" alt="Your photo" />' : portalEscape(initials)}</span>
+          <button id="changeProfilePhoto" type="button" class="vp-photo-btn" data-pick-photo aria-label="${photo ? 'Change photo' : 'Add photo'}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
+          <input id="profilePhotoFile" type="file" accept="image/jpeg,image/png,image/webp" aria-label="Choose a photo" hidden /></div>
+        <div class="vp-identity">
+          <div class="vp-name-line"><h2>${portalEscape(name)}</h2>${approved ? '<span class="vp-verified"><i aria-hidden="true">✓</i> Vetted by our team</span>' : '<span class="vp-review">Identity check in review</span>'}</div>
+          <p class="vp-role-line">${portalEscape(role)}${years ? ' · ' + portalEscape(years) + ' experience' : ''}</p>
+          ${ideal.length ? '<p class="vp-seeking">Seeking ' + portalEscape(ideal.join(' · ')) + '</p>' : ''}
+        </div>
+        <button type="button" class="vp-btn" data-edit-profile>Edit profile</button>
+      </header>
+      <div class="vp-body${intro ? ' has-video' : ''}">
+        <div class="vp-left">
+          <section class="vp-bio">${profile.summary ? '<p>' + portalEscape(profile.summary) + '</p>' : '<p class="vp-muted">Your bio appears here once our team writes it from your resume.</p>'}
+            <small>Written by our team from your resume. Want something changed? <a href="mailto:support@hirefromsa.com?subject=Change%20my%20profile%20bio">Email support</a></small></section>
+          <div class="vp-facts">${profileFact('Rate', rate, 'green')}${profileFact('Experience', years, 'violet')}${profileFact('Hours/week', hours, 'blue', startLabels[profile.startAvailability])}${profileFact('Location', profile.location, 'rose')}</div>
+        </div>
+        <section class="vp-video${intro ? '' : ' empty'}">
+          ${intro ? '<video src="' + portalEscape(intro) + '" controls playsinline preload="metadata" aria-label="Your introduction video"></video>' : '<div class="vp-video-empty"><b>No intro video yet</b><span>' + (approved ? 'A one-minute intro helps hirers get to know you before they message.' : 'Recording opens once your identity check is approved.') + '</span></div>'}
+          ${approved ? '<a class="vp-link" href="./candidate-onboarding.html?manage=1">' + (intro ? 'Re-record or manage video' : 'Record your video') + ' →</a>' : ''}
+        </section>
+      </div>
+      <section class="vp-section"><div class="vp-section-head"><h3>Work Experience${profile.displayExperienceSource === 'resume' && experience.length ? ' <small>From your resume</small>' : ''}</h3>${resumeLink}</div>
+        ${experience.length ? '<div class="vp-roles">' + roleRows + '</div>' + (experience.length > 3 ? '<button type="button" class="vp-more" data-more-roles>Show ' + (experience.length - 3) + ' more</button>' : '') : '<p class="vp-muted">Upload your resume and we will fill this in for you.</p>'}
+      </section>
+      <div class="vp-columns">
+        <section class="vp-section"><div class="vp-section-head"><h3>Skills <small>From your resume</small></h3></div>${skills.length ? tags(skills) : '<p class="vp-muted">Pulled from your resume.</p>'}</section>
+        <section class="vp-section"><div class="vp-section-head"><h3>Tools & Software <small>From your resume</small></h3></div>${software.length ? tags(software) : '<p class="vp-muted">Pulled from your resume.</p>'}</section>
+      </div>
+      <section class="vp-section"><div class="vp-section-head"><h3>Portfolio & Work Samples</h3><button type="button" class="vp-link" data-edit-profile>${links.length ? 'Edit links' : 'Add links'}</button></div>
+        ${links.length ? '<div class="vp-links">' + links.map(link => '<a href="' + portalEscape(link) + '" target="_blank" rel="noopener noreferrer">' + portalEscape(new URL(link).hostname.replace(/^www\./, '') + (new URL(link).pathname === '/' ? '' : new URL(link).pathname)) + ' ↗</a>').join('') + '</div>' : '<p class="vp-muted">Optional. Add links to work you are proud of, like a portfolio, Canva designs or a video you edited.</p>'}
+      </section>
+    </article>
+    <div class="vp-private">
+      <section class="vp-private-card"><h3>Your resume</h3><p>${portalEscape(profile.resumeFileName || 'No resume uploaded')}</p><small>Hirers see a copy with your contact details removed.</small>
+        <div class="vp-private-actions">${resume ? '<a class="vp-btn secondary" href="' + portalEscape(resume) + '" target="_blank" rel="noopener noreferrer">View resume ↗</a>' : ''}${resumeLink}</div></section>
+      <section class="vp-private-card"><h3>Notes for our team <span class="vp-lock">Private</span></h3><p>${portalEscape(profile.preferredJobNote || 'Nothing added yet.')}</p><small>Only the Hire From SA team sees this, never hirers.</small>
+        <div class="vp-private-actions"><button type="button" class="vp-link" data-edit-profile>${profile.preferredJobNote ? 'Edit note' : 'Add a note'}</button></div></section>
+    </div>
+    <div id="profileEditDialog" class="vp-dialog" hidden>
+      <button type="button" class="vp-dialog-backdrop" data-close-edit aria-label="Close"></button>
+      <section class="vp-dialog-panel" role="dialog" aria-modal="true" aria-labelledby="profileEditTitle">
+        <header><h2 id="profileEditTitle">Edit your profile</h2><button type="button" data-close-edit aria-label="Close">×</button></header>
+        <form id="candidateProfileFactsForm" class="vp-form">
+          <label class="wide">Jobs you want (up to five, separated by commas)<input name="idealJobTitles" type="text" maxlength="409" placeholder="Executive Assistant, Customer Support" value="${portalEscape(ideal.join(', '))}" /></label>
+          <label>Rate from (USD per hour)<input name="requestedRateMinUsd" type="number" min="0.01" max="1000" step="0.01" inputmode="decimal" value="${portalEscape(profile.requestedRateMinUsd ?? '')}" /></label>
+          <label>Rate to (USD per hour)<input name="requestedRateMaxUsd" type="number" min="0.01" max="1000" step="0.01" inputmode="decimal" value="${portalEscape(profile.requestedRateMaxUsd ?? '')}" /></label>
+          <label>Hours available per week<input name="availableHoursPerWeek" type="number" min="1" max="80" step="1" inputmode="numeric" value="${portalEscape(profile.availableHoursPerWeek ?? '')}" /></label>
+          <label>When you can start${profileSelect('startAvailability', profile.startAvailability || '', [['', 'Not added'], ['immediately', 'Immediately'], ['two_weeks', 'Within two weeks'], ['one_month', 'Within a month'], ['flexible', 'Flexible']])}</label>
+          <label class="wide">City and country<input name="location" type="text" maxlength="120" autocomplete="address-level2" placeholder="Cape Town, South Africa" value="${portalEscape(profile.location || '')}" /></label>
+          <label class="wide">Portfolio links (optional, one per line)<textarea name="portfolioLinks" maxlength="10244" rows="3" spellcheck="false" autocapitalize="none" placeholder="https://your-portfolio.com">${portalEscape((profile.portfolioLinks || []).join('\n'))}</textarea></label>
+          <label class="wide">Notes for our team (private, hirers never see this)<textarea name="preferredJobNote" maxlength="400" rows="3">${portalEscape(profile.preferredJobNote || '')}</textarea></label>
+          <div class="vp-form-actions wide"><span id="profileFactsStatus" role="status" aria-live="polite"></span><button type="button" class="vp-btn secondary" data-close-edit>Cancel</button><button class="vp-btn" type="submit">Save changes</button></div>
+        </form>
+      </section>
+    </div>`;
+  root.querySelector('video')?.addEventListener('error', () => { profileLoaded = false; root.querySelector('.vp-video').insertAdjacentHTML('beforeend', '<p role="alert" class="vp-muted">Your video could not play. <button type="button" class="vp-link" data-retry-profile>Reload profile</button></p>'); });
+  window.savaPendingAccountPhoto = photo;
+  window.savaSetAccountPhoto?.(photo);
+}
 async function loadProfile() {
   if (profileLoading) return;
   profileLoading = true;
-  document.querySelector('#refreshProfile').disabled = true;
   const root = document.querySelector('#candidateProfile');
   root.querySelector('video')?.pause?.();
   root.innerHTML = '<p role="status">Loading your profile…</p>';
   try {
-    const [{ profile }, onboarding] = await Promise.all([window.savaPlatform.candidateRequest('getProfile'), onboardingRequest('status')]);
+    const [{ profile }, onboarding] = dashboardDemo ? [{ profile: demoProfile }, {}] : await Promise.all([window.savaPlatform.candidateRequest('getProfile'), onboardingRequest('status')]);
     if (!profile) throw new Error('Your profile could not be found.');
-    const name = profile.fullName || [candidate.user_metadata?.first_name, candidate.user_metadata?.last_name].filter(Boolean).join(' ') || 'Your profile';
-    const initials = name.split(/\s+/).slice(0,2).map(part => part[0]).join('').toUpperCase();
-    const photo = safeAssetUrl(profile.photoUrl);
-    const resume = safeAssetUrl(profile.resumeUrl);
-    const intro = safeAssetUrl(onboarding.introUrl);
-    const skills = (profile.skills || []).slice(0,20);
-    const software = (profile.software || []).slice(0,20);
-    const workExperience = Array.isArray(profile.displayExperience) ? profile.displayExperience.filter(role => role?.jobTitle && role?.companyName) : [];
-    const enteredExperience = profile.displayExperienceSource === 'candidate';
-    const workRows = workExperience.map(role => `<article class="va-work-role"><div><h4>${portalEscape(role.jobTitle)}</h4><p>${portalEscape(role.companyName)} · ${portalEscape([workDateLabel(role.startDate), role.currentRole ? 'Present' : workDateLabel(role.endDate)].filter(Boolean).join(' – '))}</p></div>${role.description ? `<p>${portalEscape(role.description)}</p>` : ''}</article>`);
-    const workCard = workRows.length ? `<section class="va-card va-work-experience"><p class="portal-kicker">${enteredExperience ? 'WORK HISTORY' : 'FROM YOUR RESUME'}</p><h3>Work experience</h3><div class="va-work-list">${workRows.slice(0,3).join('')}</div>${workRows.length > 3 ? `<details class="va-work-more"><summary>Show ${workRows.length - 3} more role${workRows.length - 3 === 1 ? '' : 's'}</summary><div class="va-work-list">${workRows.slice(3).join('')}</div></details>` : ''}<p class="va-work-source">${enteredExperience ? 'Based on your saved profile details.' : 'Pulled from your connected resume. Replace the resume if these details need updating.'}</p></section>` : '';
-    const approved = profile.verificationStatus === 'verified' || profile.verificationBypass;
-    const shareSlug = /^[0-9a-f]{32}$/.test(profile.shareSlug || '') ? profile.shareSlug : '';
-    const shareOrigin = window.location.origin || 'https://www.hirefromsa.com';
-    const shareUrl = shareSlug ? new URL('/candidate-public-profile.html?profile=' + encodeURIComponent(shareSlug), shareOrigin).href : '';
-    const shareCard = shareUrl ? `<section class="va-card va-profile-share"><p class="portal-kicker">SHARE YOUR PROFILE</p><h3>Your profile link</h3><p>Send this link to a hirer. Your email and contact details stay private.</p><div class="va-share-row"><input id="candidateShareUrl" type="text" readonly value="${portalEscape(shareUrl)}" aria-label="Your shareable profile link" /><button type="button" class="va-button" data-share-profile="${portalEscape(shareUrl)}">Copy link</button></div><span id="candidateShareStatus" role="status" aria-live="polite"></span></section>` : '';
-    root.innerHTML = `<div class="va-profile-grid">
-      <section class="va-card va-profile-details">${photo ? '<img class="va-avatar" src="' + portalEscape(photo) + '" alt="Your headshot" />' : '<span class="va-avatar" aria-hidden="true">' + portalEscape(initials) + '</span>'}
-        <dl><div><dt>Name</dt><dd>${portalEscape(name)}</dd></div><div><dt>Email</dt><dd>${portalEscape(candidate.email)}</dd></div><div><dt>Identity</dt><dd>${identityLabel(profile)}</dd></div></dl>
-        <div class="va-photo-actions"><button id="changeProfilePhoto" type="button" class="va-button secondary">${photo ? 'Change headshot' : 'Add headshot'}</button><input id="profilePhotoFile" type="file" accept="image/jpeg,image/png,image/webp" aria-label="Choose a headshot" /><small>JPG, PNG or WebP · up to 20 MB</small></div>
-      </section>
-      <section class="va-card va-profile-facts-card"><p class="portal-kicker">JOB PREFERENCES</p><h3>Ideal roles, rate & availability</h3><p>Your ideal roles, rate, weekly hours and location appear on your shareable profile. Experience comes from your resume.</p>
-        <form id="candidateProfileFactsForm" class="va-profile-facts-form">
-          <label>Ideal jobs (up to five, separated by commas)<input name="idealJobTitles" type="text" maxlength="409" placeholder="Executive Assistant, Customer Support" value="${portalEscape((profile.idealJobTitles || []).join(', '))}" /></label>
-          <label>Requested rate from (USD/hour)<input name="requestedRateMinUsd" type="number" min="0.01" max="1000" step="0.01" inputmode="decimal" value="${portalEscape(profile.requestedRateMinUsd ?? '')}" /></label>
-          <label>Requested rate to (USD/hour)<input name="requestedRateMaxUsd" type="number" min="0.01" max="1000" step="0.01" inputmode="decimal" value="${portalEscape(profile.requestedRateMaxUsd ?? '')}" /></label>
-          <label>Hours available per week<input name="availableHoursPerWeek" type="number" min="1" max="80" step="1" inputmode="numeric" value="${portalEscape(profile.availableHoursPerWeek ?? '')}" /></label>
-          <label>City and country<input name="location" type="text" maxlength="120" autocomplete="address-level2" placeholder="Cape Town, South Africa" value="${portalEscape(profile.location || '')}" /></label>
-          <label>When you can start<select name="startAvailability"><option value="">Not added</option><option value="immediately"${profile.startAvailability === 'immediately' ? ' selected' : ''}>Immediately</option><option value="two_weeks"${profile.startAvailability === 'two_weeks' ? ' selected' : ''}>Within two weeks</option><option value="one_month"${profile.startAvailability === 'one_month' ? ' selected' : ''}>Within a month</option><option value="flexible"${profile.startAvailability === 'flexible' ? ' selected' : ''}>Flexible</option></select></label>
-          <label>Portfolio links (optional)<textarea name="portfolioLinks" maxlength="10244" rows="3" spellcheck="false" autocapitalize="none" placeholder="https://your-portfolio.com">${portalEscape((profile.portfolioLinks || []).join('\n'))}</textarea><small>Up to five links, one per line. Employers can view these on your public profile.</small></label>
-          <label>Other job preferences (only our team sees this)<textarea name="preferredJobNote" maxlength="400" rows="3">${portalEscape(profile.preferredJobNote || '')}</textarea></label>
-          <div class="va-profile-facts-actions"><button class="va-button" type="submit">Save profile details</button><span id="profileFactsStatus" role="status" aria-live="polite"></span></div>
-        </form>
-      </section>
-      ${workCard}
-      ${shareCard}
-      <section class="va-card"><p class="portal-kicker">YOUR INTRODUCTION</p><h3>One-minute video</h3>
-        ${intro ? '<video src="' + portalEscape(intro) + '" controls playsinline preload="metadata" aria-label="Your introduction video"></video>' : '<div class="va-empty-video"><p>No introduction video yet.</p><p>' + (approved ? 'Introduce yourself and your skills in about one minute.' : 'Recording becomes available after identity approval.') + '</p></div>'}
-        ${approved ? '<a class="va-button secondary" href="./candidate-onboarding.html?manage=1">' + (intro ? 'Manage video' : 'Record your video') + ' →</a>' : ''}
-      </section>
-      <section class="va-card"><p class="portal-kicker">YOUR RESUME</p><h3>Resume</h3>
-        <div class="va-file"><span class="va-file-icon" aria-hidden="true">▤</span><div><b>${portalEscape(profile.resumeFileName || 'No resume connected')}</b><p>Your connected, contact-redacted resume.</p></div></div>
-        ${resume ? '<a class="va-button" href="' + portalEscape(resume) + '" target="_blank" rel="noopener noreferrer">View resume ↗</a>' : '<p>Your resume link is unavailable. Refresh your profile to try again.</p>'}
-        <a class="va-button secondary" href="./candidate-resume.html?next=.%2Fcandidate-dashboard.html%3Ftab%3Dprofile">Replace resume</a>
-      </section>
-      ${profile.summary ? '<section class="va-card"><h3>About me</h3><p>' + portalEscape(profile.summary) + '</p></section>' : ''}
-      ${skills.length ? '<section class="va-card"><p class="portal-kicker">FROM YOUR RESUME</p><h3>Skills</h3><div class="va-skills">' + skills.map(skill => '<span>' + portalEscape(skill) + '</span>').join('') + '</div></section>' : ''}
-      ${software.length ? '<section class="va-card"><p class="portal-kicker">FROM YOUR RESUME</p><h3>Tools & Software</h3><div class="va-skills">' + software.map(tool => '<span>' + portalEscape(tool) + '</span>').join('') + '</div></section>' : ''}
-    </div>`;
-    root.querySelector('video')?.addEventListener('error', () => { profileLoaded = false; root.insertAdjacentHTML('beforeend', '<p role="alert">Your video link could not play. <button type="button" class="va-button secondary" data-retry-profile>Refresh profile</button></p>'); });
-    window.savaPendingAccountPhoto = photo;
-    window.savaSetAccountPhoto?.(photo);
+    renderProfile(profile, safeAssetUrl(onboarding.introUrl));
     profileLoaded = true;
     profileLoadedAt = Date.now();
     return true;
   } catch (error) {
     root.innerHTML = emptyState('Profile unavailable.', error.message || 'Try again to load your details.', '<button type="button" class="va-button" data-retry-profile>Try again</button>');
     return false;
-  } finally { profileLoading = false; document.querySelector('#refreshProfile').disabled = false; }
+  } finally { profileLoading = false; }
 }
 async function loadJobs() {
   if (jobsLoading) return;
@@ -466,7 +544,16 @@ document.querySelectorAll('[data-dashboard-tab]').forEach(button => {
   });
 });
 document.querySelector('#candidateProfile').addEventListener('click', event => {
-  if (event.target.closest('#changeProfilePhoto') && !photoUploading) document.querySelector('#profilePhotoFile')?.click();
+  if (event.target.closest('[data-pick-photo]') && !photoUploading) document.querySelector('#profilePhotoFile')?.click();
+  const dialog = document.querySelector('#profileEditDialog');
+  if (event.target.closest('[data-edit-profile]') && dialog) { dialog.hidden = false; document.body.classList.add('vp-dialog-open'); dialog.querySelector('input')?.focus(); }
+  if (event.target.closest('[data-close-edit]') && dialog) { dialog.hidden = true; document.body.classList.remove('vp-dialog-open'); }
+  const more = event.target.closest('[data-more-roles]');
+  if (more) { document.querySelectorAll('.vp-extra-role').forEach(role => { role.hidden = false; }); more.remove(); }
+});
+document.addEventListener('keydown', event => {
+  const dialog = document.querySelector('#profileEditDialog');
+  if (event.key === 'Escape' && dialog && !dialog.hidden) { dialog.hidden = true; document.body.classList.remove('vp-dialog-open'); }
 });
 document.querySelector('#candidateProfile').addEventListener('change', async event => {
   if (event.target.id !== 'profilePhotoFile') return;
@@ -499,10 +586,12 @@ document.querySelector('#candidateProfile').addEventListener('submit', async eve
   button.disabled = true;
   status.textContent = 'Saving…';
   try {
-    await window.savaPlatform.candidateRequest('updateCandidateProfileFacts', { idealJobTitles, requestedRateMinUsd: min, requestedRateMaxUsd: max, availableHoursPerWeek: hours, location, startAvailability, preferredJobNote, portfolioLinks });
+    if (dashboardDemo) Object.assign(demoProfile, { idealJobTitles: roles, requestedRateMinUsd: min ? Number(min) : null, requestedRateMaxUsd: max ? Number(max) : null, availableHoursPerWeek: hours ? Number(hours) : null, location, startAvailability, preferredJobNote, portfolioLinks: portfolioLinks.split(/\s+/).filter(Boolean) });
+    else await window.savaPlatform.candidateRequest('updateCandidateProfileFacts', { idealJobTitles, requestedRateMinUsd: min, requestedRateMaxUsd: max, availableHoursPerWeek: hours, location, startAvailability, preferredJobNote, portfolioLinks });
     profileLoaded = false;
+    document.body.classList.remove('vp-dialog-open');
     await loadProfile();
-    document.querySelector('#profileFactsStatus').textContent = 'Saved. Your public profile now shows these details.';
+    showPhotoStatus(dashboardDemo ? 'Preview only: changes shown on this page, nothing was saved.' : 'Saved. Hirers now see your updated profile.');
   } catch (error) {
     status.textContent = error.message || 'Could not save profile details. Try again.';
     button.disabled = false;
@@ -573,7 +662,6 @@ document.querySelector('#candidateMessages').addEventListener('input', event => 
 });
 document.querySelector('#messageSort').addEventListener('change', () => { saveDraft(); renderMessages(); });
 ['#applicationStatus', '#applicationSort'].forEach(selector => document.querySelector(selector).addEventListener('change', () => renderApplications(dashboardData?.applications || [])));
-document.querySelector('#refreshProfile').addEventListener('click', () => { profileLoaded = false; loadProfile(); });
 // Only fetch while the inbox is visible. Drafts stay local and survive refreshes.
 window.setInterval?.(() => { if (!document.hidden && activeTab === 'messages' && Date.now() - lastInboxRefresh >= 30000) refreshInbox(); }, 30000);
 document.querySelector('#jobSearch').addEventListener('input', () => { if (jobsLoaded) renderJobs(); });

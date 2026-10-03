@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="./va-jobs.css" />
     <link rel="stylesheet" href="./va-messages.css" />
     <link rel="stylesheet" href="./va-applications.css" />
+    <link rel="stylesheet" href="./va-profile.css" />
     <link rel="stylesheet" href="./account-menu.css" data-sava-account-styles />
   </head>
   <body class="va-dashboard-page">
@@ -53,7 +54,7 @@
           </div>
           <div id="candidateApplications" class="va-apps-list"></div>
         </section>
-        <section id="panel-profile" role="tabpanel" aria-label="My Profile" tabindex="0" hidden><div class="va-section-heading va-section-toolbar"><div><h2>My Profile</h2><p>Your details, introduction and resume, all together.</p></div><button id="refreshProfile" type="button" class="va-button secondary">Refresh</button></div><p id="profilePhotoStatus" class="va-photo-status" role="status" aria-live="polite" hidden></p><div id="candidateProfile"></div></section>
+        <section id="panel-profile" class="vp-panel" role="tabpanel" aria-label="My Profile" tabindex="0" hidden><p id="profilePhotoStatus" class="vp-status" role="status" aria-live="polite" hidden></p><div id="candidateProfile"></div></section>
         <section id="panel-jobs" class="vj-panel" role="tabpanel" aria-labelledby="tab-jobs" tabindex="0" hidden>
           <div class="vj-top"><h1>Apply for jobs</h1><p id="jobsStatus" role="status" aria-live="polite"></p></div>
           <div class="vj-toolbar">
