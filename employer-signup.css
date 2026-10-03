@@ -94,3 +94,11 @@ body.es-page{margin:0;background:#f6f8fc;color:#142238;font-family:"DM Sans",san
 .es-secondary{display:flex;height:50px;align-items:center;justify-content:center;border:1px solid #c6d1df;border-radius:14px;background:#fff;color:#142238;font:800 16px "DM Sans",sans-serif;text-decoration:none}
 .es-secondary:hover{background:#f4f6f9}
 .es-side-card-top .es-new{background:#246fe5;color:#fff}
+.es-side-card-top .es-new{white-space:nowrap}
+.es-terms{margin:12px 0 0;color:#6b7890;font-size:13px;text-align:center}
+.es-steps-card{gap:14px}
+.es-steps-card>strong{font:800 16px Manrope,sans-serif}
+.es-steps-card ol{display:grid;gap:12px;margin:0;padding:0;list-style:none}
+.es-steps-card li{display:flex;align-items:flex-start;gap:12px;font-size:14px;font-weight:700}
+.es-steps-card li b{display:grid;width:28px;height:28px;flex:none;place-items:center;border-radius:50%;background:#e8f0ff;color:#1f5fcf;font:800 13px Manrope,sans-serif}
+.es-steps-card li small{display:block;margin-top:2px;color:#6b7890;font-size:13px;font-weight:500}

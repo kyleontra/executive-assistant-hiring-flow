@@ -5,7 +5,7 @@ const REGISTER_ENDPOINT = 'https://jyxamdvvnoylaxolhlht.supabase.co/functions/v1
 const requestedJob = new URLSearchParams(window.location.search).get('job');
 if (requestedJob) {
   sessionStorage.setItem('sava-applying-job', requestedJob);
-  document.querySelector('.account-switch a').href = `./candidate-login.html?next=${encodeURIComponent(`./application-questions.html?job=${encodeURIComponent(requestedJob)}`)}`;
+  document.querySelector('.account-switch-link').href = `./candidate-login.html?next=${encodeURIComponent(`./application-questions.html?job=${encodeURIComponent(requestedJob)}`)}`;
 }
 
 form.addEventListener('submit', async (event) => {
@@ -14,7 +14,7 @@ form.addEventListener('submit', async (event) => {
   const email = document.querySelector('#email').value.trim().toLowerCase();
   submitButton.disabled = true;
   submitButton.textContent = 'Creating account…';
-  formResult.className = 'form-result';
+  formResult.hidden = true;
   try {
     // The existing registration endpoint supports account-only JSON requests.
     // Keep its email verification logic unchanged; resume upload is a later step.
@@ -34,8 +34,17 @@ form.addEventListener('submit', async (event) => {
     window.location.assign('./check-email.html');
   } catch (error) {
     submitButton.disabled = false;
-    submitButton.innerHTML = 'Create account <span>→</span>';
+    submitButton.innerHTML = 'Create account <span aria-hidden="true">→</span>';
     formResult.textContent = error instanceof TypeError ? 'We could not reach the account service. Check your connection and try again.' : (['TimeoutError', 'AbortError'].includes(error?.name) ? 'The request took too long. Check your connection and try again. Your saved progress is kept.' : error.message) || 'Your account could not be created. Please try again.';
-    formResult.className = 'form-result show error';
+    formResult.className = 'portal-result error';
+    formResult.hidden = false;
   }
+});
+
+document.querySelector('[data-toggle-password]')?.addEventListener('click', (event) => {
+  const input = document.querySelector('#password');
+  const show = input.type === 'password';
+  input.type = show ? 'text' : 'password';
+  event.currentTarget.textContent = show ? 'Hide' : 'Show';
+  event.currentTarget.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
 });
