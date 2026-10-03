@@ -57,6 +57,41 @@
         </section>
         <section id="panel-profile" class="vp-panel" role="tabpanel" aria-label="My Profile" tabindex="0" hidden><p id="profilePhotoStatus" class="vp-status" role="status" aria-live="polite" hidden></p><div id="candidateProfile"></div></section>
         <section id="panel-payments" class="va-acct-panel va-pay-panel" role="tabpanel" aria-label="Payments" tabindex="0" hidden><div id="candidatePayments"></div></section>
+        <section id="panel-settings" class="va-acct-panel va-set-panel" role="tabpanel" aria-label="Settings" tabindex="0" hidden>
+          <div class="va-acct-top"><h1>Settings</h1></div>
+          <form id="settingsNameForm" class="va-acct-card va-set-row"><div class="va-set-intro"><h2>Account details</h2><p>Your name shows on your profile and in messages to hirers.</p></div>
+            <div class="va-set-fields">
+              <div class="va-acct-grid">
+                <label>First name<input name="firstName" type="text" maxlength="60" autocomplete="given-name" required /></label>
+                <label>Last name<input name="lastName" type="text" maxlength="60" autocomplete="family-name" required /></label>
+                <label class="wide">Email<input id="settingsEmail" type="email" readonly /><small>Need to change your email? <a href="mailto:support@hirefromsa.com?subject=Change%20my%20email">Email support</a> from your current address.</small></label>
+              </div>
+              <div class="va-set-foot"><dl class="va-set-meta"><div><dt>Member since</dt><dd id="settingsJoined">–</dd></div></dl>
+                <div class="va-acct-actions"><span class="va-acct-status" role="status" aria-live="polite"></span><button class="va-acct-button" type="submit">Save changes</button></div></div>
+            </div>
+          </form>
+          <form id="settingsPasswordForm" class="va-acct-card va-set-row"><div class="va-set-intro"><h2>Password</h2><p>Use at least 8 characters. A short phrase is easier to remember and harder to guess.</p></div>
+            <div class="va-set-fields">
+              <div class="va-acct-grid">
+                <label>New password<input name="password" type="password" minlength="8" autocomplete="new-password" required /></label>
+                <label>Confirm new password<input name="confirm" type="password" minlength="8" autocomplete="new-password" required /></label>
+              </div>
+              <div class="va-set-foot"><label class="va-set-show"><input type="checkbox" data-show-passwords /> Show passwords</label>
+                <div class="va-acct-actions"><span class="va-acct-status" role="status" aria-live="polite"></span><button class="va-acct-button" type="submit">Change password</button></div></div>
+            </div>
+          </form>
+          <section class="va-acct-card va-set-row"><div class="va-set-intro"><h2>Signed-in devices</h2><p>Lost a phone or signed in on a shared computer? Sign out everywhere.</p></div>
+            <div class="va-set-fields">
+              <dl class="va-set-meta"><div><dt>Last signed in</dt><dd id="settingsLastSignIn">–</dd></div></dl>
+              <div class="va-acct-actions"><button id="settingsSignOutAll" class="va-acct-button secondary" type="button">Sign out of all devices</button><span class="va-acct-status" role="status" aria-live="polite"></span></div>
+            </div>
+          </section>
+          <section class="va-acct-card va-set-row va-set-danger"><div class="va-set-intro"><h2>Close your account</h2><p>This removes your profile from hirers and stops all messages.</p></div>
+            <div class="va-set-fields"><p class="va-acct-note">Email <a href="mailto:support@hirefromsa.com?subject=Close%20my%20account">support@hirefromsa.com</a> from your account email and we will close it for you. If you are working a job through Hire From SA, let your hirer know first.</p>
+              <div class="va-acct-actions"><a class="va-acct-button danger" href="mailto:support@hirefromsa.com?subject=Close%20my%20account">Request account closure</a></div>
+            </div>
+          </section>
+        </section>
         </section>
         <section id="panel-jobs" class="vj-panel" role="tabpanel" aria-labelledby="tab-jobs" tabindex="0" hidden>
           <div class="vj-top"><h1>Apply for jobs</h1><p id="jobsStatus" role="status" aria-live="polite"></p></div>

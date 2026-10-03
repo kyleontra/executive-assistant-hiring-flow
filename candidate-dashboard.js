@@ -3,7 +3,7 @@ import { prepareHeadshot } from './headshot-image.mjs';
 const PHOTO_ENDPOINT = 'https://jyxamdvvnoylaxolhlht.supabase.co/functions/v1/submit-profile-photo';
 const applicationsRoot = document.querySelector('#candidateApplications');
 const portalStatus = document.querySelector('#portalStatus');
-const tabs = ['jobs', 'messages', 'applications', 'profile', 'payments'];
+const tabs = ['jobs', 'messages', 'applications', 'profile', 'payments', 'settings'];
 const navTabs = ['jobs', 'messages', 'applications'];
 let activeTab = new URLSearchParams(window.location.search).get('tab') || 'applications';
 if (!tabs.includes(activeTab)) activeTab = 'applications';
@@ -132,6 +132,7 @@ function switchTab(tab, updateUrl = true) {
   if (!dashboardData) return;
   if (tab === 'profile' && (!profileLoaded || Date.now() - profileLoadedAt > 45 * 60 * 1000)) loadProfile();
   if (tab === 'jobs' && !jobsLoaded) loadJobs();
+  if (tab === 'settings') fillSettings();
   if (tab === 'payments') renderPayments();
   if (tab === 'messages' && Date.now() - lastInboxRefresh > 30000) refreshInbox();
 }
@@ -717,5 +718,64 @@ function renderPayments() {
 }
 document.querySelector('#candidatePayments').addEventListener('click', event => {
   if (event.target.closest('[data-pay-method]')) document.querySelector('#payMethodNote').hidden = false;
+});
+// Settings: name and password save to the signed-in account (Supabase auth), so they work without a backend change.
+function settingsUser() { return candidate || window.savaAccountPreviewUser || { email: 'demo.candidate@example.com', user_metadata: { first_name: 'Thandi', last_name: 'Jacobs' } }; }
+function fillSettings() {
+  const user = settingsUser();
+  const form = document.querySelector('#settingsNameForm');
+  form.elements.firstName.value ||= user.user_metadata?.first_name || '';
+  form.elements.lastName.value ||= user.user_metadata?.last_name || '';
+  document.querySelector('#settingsEmail').value = user.email || '';
+  const when = value => value && !Number.isNaN(new Date(value).getTime()) ? dateLabel(value) : '–';
+  document.querySelector('#settingsJoined').textContent = when(user.created_at || (dashboardDemo ? new Date(Date.now() - 120 * 864e5).toISOString() : ''));
+  document.querySelector('#settingsLastSignIn').textContent = user.last_sign_in_at ? dateLabel(user.last_sign_in_at, true) : dashboardDemo || window.savaAccountPreviewUser ? dateLabel(new Date().toISOString(), true) : '–';
+}
+document.querySelector('[data-show-passwords]').addEventListener('change', event => {
+  document.querySelectorAll('#settingsPasswordForm input[type="password"], #settingsPasswordForm input[data-was-password]').forEach(input => {
+    input.dataset.wasPassword = '1';
+    input.type = event.target.checked ? 'text' : 'password';
+  });
+});
+function settingsStatus(element, message, error = false) {
+  const status = element.querySelector('.va-acct-status');
+  status.textContent = message;
+  status.classList.toggle('error', error);
+}
+const settingsPreview = () => dashboardDemo || Boolean(window.savaAccountPreviewUser);
+document.querySelector('#settingsNameForm').addEventListener('submit', async event => {
+  event.preventDefault();
+  const form = event.currentTarget, button = form.querySelector('button');
+  const data = { first_name: form.elements.firstName.value.trim(), last_name: form.elements.lastName.value.trim() };
+  if (!data.first_name || !data.last_name) { settingsStatus(form, 'Add your first and last name.', true); return; }
+  button.disabled = true; settingsStatus(form, 'Saving…');
+  try {
+    if (!settingsPreview()) { const { error } = await window.savaAuth.auth.updateUser({ data }); if (error) throw error; }
+    settingsStatus(form, 'Saved.');
+  } catch (error) { settingsStatus(form, error.message || 'Could not save. Try again.', true); }
+  finally { button.disabled = false; }
+});
+document.querySelector('#settingsPasswordForm').addEventListener('submit', async event => {
+  event.preventDefault();
+  const form = event.currentTarget, button = form.querySelector('button');
+  const password = form.elements.password.value;
+  if (password.length < 8) { settingsStatus(form, 'Use at least 8 characters.', true); return; }
+  if (password !== form.elements.confirm.value) { settingsStatus(form, 'The two passwords don’t match.', true); return; }
+  button.disabled = true; settingsStatus(form, 'Changing password…');
+  try {
+    if (!settingsPreview()) { const { error } = await window.savaAuth.auth.updateUser({ password }); if (error) throw error; }
+    form.reset(); settingsStatus(form, 'Password changed.');
+  } catch (error) { settingsStatus(form, error.message || 'Could not change your password. Try again.', true); }
+  finally { button.disabled = false; }
+});
+document.querySelector('#settingsSignOutAll').addEventListener('click', async event => {
+  const button = event.currentTarget, card = button.closest('.va-acct-card');
+  button.disabled = true; settingsStatus(card, 'Signing out…');
+  try {
+    if (settingsPreview()) { settingsStatus(card, 'Preview only: nothing was signed out.'); button.disabled = false; return; }
+    const { error } = await window.savaAuth.auth.signOut({ scope: 'global' });
+    if (error) throw error;
+    window.location.assign('./candidate-login.html');
+  } catch (error) { settingsStatus(card, error.message || 'Could not sign out. Try again.', true); button.disabled = false; }
 });
 loadCandidateDashboard();

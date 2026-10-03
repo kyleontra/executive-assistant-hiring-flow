@@ -30,9 +30,9 @@
       return '<a href="./employer-profile.html">My Profile</a><a href="./employees.html">My Employees</a><a href="./billing.html">Billing</a>';
     }
     if (document.body.classList.contains('va-dashboard-page')) {
-      return '<a href="./candidate-dashboard.html?tab=profile">My Profile</a><a href="./candidate-dashboard.html?tab=payments">Payments</a>';
+      return '<a href="./candidate-dashboard.html?tab=profile">My Profile</a><a href="./candidate-dashboard.html?tab=payments">Payments</a><a href="./candidate-dashboard.html?tab=settings">Settings</a>';
     }
-    return '<a href="./candidate-dashboard.html?tab=messages">Messages</a><a href="./candidate-dashboard.html?tab=applications">Applications</a><a href="./candidate-dashboard.html?tab=profile">My Profile</a><a href="./candidate-dashboard.html?tab=jobs">Apply for Jobs</a><a href="./candidate-dashboard.html?tab=payments">Payments</a>';
+    return '<a href="./candidate-dashboard.html?tab=messages">Messages</a><a href="./candidate-dashboard.html?tab=applications">Applications</a><a href="./candidate-dashboard.html?tab=profile">My Profile</a><a href="./candidate-dashboard.html?tab=jobs">Apply for Jobs</a><a href="./candidate-dashboard.html?tab=payments">Payments</a><a href="./candidate-dashboard.html?tab=settings">Settings</a>';
   }
 
   function setAccountPhoto(value) {

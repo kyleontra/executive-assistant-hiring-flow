@@ -84,3 +84,23 @@
   .va-pay-row .amount{grid-column:2;grid-row:2}
   .va-pay-row span:nth-child(4){grid-column:2;grid-row:3;justify-self:end}
 }
+/* Settings: title and explanation on the left, fields on the right. */
+.va-set-panel{width:min(900px,100%)}
+.va-set-row{grid-template-columns:240px minmax(0,1fr);gap:24px}
+.va-set-intro h2{margin-bottom:6px}
+.va-set-intro p{margin:0;color:#5e6c82;font-size:14px;line-height:1.55}
+.va-set-fields{display:grid;align-content:start;gap:14px;min-width:0}
+.va-acct-grid small a{color:#1f5fcf;font-weight:700}
+.va-set-meta{display:flex;flex-wrap:wrap;gap:10px 28px;margin:0}
+.va-set-meta dt{color:#7b889c;font-size:12px;font-weight:700}
+.va-set-meta dd{margin:2px 0 0;color:#142238;font-size:14px;font-weight:700}
+.va-set-show{display:inline-flex;align-items:center;gap:8px;color:#33445e;font-size:13px;font-weight:600;cursor:pointer}
+.va-set-show input{width:16px;height:16px;accent-color:#246fe5}
+.va-set-danger{border-color:#f0d3d6}
+.va-acct-button.danger{border:1px solid #e3a6ad;background:#fff;color:#b3343f}
+.va-acct-button.danger:hover{background:#fff5f6}
+@media(max-width:760px){.va-set-row{grid-template-columns:1fr;gap:14px}}
+.va-set-foot{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.va-set-foot .va-acct-actions{margin-left:auto;justify-content:flex-end}
+.va-set-row .va-set-fields{gap:12px}
+@media(max-width:640px){.va-set-foot .va-acct-actions{width:100%}}
