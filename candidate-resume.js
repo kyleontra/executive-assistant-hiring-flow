@@ -1,4 +1,5 @@
 const RESUME_ENDPOINT = 'https://jyxamdvvnoylaxolhlht.supabase.co/functions/v1/submit-resume';
+const RESUME_LINK_ENDPOINT = 'https://jyxamdvvnoylaxolhlht.supabase.co/functions/v1/submit-resume-link';
 const MAX_RESUME_BYTES = 10 * 1024 * 1024;
 const RESUME_TYPES = new Set([
   'application/pdf',
@@ -25,6 +26,24 @@ const demoMode = ['localhost', '127.0.0.1'].includes(window.location.hostname) &
 let candidate = null;
 let profile = null;
 let selectedResume = null;
+let resumeMode = 'file';
+const linkInput = document.querySelector('#resumeLink');
+
+function validLink(value) {
+  return /^https:\/\/(?:docs\.google\.com|drive\.google\.com|(?:www\.)?dropbox\.com)\//i.test((value || '').trim());
+}
+
+function refreshSaveButton() {
+  if (resumeMode === 'link') {
+    saveButton.disabled = !validLink(linkInput?.value);
+    saveButton.innerHTML = 'Connect resume link and continue <span aria-hidden="true">→</span>';
+    return;
+  }
+  saveButton.disabled = !selectedResume && !profile?.resumePath;
+  saveButton.innerHTML = selectedResume
+    ? `${profile?.resumePath ? 'Replace resume' : 'Connect resume'} and continue <span aria-hidden="true">→</span>`
+    : `${profile?.resumePath ? 'Continue with saved resume' : 'Connect resume and continue'} <span aria-hidden="true">→</span>`;
+}
 
 function nextDestination() {
   const requested = params.get('next');
@@ -36,7 +55,7 @@ function showResult(message, type) {
   if (type === 'error' && /sign.in|expired/i.test(message)) document.querySelector('#signInAgain').hidden = false;
   result.textContent = message;
   result.hidden = false;
-  result.className = `status-box ${type}`;
+  result.className = `portal-result ${type}`;
 }
 
 function validResume(file) {
@@ -52,7 +71,7 @@ function renderExisting() {
   openResume.hidden = !profile.resumeUrl;
   if (profile.resumeUrl) openResume.href = profile.resumeUrl;
   saveButton.disabled = false;
-  saveButton.innerHTML = 'Continue with saved resume <span>→</span>';
+  saveButton.innerHTML = 'Continue with saved resume <span aria-hidden="true">→</span>';
 }
 
 async function initialize() {
@@ -64,8 +83,8 @@ async function initialize() {
     window.location.replace(`./candidate-login.html?next=${encodeURIComponent('./candidate-resume.html')}`);
     return;
   }
-  authStatus.textContent = demoMode ? 'Demo mode — your resume stays in this browser and is never uploaded.' : `Email confirmed for ${candidate.email}.`;
-  authStatus.className = 'status-box success';
+  authStatus.textContent = demoMode ? 'Demo mode: your resume is never uploaded' : `Email confirmed: ${candidate.email}`;
+  authStatus.className = 'es-verified success';
   if (demoMode) return;
   try {
     ({ profile } = await window.savaPlatform.candidateRequest('getProfile'));
@@ -73,8 +92,7 @@ async function initialize() {
   } catch (error) { accountLoadFailed(error); }
 }
 
-input.addEventListener('change', () => {
-  const file = input.files?.[0];
+function chooseResume(file) {
   if (!validResume(file)) {
     selectedResume = null;
     input.value = '';
@@ -84,14 +102,65 @@ input.addEventListener('change', () => {
   }
   selectedResume = file;
   pickerTitle.textContent = file.name;
-  pickerDetail.textContent = `${(file.size / (1024 * 1024)).toFixed(1)} MB · ready to connect`;
+  pickerDetail.textContent = `${(file.size / (1024 * 1024)).toFixed(1)} MB · ready to upload · click to change`;
   saveButton.disabled = false;
-  saveButton.innerHTML = `${profile?.resumePath ? 'Replace resume' : 'Connect resume'} and continue <span>→</span>`;
+  saveButton.innerHTML = `${profile?.resumePath ? 'Replace resume' : 'Connect resume'} and continue <span aria-hidden="true">→</span>`;
   result.hidden = true;
-});
+  dropzone?.classList.add('has-file');
+}
+
+input.addEventListener('change', () => chooseResume(input.files?.[0]));
+
+// Drag and drop onto the upload box.
+const dropzone = document.querySelector('.es-dropzone');
+if (dropzone) {
+  ['dragenter', 'dragover'].forEach((name) => dropzone.addEventListener(name, (event) => { event.preventDefault(); dropzone.classList.add('dragging'); }));
+  ['dragleave', 'drop'].forEach((name) => dropzone.addEventListener(name, () => dropzone.classList.remove('dragging')));
+  dropzone.addEventListener('drop', (event) => {
+    event.preventDefault();
+    if (!input.disabled) chooseResume(event.dataTransfer?.files?.[0]);
+  });
+}
+
+document.querySelectorAll('[data-resume-mode]').forEach((tab) => tab.addEventListener('click', () => {
+  resumeMode = tab.dataset.resumeMode;
+  document.querySelectorAll('[data-resume-mode]').forEach((item) => {
+    item.classList.toggle('active', item === tab);
+    item.setAttribute('aria-pressed', String(item === tab));
+  });
+  document.querySelectorAll('[data-mode-panel]').forEach((panel) => { panel.hidden = panel.dataset.modePanel !== resumeMode; });
+  result.hidden = true;
+  refreshSaveButton();
+  if (resumeMode === 'link') linkInput?.focus();
+}));
+linkInput?.addEventListener('input', refreshSaveButton);
+
+async function submitLink() {
+  const link = linkInput.value.trim();
+  if (!validLink(link)) { showResult('Paste a Google Docs, Google Drive or Dropbox link to your resume.', 'error'); return; }
+  saveButton.disabled = true;
+  linkInput.disabled = true;
+  saveButton.textContent = 'Getting your resume…';
+  try {
+    if (!demoMode) {
+      const token = await window.getAccessToken();
+      if (!token) throw new Error('Your sign-in expired. Verify your email again, then retry.');
+      const response = await fetch(RESUME_LINK_ENDPOINT, { signal: AbortSignal.timeout(120000), method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ url: link }) });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || 'Your resume link could not be saved.');
+    }
+    showResult(demoMode ? 'Demo resume link connected locally. Continuing…' : 'Resume connected to your account. Continuing…', 'success');
+    window.setTimeout(() => window.location.assign(nextDestination()), 500);
+  } catch (error) {
+    linkInput.disabled = false;
+    refreshSaveButton();
+    showResult(error instanceof TypeError ? 'The resume service could not be reached. Check your connection and try again.' : (['TimeoutError', 'AbortError'].includes(error?.name) ? 'The request took too long. Check your connection and try again.' : error.message) || 'Your resume link could not be saved.', 'error');
+  }
+}
 
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
+  if (resumeMode === 'link') { if (candidate && !saveButton.disabled) await submitLink(); return; }
   if (!candidate || saveButton.disabled || (!selectedResume && !profile?.resumePath)) return;
   if (!selectedResume) {
     window.location.assign(nextDestination());
@@ -115,7 +184,7 @@ form.addEventListener('submit', async (event) => {
   } catch (error) {
     input.disabled = false;
     saveButton.disabled = false;
-    saveButton.innerHTML = 'Connect resume and continue <span>→</span>';
+    saveButton.innerHTML = 'Connect resume and continue <span aria-hidden="true">→</span>';
     showResult(error instanceof TypeError ? 'The resume service could not be reached. Check your connection and try again.' : (['TimeoutError', 'AbortError'].includes(error?.name) ? 'The request took too long. Check your connection and try again. Your saved progress is kept.' : error.message) || 'Your resume could not be saved.', 'error');
   }
 });
@@ -125,7 +194,7 @@ initialize().catch(accountLoadFailed);
 function accountLoadFailed(error) {
   const status = document.querySelector('#authStatus');
   status.textContent = error.message || 'Your account could not be checked. Retry to continue.';
-  status.className = 'status-box error';
+  status.className = 'es-verified error';
   if (/sign.in|expired/i.test(error.message || '')) document.querySelector('#signInAgain').hidden = false;
   document.querySelector('#retryAccount').hidden = false;
 }

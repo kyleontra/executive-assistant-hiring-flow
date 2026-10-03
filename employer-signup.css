@@ -122,3 +122,36 @@ body.es-page{margin:0;background:#f6f8fc;color:#142238;font-family:"DM Sans",san
 .es-code-label input.es-code::placeholder{color:#c6d1df}
 .es-code-label input:focus{border-color:#246fe5;outline:0;box-shadow:0 0 0 3px #246fe51f}
 .es-inbox .es-secondary{width:100%;cursor:pointer}
+.es-verified{display:inline-flex;max-width:100%;align-items:center;gap:7px;margin:0 0 16px;padding:6px 12px;border-radius:999px;background:#f1f4f8;color:#4a5a73;font-size:13px;font-weight:700;overflow-wrap:anywhere}
+.es-verified.success{background:#e6f6ee;color:#0b6b47}
+.es-verified.success::before{content:"✓";font-weight:800}
+.es-verified.error{border-radius:12px;background:#fff7f7;color:#a84e57}
+.es-resume #retryAccount{width:100%;margin-top:14px;cursor:pointer}
+.es-inline-link{display:block;margin-top:10px;color:#1f5fcf;font-weight:700}
+.es-inline-link[hidden]{display:none}
+.es-dropzone{position:relative;display:grid;justify-items:center;gap:6px;margin-top:22px;padding:30px 20px;border:2px dashed #c6d1df;border-radius:16px;background:#f8faff;text-align:center;cursor:pointer;transition:border-color .15s,background .15s}
+.es-dropzone:hover,.es-dropzone.dragging{border-color:#246fe5;background:#eef4ff}
+.es-dropzone.has-file{border-style:solid;border-color:#7fc4a4;background:#f1faf6}
+.es-dropzone input{position:absolute;width:1px;height:1px;opacity:0}
+.es-dropzone strong{color:#142238;font-size:16px;overflow-wrap:anywhere}
+.es-dropzone strong u{color:#1f5fcf;text-underline-offset:3px}
+.es-dropzone small{color:#6b7890;font-size:13px}
+.es-drop-icon{display:grid;width:52px;height:52px;margin-bottom:6px;place-items:center;border-radius:16px;background:#e8f0ff;color:#1f5fcf;font-size:24px;font-weight:800}
+.es-dropzone.has-file .es-drop-icon{background:#e6f6ee;color:#0b7a50}
+.es-saved-resume{display:flex;align-items:center;gap:12px;margin-top:14px;padding:12px 14px;border:1px solid #cfe9dc;border-radius:12px;background:#f1faf6}
+.es-saved-resume[hidden]{display:none}
+.es-saved-resume b,.es-saved-resume small{display:block}
+.es-saved-resume b{color:#142238;font-size:14px;overflow-wrap:anywhere}
+.es-saved-resume small{color:#0b6b47;font-size:12.5px}
+.es-saved-resume a{margin-left:auto;color:#1f5fcf;font-size:14px;font-weight:800}
+.es-file-badge{display:grid;width:30px;height:30px;flex:none;place-items:center;border-radius:50%;background:#0b7a50;color:#fff;font-weight:800}
+.es-privacy{margin:14px 0 0;color:#6b7890;font-size:13px;text-align:center}
+.es-secondary[hidden]{display:none}
+.es-dropzone.has-file,.es-dropzone.has-file:hover{border-style:solid;border-color:#7fc4a4;background:#f1faf6}
+.es-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:20px;padding:4px;border-radius:12px;background:#f1f4f8}
+.es-tabs button{height:40px;border:0;border-radius:9px;background:transparent;color:#4a5a73;font:700 14px "DM Sans",sans-serif;cursor:pointer}
+.es-tabs button.active{background:#fff;color:#142238;box-shadow:0 1px 4px rgba(20,34,56,.12)}
+.es-resume .es-dropzone{margin-top:12px}
+.es-link-field{margin-top:12px}
+.es-link-field small{color:#6b7890;font-size:13px;font-weight:500}
+.es-dropzone[hidden]{display:none}

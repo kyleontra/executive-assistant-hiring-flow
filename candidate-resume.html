@@ -3,42 +3,64 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#1d6be8" />
-    <title>Connect your resume</title>
+    <meta name="theme-color" content="#1f5fcf" />
+    <title>Add your resume - Hire From SA</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./candidate-resume.css" />
     <link rel="stylesheet" href="./brand.css" />
-    <link rel="stylesheet" href="./candidate-flow-layout.css" />
+    <link rel="stylesheet" href="./employer-signup.css" />
   </head>
-  <body class="onboarding-page">
-    <header class="resume-header"><a class="resume-brand site-logo-link" href="./jobs.html"><img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a><span>Candidate profile</span><a href="./jobs.html">Exit</a></header>
-    <main class="resume-shell">
-      <aside class="resume-aside">
-        <p class="eyebrow">YOUR CANDIDATE PROFILE</p>
-        <h1>Connect your resume.</h1>
-        <p>Add your resume, then complete your headshot, identity verification, and contract. We’ll review your account before you can apply for roles.</p>
-        <div class="flow-steps"><span>✓</span><b>Account created</b><span>✓</span><b>Email confirmed</b><span class="active">3</span><b>Resume</b></div>
-      </aside>
-      <section class="resume-main">
-        <div class="resume-card">
-          <p class="eyebrow blue">FINISH ACCOUNT SETUP</p>
-          <h2>Add your current resume.</h2>
-          <p class="lead">Upload a PDF, DOC, DOCX, TXT, RTF, or ODT file. You can replace it from your candidate dashboard whenever it changes.</p>
-          <p class="resume-privacy-note">Your upload is converted to a private text file and contact details are redacted before hirers can view it.</p>
-          <p id="authStatus" class="status-box" aria-live="polite">Checking your verified account…</p><button id="retryAccount" type="button" hidden>Retry loading account</button><a id="signInAgain" href="./candidate-login.html?next=./candidate-resume.html" hidden>Sign in again to continue</a>
-          <form id="resumeForm" novalidate>
-            <label class="resume-picker" for="resumeInput">
-              <input id="resumeInput" type="file" accept=".pdf,.doc,.docx,.txt,.rtf,.odt,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,application/rtf,text/rtf,application/vnd.oasis.opendocument.text" />
-              <span class="file-icon" aria-hidden="true">↥</span>
-              <span><strong id="resumePickerTitle">Choose your resume</strong><small id="resumePickerDetail">PDF, DOC, DOCX, TXT, RTF, or ODT · maximum 10 MB</small></span>
-            </label>
-            <div id="savedResume" class="saved-resume" hidden><span><b id="savedResumeName"></b><small>Connected to your account</small></span><a id="openResume" href="#" target="_blank" rel="noopener">Open resume</a></div>
-            <p id="resumeResult" class="status-box" aria-live="polite" hidden></p>
-            <button id="saveResume" class="primary-action" type="submit" disabled>Connect resume and continue <span>→</span></button>
-          </form>
+  <body class="es-page" data-account-menu="off">
+    <main class="es-shell">
+      <aside class="es-side">
+        <a href="./home.html" class="es-logo" aria-label="Hire From SA home"><img src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a>
+        <div class="es-side-copy">
+          <h2>Last step. Show hirers what you can do.</h2>
+          <ul>
+            <li>Hirers see your resume when you apply</li>
+            <li>Your contact details stay private</li>
+            <li>Replace it anytime from your dashboard</li>
+          </ul>
         </div>
+        <div class="es-side-card es-steps-card" aria-hidden="true">
+          <strong>Your profile in 3 steps</strong>
+          <ol>
+            <li class="done"><b>✓</b><span>Create your account<small>Done</small></span></li>
+            <li class="done"><b>✓</b><span>Confirm your email<small>Done</small></span></li>
+            <li class="current"><b>3</b><span>Build your profile<small>Add your resume and start applying</small></span></li>
+          </ol>
+        </div>
+      </aside>
+
+      <section class="es-main">
+        <div class="es-top"><a href="./home.html" class="es-logo es-logo-mobile" aria-label="Hire From SA home"><img src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a></div>
+
+        <form id="resumeForm" class="es-card es-login es-resume" novalidate>
+          <p id="authStatus" class="es-verified" aria-live="polite">Checking your account…</p>
+          <p class="es-kicker">STEP 3 OF 3</p>
+          <h1>Add your resume</h1>
+          <p class="es-lead">Upload your current resume. Hirers see it when you apply for their jobs.</p>
+          <button id="retryAccount" class="es-secondary" type="button" hidden>Retry loading account</button><a id="signInAgain" class="es-inline-link" href="./candidate-login.html?next=./candidate-resume.html" hidden>Sign in again to continue</a>
+          <div class="es-tabs" role="group" aria-label="How to add your resume">
+            <button type="button" class="active" data-resume-mode="file" aria-pressed="true">Upload a file</button>
+            <button type="button" data-resume-mode="link" aria-pressed="false">Paste a link</button>
+          </div>
+          <label class="es-dropzone" for="resumeInput" data-mode-panel="file">
+            <input id="resumeInput" type="file" accept=".pdf,.doc,.docx,.txt,.rtf,.odt,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,application/rtf,text/rtf,application/vnd.oasis.opendocument.text" />
+            <span class="es-drop-icon" aria-hidden="true">↥</span>
+            <strong id="resumePickerTitle">Drag your resume here or <u>browse</u></strong>
+            <small id="resumePickerDetail">PDF, Word, TXT, RTF or ODT · up to 10 MB</small>
+          </label>
+          <label class="es-code-label es-link-field" data-mode-panel="link" hidden>Link to your resume
+            <input id="resumeLink" type="url" inputmode="url" autocapitalize="none" spellcheck="false" placeholder="https://docs.google.com/document/d/..." />
+            <small>Google Docs, Google Drive or Dropbox. Set sharing to "Anyone with the link".</small>
+          </label>
+          <div id="savedResume" class="es-saved-resume" hidden><span class="es-file-badge" aria-hidden="true">✓</span><span><b id="savedResumeName"></b><small>Connected to your account</small></span><a id="openResume" href="#" target="_blank" rel="noopener">Open</a></div>
+          <p id="resumeResult" class="portal-result" aria-live="polite" hidden></p>
+          <button id="saveResume" class="es-submit" type="submit" disabled>Connect resume and continue <span aria-hidden="true">→</span></button>
+          <p class="es-privacy">🔒 We remove your phone number and email from your resume before hirers can see it.</p>
+        </form>
       </section>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
