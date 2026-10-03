@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="./candidate-dashboard.css" />
     <link rel="stylesheet" href="./va-jobs.css" />
     <link rel="stylesheet" href="./va-messages.css" />
+    <link rel="stylesheet" href="./va-applications.css" />
     <link rel="stylesheet" href="./account-menu.css" data-sava-account-styles />
   </head>
   <body class="va-dashboard-page">
@@ -43,7 +44,15 @@
           <p id="inboxStatus" class="vm-status" role="status" aria-live="polite" hidden></p>
           <div id="candidateMessages"></div>
         </section>
-        <section id="panel-applications" role="tabpanel" aria-labelledby="tab-applications" tabindex="0"><div class="va-section-heading"><h2>Your applications</h2><p>Follow the roles you’ve applied to and what happens next.</p></div><div id="candidateApplications" class="portal-applications"></div></section>
+        <section id="panel-applications" class="va-apps-panel" role="tabpanel" aria-labelledby="tab-applications" tabindex="0">
+          <div class="va-apps-top"><h1>Applications</h1>
+            <div class="va-apps-filters">
+              <label><span>Status</span><select id="applicationStatus" aria-label="Status"><option value="">All</option><option value="pending">Pending</option><option value="hired">Hired</option><option value="rejected">Not selected</option></select></label>
+              <label><span>Organize by</span><select id="applicationSort" aria-label="Organize by"><option value="newest">Newest</option><option value="oldest">Oldest</option></select></label>
+            </div>
+          </div>
+          <div id="candidateApplications" class="va-apps-list"></div>
+        </section>
         <section id="panel-profile" role="tabpanel" aria-label="My Profile" tabindex="0" hidden><div class="va-section-heading va-section-toolbar"><div><h2>My Profile</h2><p>Your details, introduction and resume, all together.</p></div><button id="refreshProfile" type="button" class="va-button secondary">Refresh</button></div><p id="profilePhotoStatus" class="va-photo-status" role="status" aria-live="polite" hidden></p><div id="candidateProfile"></div></section>
         <section id="panel-jobs" class="vj-panel" role="tabpanel" aria-labelledby="tab-jobs" tabindex="0" hidden>
           <div class="vj-top"><h1>Apply for jobs</h1><p id="jobsStatus" role="status" aria-live="polite"></p></div>

@@ -1,0 +1,48 @@
+/* VA Applications tab (candidate-dashboard.html): grouped by who owes a reply; neutral cards, blue only for new messages. */
+.va-apps-panel{width:min(1040px,100%);margin:0 auto}
+.va-apps-top{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px 16px;margin-bottom:8px}
+.va-apps-top h1{margin:0;color:#142238;font:800 30px/1.1 Manrope,sans-serif;letter-spacing:-1px}
+.va-apps-filters{display:flex;flex-wrap:wrap;gap:12px}
+.va-apps-filters label{display:flex;align-items:center;gap:8px;color:#6b7890;font-size:12px;font-weight:700}
+.va-apps-filters select{min-width:160px;height:40px;padding:0 36px 0 12px;border:1px solid #c6d1df;border-radius:9px;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='none' stroke='%23526178' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3 5 4 4 4-4'/%3E%3C/svg%3E") no-repeat right 12px center;color:#142238;font:600 14px "DM Sans",sans-serif;appearance:none;cursor:pointer}
+.va-apps-filters select:focus{border-color:#246fe5;outline:0;box-shadow:0 0 0 3px #246fe51f}
+.va-apps-list{display:grid;gap:22px}
+.va-apps-none{margin:0;padding:22px;border:1px dashed #cfd9e6;border-radius:12px;color:#5e6c82;font-size:14px;text-align:center}
+.va-apps-group{display:grid;gap:10px}
+.va-apps-group-title{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:6px 0 2px;color:#142238;font:800 17px Manrope,sans-serif;letter-spacing:-.3px}
+.va-apps-group-title span{display:inline-grid;min-width:22px;height:22px;padding:0 7px;place-items:center;border-radius:999px;background:#e9edf3;color:#4a5870;font:800 12px "DM Sans",sans-serif}
+.va-apps-group-title small{margin-left:4px;color:#7b889c;font:600 13px "DM Sans",sans-serif;letter-spacing:0}
+.va-apps-group.urgent .va-apps-group-title{color:#1f5fcf}
+.va-apps-group.urgent .va-apps-group-title span{background:#246fe5;color:#fff}
+.va-apps-group-title i{width:11px;height:11px;border-radius:50%;background:#246fe5;box-shadow:0 0 0 4px #246fe52e}
+.va-app{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:20px;padding:18px 22px;border:1px solid #dce2ea;border-radius:14px;background:#fff;box-shadow:0 8px 24px rgba(20,34,56,.04)}
+.va-app.has-reply{border:2px solid #246fe5;background:#f5f9ff;box-shadow:0 12px 30px rgba(36,111,229,.14)}
+.va-app-title{display:flex;align-items:center;flex-wrap:wrap;gap:8px 10px}
+.va-app-title h2{margin:0;color:#142238;font:800 20px Manrope,sans-serif;letter-spacing:-.4px}
+.va-app-status{padding:3px 9px;border-radius:999px;background:#f1f3f6;color:#4a5870;font-size:12px;font-weight:700}
+.va-app-status.hired{background:#e6f6ee;color:#0b7a50}
+.va-app-status.rejected{background:#f1f3f6;color:#8a94a6}
+.va-app-new{display:flex;align-items:center;gap:10px;min-width:0;margin:10px 0 0;color:#142238;font-size:14px}
+.va-app-new b{flex:none;padding:4px 10px;border-radius:999px;background:#246fe5;color:#fff;font-size:12px}
+.va-app-new span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.va-app-date{margin:8px 0 10px;color:#6b7890;font-size:13px}
+.va-app-meta{display:flex;flex-wrap:wrap;gap:8px}
+.va-app-meta span{padding:5px 10px;border-radius:8px;background:#f1f4f8;color:#33445e;font-size:13px;font-weight:600}
+.va-app.has-reply .va-app-meta span{background:#fff}
+.va-app-actions{display:flex;gap:10px}
+.va-app-primary,.va-app-secondary{display:inline-flex;height:42px;align-items:center;justify-content:center;padding:0 16px;border-radius:10px;font:700 14px "DM Sans",sans-serif;text-decoration:none;white-space:nowrap;cursor:pointer}
+.va-app-primary{min-width:120px;border:0;background:#246fe5;color:#fff;box-shadow:0 8px 18px rgba(36,111,229,.25)}
+.va-app-primary:hover{background:#1d5fcc}
+.va-app-secondary{border:1px solid #c6d1df;background:#fff;color:#22344f}
+.va-app-secondary:hover{background:#f4f6f9}
+@media(max-width:760px){
+  .va-apps-top h1{font-size:26px}
+  .va-apps-filters{display:grid;grid-template-columns:1fr 1fr;width:100%}
+  .va-apps-filters label{display:grid;gap:5px}
+  .va-apps-filters select{min-width:0;width:100%}
+  .va-app{grid-template-columns:1fr;gap:14px;padding:16px}
+  .va-app-new{align-items:flex-start;flex-direction:column;gap:6px}
+  .va-app-new span{white-space:normal}
+  .va-app-actions{display:grid;grid-template-columns:1fr 1fr}
+  .va-app-actions>:only-child{grid-column:1/-1}
+}

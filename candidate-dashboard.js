@@ -25,6 +25,9 @@ const demoData = {
       ] },
     { id: 'demo-app-2', status: 'new', bid: { rate: 6, min: 5, max: 7, period: 'hour' }, submittedAt: new Date(Date.now() - 5 * 864e5).toISOString(), job: demoJobs[1],
       messages: [{ sender: 'candidate', body: 'Hi, my name is Thandi, and I think I would be a good fit for your role because I supported two founders as their EA for three years.', createdAt: new Date(Date.now() - 5 * 864e5).toISOString() }] },
+    { id: 'demo-app-3', status: 'interviewing', bid: { rate: 5, min: 4, max: 5, period: 'hour' }, submittedAt: new Date(Date.now() - 9 * 864e5).toISOString(), job: demoJobs[3],
+      messages: [{ sender: 'candidate', body: 'Hi, my name is Thandi, and I think I would be a good fit for your role because I handled patient bookings for a busy clinic for two years.', createdAt: new Date(Date.now() - 9 * 864e5).toISOString() }, { sender: 'employer', body: 'Great chatting today. We will send the next steps by Friday.', createdAt: new Date(Date.now() - 4 * 864e5).toISOString() }, { sender: 'candidate', body: 'Thank you, looking forward to it!', createdAt: new Date(Date.now() - 4 * 864e5 + 36e5).toISOString() }] },
+    { id: 'demo-app-4', status: 'rejected', bid: { rate: 5, min: 4, max: 6, period: 'hour' }, submittedAt: new Date(Date.now() - 14 * 864e5).toISOString(), job: { id: 'demo-social', title: 'Social Media Assistant', type: 'Part-time', arrangement: 'Remote', pay: '$4–$6 / hour' }, messages: [] },
   ],
   conversations: [{ id: 'demo-thread-direct', company: 'Harbor Accounting', roleName: 'Bookkeeping Assistant', updatedAt: new Date(Date.now() - 3 * 36e5).toISOString(),
     messages: [{ sender: 'employer', body: 'Hi Thandi, I saw your profile and think you would be great for our bookkeeping role. Would you be open to a quick call this week?', createdAt: new Date(Date.now() - 3 * 36e5).toISOString() }] }],
@@ -95,7 +98,7 @@ function workDateLabel(value) {
   return new Intl.DateTimeFormat('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(value + '-01T00:00:00Z'));
 }
 function statusLabel(status) {
-  return ({ new: 'Pending', shortlisted: 'Shortlisted', interviewing: 'Interview stage', rejected: 'Denied', hired: 'Hired' })[status] || 'Pending';
+  return ({ rejected: 'Not selected', hired: 'Hired' })[status] || 'Pending';
 }
 function companyAvatar(company, logoUrl = '') {
   const logo = safeAssetUrl(logoUrl);
@@ -131,19 +134,49 @@ function switchTab(tab, updateUrl = true) {
   if (tab === 'messages' && Date.now() - lastInboxRefresh > 30000) refreshInbox();
 }
 window.savaOpenDashboardTab = switchTab;
+function applicationThread(application) {
+  return conversations.find(thread => thread.applicationId === application.id);
+}
+function applicationHasReply(application) {
+  const last = (applicationThread(application)?.messages || application.messages || []).at(-1);
+  return Boolean(last && last.sender !== 'candidate');
+}
+// VAs see three statuses: Pending (anything still open), Hired and Not selected.
+function applicationState(application) {
+  return application.status === 'hired' ? 'hired' : application.status === 'rejected' ? 'rejected' : 'pending';
+}
+function applicationCard(application) {
+  const job = application.job || {};
+  const state = applicationState(application);
+  const reply = applicationHasReply(application);
+  const last = (applicationThread(application)?.messages || application.messages || []).at(-1);
+  const meta = [job.pay, JOB_TYPE_HOURS[job.type] || job.type, bidLabel(application.bid)].filter(Boolean).map(item => '<span>' + portalEscape(item) + '</span>').join('');
+  return '<article class="va-app' + (reply ? ' has-reply' : '') + '" data-application-id="' + portalEscape(application.id) + '"><div class="va-app-main"><div class="va-app-title"><h2>' + portalEscape(job.title || 'Job no longer listed') + '</h2><span class="va-app-status ' + state + '">' + portalEscape(statusLabel(state)) + '</span></div>'
+    + (reply ? '<p class="va-app-new"><b>New message</b><span>' + portalEscape(String(last.body || '').slice(0, 110)) + '</span></p>' : '')
+    + '<p class="va-app-date">Applied ' + portalEscape(dateLabel(application.submittedAt)) + (last ? ' · ' + (reply ? 'Hirer replied ' : 'You messaged ') + portalEscape(threadTime(last.createdAt)) : '') + '</p><div class="va-app-meta">' + meta + '</div></div><div class="va-app-actions">'
+    + (job.id ? '<a class="va-app-secondary" href="./job-detail.html?job=' + encodeURIComponent(job.id) + '" target="_blank" rel="noopener">View role</a>' : '')
+    + '<button type="button" class="' + (reply ? 'va-app-primary' : 'va-app-secondary') + '" data-application-conversation="' + portalEscape(application.id) + '">' + (reply ? 'Reply' : 'View conversation') + '</button></div></article>';
+}
 function renderApplications(applications) {
   document.querySelector('#applicationCount').textContent = String(applications.length);
+  const statusSelect = document.querySelector('#applicationStatus');
+  const counts = applications.reduce((all, application) => { all[applicationState(application)] = (all[applicationState(application)] || 0) + 1; return all; }, {});
+  [...statusSelect.options].forEach(option => { option.textContent = option.textContent.replace(/ \(\d+\)$/, '') + ' (' + (option.value ? counts[option.value] || 0 : applications.length) + ')'; });
   if (!applications.length) {
-    applicationsRoot.innerHTML = emptyState('No applications yet.', 'Find a role that fits your skills and send your first application.', '<button type="button" class="va-button" data-open-tab="jobs">Explore roles →</button>');
+    applicationsRoot.innerHTML = emptyState('No applications yet.', 'Find a job that fits your skills and send your first application.', '<button type="button" class="va-button" data-open-tab="jobs">Apply for jobs →</button>');
     return;
   }
-  applicationsRoot.innerHTML = applications.map(application => {
-    const job = application.job || {};
-    const status = ['new','shortlisted','interviewing','rejected','hired'].includes(application.status) ? application.status : 'new';
-    const latestMessage = conversations.find(thread => thread.applicationId === application.id)?.messages?.at(-1) || application.messages?.at(-1);
-    const replyStatus = latestMessage ? (latestMessage.sender === 'candidate' ? 'Waiting for response' : 'New message') : '';
-    return '<article class="portal-application" data-application-id="' + portalEscape(application.id) + '"><header><div><span>' + portalEscape(job.company || 'Hirer') + '</span><h2>' + portalEscape(job.title || 'Role no longer listed') + '</h2><p>' + portalEscape([job.arrangement,job.type,job.location].filter(Boolean).join(' · ')) + '</p></div></header><div class="va-application-body"><p class="va-application-pay">' + portalEscape(job.pay || 'Pay not listed') + '</p><div class="va-application-description"><h3>Job description</h3><p>' + portalEscape(job.description || 'The job description is no longer available.') + '</p></div><div class="va-application-status-row"><span>Status</span><strong class="application-status ' + status + '">' + portalEscape(statusLabel(status)) + '</strong>' + (replyStatus ? '<span class="va-reply-status">' + portalEscape(replyStatus) + '</span>' : '') + '</div></div><div class="va-application-footer"><p>Applied ' + dateLabel(application.submittedAt) + '</p><button type="button" class="va-button secondary" data-application-conversation="' + portalEscape(application.id) + '">View conversation →</button></div></article>';
-  }).join('');
+  const status = statusSelect.value;
+  const oldest = document.querySelector('#applicationSort').value === 'oldest';
+  const visible = applications.filter(application => !status || applicationState(application) === status)
+    .sort((a, b) => (oldest ? -1 : 1) * String(b.submittedAt || '').localeCompare(String(a.submittedAt || '')));
+  if (!visible.length) { applicationsRoot.innerHTML = '<p class="va-apps-none">No applications with this status.</p>'; return; }
+  const groups = [
+    { title: 'Needs your reply', note: 'The hirer messaged you', items: visible.filter(applicationHasReply), urgent: true },
+    { title: 'Waiting on the hirer', note: 'You’re all caught up on these', items: visible.filter(application => !applicationHasReply(application) && applicationState(application) === 'pending') },
+    { title: 'Closed', note: 'Hired or not selected', items: visible.filter(application => !applicationHasReply(application) && applicationState(application) !== 'pending') },
+  ].filter(group => group.items.length);
+  applicationsRoot.innerHTML = groups.map(group => '<section class="va-apps-group' + (group.urgent ? ' urgent' : '') + '"><h2 class="va-apps-group-title">' + (group.urgent ? '<i aria-hidden="true"></i>' : '') + portalEscape(group.title) + ' <span>' + group.items.length + '</span><small>' + portalEscape(group.note) + '</small></h2>' + group.items.map(applicationCard).join('') + '</section>').join('');
 }
 function prepareConversations(data) {
   conversations = [...(data.conversations || [])];
@@ -191,7 +224,7 @@ function renderMessages() {
   }).join('') || '<p class="vm-empty">No conversations match your search.</p>';
   const application = dashboardData?.applications?.find(item => item.id === selected.applicationId);
   const job = application?.job;
-  const status = application ? (['new','shortlisted','interviewing','rejected','hired'].includes(application.status) ? application.status : 'new') : '';
+  const status = application ? applicationState(application) : '';
   const firstCandidate = (selected.messages || []).findIndex(message => message.sender === 'candidate');
   const messages = (selected.messages || []).map((message, index) => {
     const mine = message.sender === 'candidate';
@@ -539,6 +572,7 @@ document.querySelector('#candidateMessages').addEventListener('input', event => 
   search.focus(); search.setSelectionRange(caret, caret);
 });
 document.querySelector('#messageSort').addEventListener('change', () => { saveDraft(); renderMessages(); });
+['#applicationStatus', '#applicationSort'].forEach(selector => document.querySelector(selector).addEventListener('change', () => renderApplications(dashboardData?.applications || [])));
 document.querySelector('#refreshProfile').addEventListener('click', () => { profileLoaded = false; loadProfile(); });
 // Only fetch while the inbox is visible. Drafts stay local and survive refreshes.
 window.setInterval?.(() => { if (!document.hidden && activeTab === 'messages' && Date.now() - lastInboxRefresh >= 30000) refreshInbox(); }, 30000);
