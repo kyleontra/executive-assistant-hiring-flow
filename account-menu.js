@@ -30,9 +30,9 @@
       return '<a href="./employer-profile.html">My Profile</a><a href="./employees.html">My Employees</a><a href="./billing.html">Billing</a>';
     }
     if (document.body.classList.contains('va-dashboard-page')) {
-      return '<a href="./candidate-dashboard.html?tab=profile">My Profile</a>';
+      return '<a href="./candidate-dashboard.html?tab=profile">My Profile</a><a href="./candidate-dashboard.html?tab=payments">Payments</a>';
     }
-    return '<a href="./candidate-dashboard.html?tab=messages">Messages</a><a href="./candidate-dashboard.html?tab=applications">Applications</a><a href="./candidate-dashboard.html?tab=profile">My Profile</a><a href="./candidate-dashboard.html?tab=jobs">Apply for Jobs</a>';
+    return '<a href="./candidate-dashboard.html?tab=messages">Messages</a><a href="./candidate-dashboard.html?tab=applications">Applications</a><a href="./candidate-dashboard.html?tab=profile">My Profile</a><a href="./candidate-dashboard.html?tab=jobs">Apply for Jobs</a><a href="./candidate-dashboard.html?tab=payments">Payments</a>';
   }
 
   function setAccountPhoto(value) {
@@ -116,12 +116,12 @@
     });
     panel.addEventListener('click', (event) => event.stopPropagation());
     if (document.body.classList.contains('va-dashboard-page')) {
-      menu.querySelector('a[href*="tab=profile"]')?.addEventListener('click', (event) => {
+      menu.querySelectorAll('a[href*="candidate-dashboard.html?tab="]').forEach((link) => link.addEventListener('click', (event) => {
         if (!window.savaOpenDashboardTab) return;
         event.preventDefault();
-        window.savaOpenDashboardTab('profile');
+        window.savaOpenDashboardTab(new URL(link.href).searchParams.get('tab'));
         closeMenu();
-      });
+      }));
     }
     menu.querySelector('.sava-account-signout').addEventListener('click', async () => {
       const signoutButton = menu.querySelector('.sava-account-signout');

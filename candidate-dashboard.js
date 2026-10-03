@@ -3,7 +3,7 @@ import { prepareHeadshot } from './headshot-image.mjs';
 const PHOTO_ENDPOINT = 'https://jyxamdvvnoylaxolhlht.supabase.co/functions/v1/submit-profile-photo';
 const applicationsRoot = document.querySelector('#candidateApplications');
 const portalStatus = document.querySelector('#portalStatus');
-const tabs = ['jobs', 'messages', 'applications', 'profile'];
+const tabs = ['jobs', 'messages', 'applications', 'profile', 'payments'];
 const navTabs = ['jobs', 'messages', 'applications'];
 let activeTab = new URLSearchParams(window.location.search).get('tab') || 'applications';
 if (!tabs.includes(activeTab)) activeTab = 'applications';
@@ -132,6 +132,7 @@ function switchTab(tab, updateUrl = true) {
   if (!dashboardData) return;
   if (tab === 'profile' && (!profileLoaded || Date.now() - profileLoadedAt > 45 * 60 * 1000)) loadProfile();
   if (tab === 'jobs' && !jobsLoaded) loadJobs();
+  if (tab === 'payments') renderPayments();
   if (tab === 'messages' && Date.now() - lastInboxRefresh > 30000) refreshInbox();
 }
 window.savaOpenDashboardTab = switchTab;
@@ -669,4 +670,52 @@ document.querySelector('#jobSort').addEventListener('change', () => { if (jobsLo
 document.querySelector('#jobType').addEventListener('change', () => { if (jobsLoaded) renderJobs(); });
 document.querySelector('#jobsRetry').addEventListener('click', loadJobs);
 document.querySelector('#dashboardRetry').addEventListener('click', loadCandidateDashboard);
+// Payments: earnings, active jobs, payout method and history. Sample data in ?demo; real VAs see empty states until payouts are connected.
+const demoPayments = {
+  method: { type: 'Wise', detail: 'th•••@gmail.com' },
+  nextPayout: { date: new Date(Date.now() + 9 * 864e5).toISOString(), amount: 410 },
+  activeJobs: [{ title: 'Customer Support Assistant', company: 'Brightside Dental', rate: '$5 / hour', hours: 82, earned: 410 }],
+  history: [
+    { date: new Date(Date.now() - 2 * 864e5).toISOString(), company: 'Brightside Dental', title: 'Customer Support Assistant', period: 'Hours worked last month', amount: 800, status: 'Paid' },
+    { date: new Date(Date.now() - 32 * 864e5).toISOString(), company: 'Brightside Dental', title: 'Customer Support Assistant', period: 'Hours worked two months ago', amount: 760, status: 'Paid' },
+  ],
+};
+function money(value) { return '$' + Number(value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function renderPayments() {
+  const data = dashboardDemo ? demoPayments : { method: null, nextPayout: null, activeJobs: [], history: [] };
+  const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0);
+  const paidThisMonth = data.history.filter(item => new Date(item.date) >= monthStart).reduce((sum, item) => sum + item.amount, 0);
+  const paidTotal = data.history.reduce((sum, item) => sum + item.amount, 0);
+  const stat = (label, value, note) => '<div class="va-pay-stat"><small>' + label + '</small><b>' + value + '</b><span>' + note + '</span></div>';
+  document.querySelector('#candidatePayments').innerHTML = `
+    <div class="va-pay-top"><div><h1>Payments</h1><p>Hire From SA is free for you. You keep 100% of the rate you agree with the hirer.</p></div></div>
+    <div class="va-pay-stats">
+      ${stat('Next payout', data.nextPayout ? money(data.nextPayout.amount) : '–', data.nextPayout ? 'On ' + dateLabel(data.nextPayout.date) + ' · earned so far' : 'Starts after your first job')}
+      ${stat('Paid this month', money(paidThisMonth), new Intl.DateTimeFormat('en-US', { month: 'long' }).format(new Date()))}
+      ${stat('Total paid to you', money(paidTotal), data.history.length ? data.history.length + ' payment' + (data.history.length === 1 ? '' : 's') : 'No payments yet')}
+    </div>
+    <section class="va-acct-card"><div class="va-pay-head"><h2>Jobs you're working</h2></div>
+      ${data.activeJobs.length ? '<div class="va-pay-jobs">' + data.activeJobs.map(job => '<div class="va-pay-job"><div><b>' + portalEscape(job.title) + '</b><span>' + portalEscape(job.company) + ' · ' + portalEscape(job.rate) + '</span></div><div class="va-pay-job-earned"><b>' + money(job.earned) + '</b><span>' + job.hours + ' hrs this pay period</span></div></div>').join('') + '</div>'
+        : '<div class="va-acct-empty"><b>No active jobs yet</b><span>When a hirer hires you, the job and what you have earned so far show here.</span><button type="button" class="va-acct-button" data-open-tab="jobs">Find jobs</button></div>'}
+    </section>
+    <section class="va-acct-card"><div class="va-pay-head"><h2>Payout method</h2>${data.method ? '<button type="button" class="vp-link" data-pay-method>Change</button>' : ''}</div>
+      ${data.method ? '<div class="va-pay-method"><span class="va-pay-method-icon" aria-hidden="true">' + portalEscape(data.method.type.slice(0, 1)) + '</span><div><b>' + portalEscape(data.method.type) + '</b><span>' + portalEscape(data.method.detail) + '</span></div><i>Active</i></div>'
+        : '<div class="va-acct-empty"><b>No payout method yet</b><span>You will add where you want to be paid once you are hired for your first job.</span></div>'}
+      <p id="payMethodNote" class="va-acct-note" hidden>Changing your payout method is coming soon. Email <a href="mailto:support@hirefromsa.com?subject=Change%20my%20payout%20method">support@hirefromsa.com</a> for now.</p>
+    </section>
+    <section class="va-acct-card"><div class="va-pay-head"><h2>Payment history</h2></div>
+      ${data.history.length ? '<div class="va-pay-table" role="table"><div class="va-pay-row head" role="row"><span role="columnheader">Date</span><span role="columnheader">Job</span><span role="columnheader">Amount</span><span role="columnheader">Status</span></div>' + data.history.map(item => '<div class="va-pay-row" role="row"><span role="cell">' + dateLabel(item.date) + '</span><span role="cell"><b>' + portalEscape(item.title) + '</b><small>' + portalEscape(item.company) + ' · ' + portalEscape(item.period) + '</small></span><span role="cell" class="amount">' + money(item.amount) + '</span><span role="cell"><i class="va-pay-status">' + portalEscape(item.status) + '</i></span></div>').join('') + '</div>'
+        : '<div class="va-acct-empty"><b>No payments yet</b><span>Every payment shows here with the date, job and amount.</span></div>'}
+    </section>
+    <section class="va-acct-card"><h2>How you get paid</h2>
+      <ul class="va-acct-steps">
+        <li><b>Get hired.</b><span>The rate you agree with the hirer is the rate you are paid.</span></li>
+        <li><b>Add your payout method.</b><span>We email you to set this up before your first payment.</span></li>
+        <li><b>Get paid.</b><span>Payments land in your account and show in your history here. No fees for you.</span></li>
+      </ul>
+    </section>`;
+}
+document.querySelector('#candidatePayments').addEventListener('click', event => {
+  if (event.target.closest('[data-pay-method]')) document.querySelector('#payMethodNote').hidden = false;
+});
 loadCandidateDashboard();
