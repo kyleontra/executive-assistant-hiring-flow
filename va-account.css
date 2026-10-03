@@ -104,3 +104,32 @@
 .va-set-foot .va-acct-actions{margin-left:auto;justify-content:flex-end}
 .va-set-row .va-set-fields{gap:12px}
 @media(max-width:640px){.va-set-foot .va-acct-actions{width:100%}}
+/* Help */
+.va-help-panel{width:min(860px,100%)}
+.va-help-top{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px 16px}
+.va-help-top h1{margin:0;color:#142238;font:800 30px/1.1 Manrope,sans-serif;letter-spacing:-1px}
+.va-help-search{display:flex;align-items:center;gap:8px;width:min(340px,100%);height:44px;padding:0 14px;border:1px solid #c6d1df;border-radius:10px;background:#fff}
+.va-help-search:focus-within{border-color:#246fe5;box-shadow:0 0 0 3px #246fe51f}
+.va-help-search svg{width:16px;height:16px;flex:none;fill:none;stroke:#7b889c;stroke-width:2;stroke-linecap:round}
+.va-help-search input{flex:1;min-width:0;border:0;outline:0;background:none;color:#142238;font:500 15px "DM Sans",sans-serif}
+.va-help-chips{display:flex;flex-wrap:wrap;gap:8px}
+.va-help-chip{height:34px;padding:0 14px;border:1px solid #c6d1df;border-radius:999px;background:#fff;color:#33445e;font:700 13px "DM Sans",sans-serif;cursor:pointer}
+.va-help-chip:hover{background:#f4f6f9}
+.va-help-chip[aria-pressed=true]{border-color:#142238;background:#142238;color:#fff}
+.va-help-list{gap:22px}
+.va-help-group{display:grid;gap:10px}
+.va-help-group[hidden],.va-help-group details[hidden]{display:none}
+.va-help-group h2{font-size:16px;color:#5e6c82;letter-spacing:0}
+.va-help-empty{margin:0;color:#5e6c82;font-size:14px;text-align:center}
+.va-help-empty[hidden]{display:none}
+.va-help-contact{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media(max-width:640px){
+  .va-help-top h1{font-size:26px}
+  .va-help-search{width:100%}
+  .va-help-contact{grid-template-columns:1fr}
+}
+.va-acct-faq summary{display:flex;align-items:center;justify-content:space-between;gap:12px;list-style:none}
+.va-acct-faq summary::-webkit-details-marker{display:none}
+.va-acct-faq summary::after{content:"";width:8px;height:8px;flex:none;margin-right:4px;border-right:2px solid #7b889c;border-bottom:2px solid #7b889c;transform:rotate(45deg) translateY(-2px);transition:transform .15s}
+.va-acct-faq details[open] summary::after{transform:rotate(-135deg) translateY(-2px)}
+.va-acct-faq details[open]{background:#fff;border-color:#cddcf5}

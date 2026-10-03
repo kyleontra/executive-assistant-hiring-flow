@@ -3,7 +3,7 @@ import { prepareHeadshot } from './headshot-image.mjs';
 const PHOTO_ENDPOINT = 'https://jyxamdvvnoylaxolhlht.supabase.co/functions/v1/submit-profile-photo';
 const applicationsRoot = document.querySelector('#candidateApplications');
 const portalStatus = document.querySelector('#portalStatus');
-const tabs = ['jobs', 'messages', 'applications', 'profile', 'payments', 'settings'];
+const tabs = ['jobs', 'messages', 'applications', 'profile', 'payments', 'settings', 'help'];
 const navTabs = ['jobs', 'messages', 'applications'];
 let activeTab = new URLSearchParams(window.location.search).get('tab') || 'applications';
 if (!tabs.includes(activeTab)) activeTab = 'applications';
@@ -777,5 +777,30 @@ document.querySelector('#settingsSignOutAll').addEventListener('click', async ev
     if (error) throw error;
     window.location.assign('./candidate-login.html');
   } catch (error) { settingsStatus(card, error.message || 'Could not sign out. Try again.', true); button.disabled = false; }
+});
+// Help: filter questions by topic chip and search text.
+let helpTopic = '';
+function filterHelp() {
+  const query = document.querySelector('#helpSearch').value.trim().toLowerCase();
+  let shown = 0;
+  document.querySelectorAll('[data-help-group]').forEach(group => {
+    let groupShown = 0;
+    group.querySelectorAll('details').forEach(item => {
+      const match = (!helpTopic || group.dataset.helpGroup === helpTopic) && (!query || item.textContent.toLowerCase().includes(query));
+      item.hidden = !match;
+      if (match) { groupShown += 1; if (query) item.open = true; }
+    });
+    group.hidden = !groupShown;
+    shown += groupShown;
+  });
+  document.querySelector('#helpEmpty').hidden = shown > 0;
+}
+document.querySelector('#helpSearch').addEventListener('input', filterHelp);
+document.querySelector('#panel-help').addEventListener('click', event => {
+  const chip = event.target.closest('[data-help-topic]');
+  if (!chip) return;
+  helpTopic = chip.dataset.helpTopic;
+  document.querySelectorAll('[data-help-topic]').forEach(item => item.setAttribute('aria-pressed', String(item === chip)));
+  filterHelp();
 });
 loadCandidateDashboard();
