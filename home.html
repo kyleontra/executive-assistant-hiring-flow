@@ -3,196 +3,176 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#f3f8ff" />
-    <meta name="description" content="Search verified South African professionals and hire skilled remote talent with Hire From SA." />
-    <title>Hire From SA — South African remote talent</title>
+    <meta name="theme-color" content="#1f5fcf" />
+    <meta name="description" content="Describe the assistant you need and instantly see vetted South African virtual assistants. Hire From SA." />
+    <title>Hire From SA — Hire vetted South African assistants</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./home.css" />
     <link rel="stylesheet" href="./brand.css" />
+    <link rel="stylesheet" href="./home-landing.css" />
   </head>
-  <body>
-    <header class="home-header">
-      <a href="./home.html" class="brand site-logo-link" aria-label="Hire From SA home">
-        <img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" />
-      </a>
-      <nav class="desktop-nav" aria-label="Main navigation">
-        <a href="#how-it-works">How it works</a>
-        <a href="#why-south-africa">Why South Africa</a>
-      </nav>
-      <span class="header-green-dot" aria-hidden="true"></span>
-      <div class="header-actions">
-        <a class="text-link candidate-login-link" href="./candidate-login.html">Candidate sign in</a>
-        <a class="header-cta post-link" data-employer-auth href="./index.html">Post a job</a>
+  <body class="hl-page">
+    <section class="hl-hero">
+      <div class="hl-glow" aria-hidden="true"></div>
+      <header class="hl-header">
+        <a href="./home.html" class="hl-logo" aria-label="Hire From SA home"><img src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a>
+        <div class="hl-header-actions">
+          <a class="hl-login" href="./candidate-login.html">VA Login</a>
+          <a class="hl-login hl-employer-login" href="./employer-login.html">Employer Login</a>
+          <details class="hl-login-menu"><summary>Log in</summary><div><a href="./candidate-login.html">VA Login</a><a href="./employer-login.html">Employer Login</a></div></details>
+          <a class="hl-start" data-employer-auth href="./index.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>Start for Free</a>
+        </div>
+      </header>
+
+      <div class="hl-hero-inner">
+        <p class="hl-trust"><span class="hl-faces" aria-hidden="true"><i>NM</i><i>AK</i><i>SP</i><i>TJ</i><i>LM</i></span><span><b>Every VA is identity-checked</b> and vetted by our team</span></p>
+        <h1><span class="hl-h1-soft">Hiring a great assistant is hard.</span><span class="hl-h1-strong">Hire From SA makes it <em>easy</em></span></h1>
+        <p class="hl-sub">Describe who you need. We instantly show you vetted South African assistants who fit.</p>
+
+        <form id="homeTalentSearch" class="hl-search" role="search">
+          <label class="sr-only" for="homeJobSearch">Describe the talent you are looking for</label>
+          <textarea id="homeJobSearch" name="q" rows="3" maxlength="300" placeholder="I need a social media manager."></textarea>
+          <div class="hl-search-foot">
+            <span class="hl-search-hint">Role, skills, tools or hours. Plain English is fine.</span>
+            <button type="submit">Find talent <span aria-hidden="true">→</span></button>
+          </div>
+        </form>
+
+        <div class="hl-chips" aria-label="Popular searches">
+          <button type="button" data-home-chip="Executive assistant to manage my inbox and calendar">Executive Assistant</button>
+          <button type="button" data-home-chip="Bookkeeper who knows QuickBooks and Xero">Bookkeeper</button>
+          <button type="button" data-home-chip="Customer support for email and live chat">Customer Support</button>
+          <button type="button" data-home-chip="Paralegal for legal research and client intake">Paralegal</button>
+          <button type="button" data-home-chip="Social media manager for Instagram and TikTok">Social Media</button>
+          <button type="button" data-home-chip="Video editor for YouTube and short-form content">Video Editor</button>
+        </div>
+
+        <ul class="hl-checks">
+          <li>Identity-checked VAs</li>
+          <li>Fluent English</li>
+          <li>Available for U.S. hours</li>
+        </ul>
+
+        <section id="homeResults" class="hl-results" aria-live="polite" hidden></section>
       </div>
-    </header>
+    </section>
 
     <main>
-      <section class="home-hero">
-        <div class="hero-grid" aria-hidden="true"></div>
-        <div class="activity-pill activity-one" aria-hidden="true">
-          <span class="activity-avatar blue">TM</span>
-          <span><b>Talent matched</b><small>Executive assistant · 94% match</small></span>
-        </div>
-        <div class="activity-pill activity-two" aria-hidden="true">
-          <span class="activity-avatar green">✓</span>
-          <span><b>Application received</b><small>Ready for review</small></span>
-        </div>
-
-        <div class="hero-content">
-          <p class="eyebrow"><span></span> SOUTH AFRICAN REMOTE TALENT</p>
-          <h1>Hire skilled remote talent from South Africa.</h1>
-          <p class="hero-copy">Connect with English-speaking professionals who are ready to support your business—or find a remote role where your experience stands out.</p>
-
-          <div class="hero-paths" aria-label="Choose how to use Hire From SA">
-            <a class="path-button primary" data-employer-auth href="./talent.html">Hire talent <span>→</span></a>
-            <a class="path-button secondary" href="./candidate-login.html">Search roles <span>→</span></a>
+      <!-- Product preview: overlaps the bottom of the hero, like a live look at the app. -->
+      <section class="hl-preview-wrap" aria-label="A look inside Hire From SA">
+        <div class="hl-preview">
+          <div class="hl-browser-bar"><i></i><i></i><i></i><span>hirefromsa.com/messages</span></div>
+          <div class="hl-app">
+            <aside class="hl-app-list">
+              <p class="hl-app-label">Executive Assistant · 12 applicants</p>
+              <div class="hl-app-row active"><b class="av c0">AK</b><div><strong>Ayanda K.</strong><small>Bid $7/hr · Vetted</small></div><em class="dot"></em></div>
+              <div class="hl-app-row"><b class="av c1">LZ</b><div><strong>Lindiwe Z.</strong><small>Bid $6/hr · Vetted</small></div><em class="dot"></em></div>
+              <div class="hl-app-row"><b class="av c2">TR</b><div><strong>Tumi R.</strong><small>Bid $8/hr · Vetted</small></div></div>
+              <div class="hl-app-row"><b class="av c3">AD</b><div><strong>Amahle D.</strong><small>Bid $6/hr · Vetted</small></div></div>
+            </aside>
+            <div class="hl-app-main">
+              <div class="hl-app-head"><b class="av c0 lg">AK</b><div><strong>Ayanda Khumalo</strong><small>Executive Assistant · 5 years experience</small></div><span class="hl-pill green">✓ Vetted by our team</span></div>
+              <div class="hl-app-body">
+                <div class="hl-video"><span class="hl-play" aria-hidden="true"></span><small>Watch Ayanda's introduction</small></div>
+                <div class="hl-app-chat">
+                  <p class="hl-bubble them"><b>Intro</b>Hi, I'm Ayanda. I've supported two founders as their EA for five years, running inboxes, calendars and travel.</p>
+                  <p class="hl-bid">Bid <b>$7/hr</b> · would accept $6–$8</p>
+                  <p class="hl-bubble you">Great fit. Free for a quick call Thursday?</p>
+                </div>
+              </div>
+            </div>
           </div>
-
-          <form class="job-search" id="homeTalentSearch" action="./talent.html" method="get" role="search">
-            <label class="sr-only" for="homeJobSearch">Search candidates by role or skill</label>
-            <span class="search-icon" aria-hidden="true">⌕</span>
-            <input id="homeJobSearch" name="q" type="search" placeholder="Search candidates by role or skill" autocomplete="off" />
-            <button type="submit">Search talent</button>
-          </form>
-
-          <div class="role-links" aria-label="Popular candidate searches">
-            <span>Popular:</span>
-            <a data-employer-auth href="./talent.html?q=Paralegal">Paralegal</a>
-            <a data-employer-auth href="./talent.html?q=Executive%20Assistant">Executive Assistant</a>
-            <a data-employer-auth href="./talent.html?q=Sales">Sales</a>
-            <a data-employer-auth href="./talent.html?q=Customer%20Support">Customer Support</a>
-            <a data-employer-auth href="./talent.html?q=Operations">Operations</a>
-          </div>
+          <div class="hl-float hl-float-a"><span class="ok">✓</span><div><b>Identity checked</b><small>ID, resume and intro video</small></div></div>
+          <div class="hl-float hl-float-b"><b class="av c1">LZ</b><div><b>New application</b><small>Lindiwe Z. · bid $6/hr</small></div></div>
         </div>
       </section>
 
-      <section class="platform-strip" aria-label="Platform features">
-        <p>One connected hiring platform</p>
-        <div>
-          <span><i>✓</i> Verified candidates</span>
-          <span><i>✓</i> Direct messaging</span>
-          <span><i>✓</i> Interview scheduling</span>
-          <span><i>✓</i> Application tracking</span>
-        </div>
-      </section>
-
-      <section class="section how-section" id="how-it-works">
-        <div class="section-heading">
-          <div>
-            <p class="section-kicker">HOW IT WORKS</p>
-            <h2>From open role to great hire.</h2>
-          </div>
-          <p>Create a role, compare applicants, and move the right people forward without losing track of conversations or interviews.</p>
-        </div>
-
-        <div class="steps-grid">
-          <article class="step-card">
-            <span class="step-number">01</span>
-            <div class="step-icon">＋</div>
-            <h3>Post your role</h3>
-            <p>Describe the work, set your requirements, and add the questions that matter to your team.</p>
-          </article>
-          <article class="step-card">
-            <span class="step-number">02</span>
-            <div class="step-icon">≋</div>
-            <h3>Review applicants</h3>
-            <p>Compare match, relevant experience, resumes, and question answers in one focused inbox.</p>
-          </article>
-          <article class="step-card">
-            <span class="step-number">03</span>
-            <div class="step-icon">✓</div>
-            <h3>Interview and hire</h3>
-            <p>Shortlist candidates, message them directly, and schedule the next conversation.</p>
-          </article>
-        </div>
-        <a class="section-cta" href="./index.html">Post your first job <span>→</span></a>
-      </section>
-
-      <section class="why-section" id="why-south-africa">
-        <div class="why-intro">
-          <p class="section-kicker light">WHY SOUTH AFRICA</p>
-          <h2>Global talent.<br />A better way to hire.</h2>
-          <p>Work with capable professionals who communicate clearly, understand international teams, and are ready for remote work.</p>
-          <a data-employer-auth href="./talent.html">Explore the talent network <span>→</span></a>
-        </div>
-        <div class="benefits-grid">
+      <section class="hl-section" id="how-it-works">
+        <div class="hl-head"><p class="hl-kicker">HOW IT WORKS</p><h2>Hire in three simple steps.</h2><p>No recruiters, no guesswork. Describe the role and start talking to vetted assistants today.</p></div>
+        <div class="hl-steps">
           <article>
-            <span>01</span>
-            <h3>English fluency</h3>
-            <p>Clear written and spoken communication for customer-facing and internal work.</p>
+            <div class="hl-step-visual"><div class="mini-search">I need a full-time bookkeeper who is QuickBooks certified<span class="caret"></span></div><span class="mini-btn">Find talent →</span></div>
+            <span class="hl-step-num">1</span><h3>Describe who you need</h3><p>Type it in plain English, or post a job with your hours, pay and the questions you want answered.</p>
           </article>
           <article>
-            <span>02</span>
-            <h3>Time-zone overlap</h3>
-            <p>Flexible working hours that overlap with teams across Europe and North America.</p>
+            <div class="hl-step-visual"><div class="mini-profile"><b class="av c1">SP</b><div><strong>Sarah P.</strong><small>Bookkeeper · 8 years</small></div><span class="hl-pill green sm">✓ Vetted</span></div><div class="mini-tags"><span>QuickBooks</span><span>Xero</span><span>$10–$15/hr</span></div></div>
+            <span class="hl-step-num">2</span><h3>Meet vetted VAs</h3><p>Watch their intro video, read their experience and see their rate before you ever send a message.</p>
           </article>
           <article>
-            <span>03</span>
-            <h3>Experienced professionals</h3>
-            <p>Talent across administration, operations, support, sales, and specialist roles.</p>
-          </article>
-          <article>
-            <span>04</span>
-            <h3>Ready for remote work</h3>
-            <p>Candidates can share their experience, resume, answers, and video introduction.</p>
+            <div class="hl-step-visual"><p class="mini-bubble">Can you start Monday?</p><p class="mini-bubble you">Yes! Looking forward to it.</p><span class="hl-pill green">Hired</span></div>
+            <span class="hl-step-num">3</span><h3>Message and hire</h3><p>Chat, schedule an interview and hire, all in one place. No juggling email threads.</p>
           </article>
         </div>
       </section>
 
-      <section class="section audience-section">
-        <div class="audience-card hirers">
-          <p class="section-kicker">FOR HIRING TEAMS</p>
-          <h2>Everything you need to make the next hire.</h2>
-          <ul>
-            <li>Search candidates by role, skill, and relevant experience</li>
-            <li>Review profiles, resumes, and application answers</li>
-            <li>Shortlist, message, and invite candidates to interview</li>
-          </ul>
-          <div class="audience-actions">
-            <a class="path-button primary" data-employer-auth href="./talent.html">Browse candidates <span>→</span></a>
-            <a class="inline-link" href="./applicants.html">Open hiring inbox</a>
-          </div>
-        </div>
-        <div class="audience-card candidates">
-          <p class="section-kicker">FOR SOUTH AFRICAN TALENT</p>
-          <h2>Put your experience in front of global teams.</h2>
-          <ul>
-            <li>Create one profile and connect your resume</li>
-            <li>Apply to roles and answer employer questions</li>
-            <li>Track every application and message in one place</li>
-          </ul>
-          <div class="audience-actions">
-            <a class="path-button dark" href="./candidate-signup.html">Create your profile <span>→</span></a>
-            <a class="inline-link" href="./candidate-login.html">Candidate sign in</a>
-          </div>
+      <section class="hl-section hl-bento-section">
+        <div class="hl-head"><p class="hl-kicker">WHY HIRERS CHOOSE US</p><h2>Know who you're hiring before the first call.</h2></div>
+        <div class="hl-bento">
+          <article class="b-video">
+            <div class="hl-video big"><span class="hl-play" aria-hidden="true"></span><small>Watch Tumi's introduction</small><em>1:04</em></div>
+            <h3>Watch them before you message</h3><p>Every VA records a one-minute intro, so you hear their English and personality up front.</p>
+          </article>
+          <article class="b-vetted">
+            <ul class="b-checks"><li>Government ID verified</li><li>Resume reviewed</li><li>Intro video recorded</li></ul>
+            <h3>Vetted by our team</h3><p>Every VA is identity-checked before they can apply to your job.</p>
+          </article>
+          <article class="b-bid">
+            <div class="b-bid-card"><small>Ayanda's bid</small><b>$7<span>/hr</span></b><em>Would accept $6–$8</em></div>
+            <h3>See their rate up front</h3><p>Each application shows the VA's bid, so there are no surprises later.</p>
+          </article>
+          <article class="b-inbox">
+            <div class="b-inbox-rows"><div><b class="av c0">AK</b><span>Ayanda K.</span><em class="dot"></em></div><div><b class="av c2">TR</b><span>Tumi R.</span><em class="dot"></em></div><div><b class="av c3">AD</b><span>Amahle D.</span></div></div>
+            <h3>One inbox for every applicant</h3><p>Messages organized by job, with unread first.</p>
+          </article>
+          <article class="b-hours">
+            <div class="b-hours-bar"><span>9 AM</span><i></i><span>5 PM</span></div><small class="b-hours-note">Your U.S. workday, covered</small>
+            <h3>Fluent English, your hours</h3><p>VAs who communicate clearly and are available to work U.S. hours.</p>
+          </article>
+          <article class="b-cal">
+            <div class="b-slots"><span>Tue 10:00</span><span class="on">Wed 2:30</span><span>Thu 9:00</span></div>
+            <h3>Interviews in a click</h3><p>Invite a VA to a call and let them pick a time on your calendar.</p>
+          </article>
         </div>
       </section>
 
-      <section class="final-cta">
-        <p class="section-kicker light">YOUR NEXT CONNECTION STARTS HERE</p>
-        <h2>Build your remote team with proven talent.</h2>
-        <p>Search South African professionals by role and experience, then start the right conversation.</p>
-        <div class="final-actions">
-          <a class="path-button white" data-employer-auth href="./index.html">Post a job <span>→</span></a>
-          <a class="path-button outline" data-employer-auth href="./talent.html">Browse talent <span>→</span></a>
+      <section class="hl-section hl-roles-section">
+        <div class="hl-head"><p class="hl-kicker">HIRE FOR ANY ROLE</p><h2>Whatever you need help with.</h2></div>
+        <div class="hl-roles">
+          <button type="button" data-home-chip="I need an executive assistant who can handle lots of different tasks inside of my business and grow with my company."><b class="c0">EA</b>Executive Assistant</button>
+          <button type="button" data-home-chip="I need a full-time bookkeeper who is QuickBooks certified."><b class="c1">BK</b>Bookkeeper</button>
+          <button type="button" data-home-chip="I need customer support for email and live chat."><b class="c2">CS</b>Customer Support</button>
+          <button type="button" data-home-chip="I need a social media manager."><b class="c3">SM</b>Social Media Manager</button>
+          <button type="button" data-home-chip="I need a qualified appointment setter who can call my leads and book sales appointments on my calendar."><b class="c0">AS</b>Appointment Setter</button>
+          <button type="button" data-home-chip="I need a paralegal for legal research and client intake."><b class="c1">PL</b>Paralegal</button>
+          <button type="button" data-home-chip="I need a video editor for YouTube and short-form content."><b class="c2">VE</b>Video Editor</button>
+          <button type="button" data-home-chip="I need a real estate assistant."><b class="c3">RE</b>Real Estate Assistant</button>
+          <button type="button" data-home-chip="I need a medical billing specialist."><b class="c0">MB</b>Medical Billing</button>
+          <button type="button" data-home-chip="I need a graphic designer."><b class="c1">GD</b>Graphic Designer</button>
+          <button type="button" data-home-chip="I need a sales representative."><b class="c2">SR</b>Sales Representative</button>
+          <button type="button" data-home-chip="I need an operations coordinator."><b class="c3">OC</b>Operations Coordinator</button>
         </div>
+      </section>
+
+      <section class="hl-final">
+        <div class="hl-glow" aria-hidden="true"></div>
+        <h2>Your next great hire is one search away.</h2>
+        <p>Describe who you need and meet vetted South African assistants today.</p>
+        <form class="hl-final-search" data-final-search role="search"><label class="sr-only" for="finalSearch">Describe the talent you need</label><input id="finalSearch" type="text" maxlength="300" placeholder="I need an executive assistant…" /><button type="submit">Find talent →</button></form>
+        <p class="hl-final-va">Are you a South African VA? <a href="./candidate-signup.html">Create your free profile →</a></p>
       </section>
     </main>
 
-    <footer class="home-footer">
-      <a href="./home.html" class="brand site-logo-link" aria-label="Hire From SA home">
-        <img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" />
-      </a>
-      <p>South African talent. Global opportunity.</p>
-      <nav aria-label="Footer navigation">
-        <a href="./candidate-login.html">Candidate sign in</a>
-        <a data-employer-auth href="./index.html">Post a job</a>
-      </nav>
+    <footer class="hl-footer">
+      <div class="hl-footer-brand"><a href="./home.html" class="hl-logo" aria-label="Hire From SA home"><img src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a><p>Vetted South African assistants for U.S. businesses.</p></div>
+      <nav aria-label="For hirers"><b>Hirers</b><a data-employer-auth href="./index.html">Start for Free</a><a href="./employer-login.html">Employer Login</a><a data-employer-auth href="./talent.html">Browse talent</a></nav>
+      <nav aria-label="For VAs"><b>VAs</b><a href="./candidate-login.html">VA Login</a><a href="./candidate-signup.html">Create a VA profile</a></nav>
+      <nav aria-label="Support"><b>Support</b><a href="mailto:support@hirefromsa.com">support@hirefromsa.com</a></nav>
+      <p class="hl-copy">© 2026 Hire From SA</p>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./auth-client.js"></script>
     <script src="./home-auth.js"></script>
+    <script src="./home-search.js"></script>
   </body>
 </html>

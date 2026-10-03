@@ -6,6 +6,8 @@
     return Boolean(user);
   }
 
+  window.savaHomeOpenAsEmployer = async (destination) => window.location.assign(await isEmployerSignedIn() ? destination : employerLoginUrl(destination));
+
   document.querySelectorAll('[data-employer-auth]').forEach((link) => {
     link.addEventListener('click', async (event) => {
       event.preventDefault();
@@ -14,17 +16,11 @@
     });
   });
 
-  document.querySelector('#homeTalentSearch')?.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    const query = document.querySelector('#homeJobSearch')?.value.trim() || '';
-    const destination = `./talent.html${query ? `?q=${encodeURIComponent(query)}` : ''}`;
-    window.location.assign(await isEmployerSignedIn() ? destination : employerLoginUrl(destination));
-  });
-
   window.getVerifiedEmployer?.().then((user) => {
     if (!user) return;
-    document.querySelector('.candidate-login-link')?.setAttribute('href', './talent.html');
-    const accountLink = document.querySelector('.candidate-login-link');
-    if (accountLink) accountLink.textContent = 'Employer dashboard';
+    const accountLink = document.querySelector('.hl-employer-login');
+    if (!accountLink) return;
+    accountLink.setAttribute('href', './talent.html');
+    accountLink.textContent = 'Dashboard';
   });
 })();
