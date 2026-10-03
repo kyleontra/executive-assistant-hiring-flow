@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Application sent | Hire From SA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./brand.css" />
+    <link rel="stylesheet" href="./apply-bid.css" />
+  </head>
+  <body class="ab-page">
+    <header class="ab-header"><a class="site-logo-link" href="./candidate-dashboard.html?tab=jobs"><img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a><a class="ab-exit" href="./candidate-dashboard.html?tab=jobs">Exit</a></header>
+
+    <main class="ab-shell">
+      <section class="ab-card ab-applied">
+        <span class="ab-done-mark" aria-hidden="true">✓</span>
+        <h1>You've successfully applied</h1>
+        <p id="appliedJob" class="ab-applied-job" hidden></p>
+        <p class="ab-applied-lead">Watch the video below to ensure the best next steps.</p>
+
+        <div class="ab-video" id="appliedVideo">
+          <div class="ab-video-placeholder">
+            <span class="ab-video-play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m8 5 11 7-11 7V5Z"/></svg></span>
+            <b>Video coming soon</b>
+          </div>
+        </div>
+
+        <div class="ab-applied-actions">
+          <a class="ab-submit" href="./candidate-dashboard.html?tab=applications">View my applications <span aria-hidden="true">→</span></a>
+          <a class="ab-secondary" href="./candidate-dashboard.html?tab=jobs">Browse more jobs</a>
+        </div>
+      </section>
+    </main>
+
+    <script src="./applied.js"></script>
+  </body>
+</html>

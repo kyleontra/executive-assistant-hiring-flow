@@ -32,6 +32,12 @@ async function platformRequest(action, payload = {}, token = '') {
 
 window.savaPlatform = {
   publicRequest: (action, payload) => platformRequest(action, payload),
+  // Sends whoever is signed in (candidate, hirer or master) so the server can tailor what it returns, e.g. job pay.
+  viewerRequest: async (action, payload = {}) => {
+    const token = await window.getAccessToken?.();
+    const identity = token ? platformEmployerIdentity() : {};
+    return platformRequest(action, { ...identity, ...payload }, token || '');
+  },
   employerRequest: async (action, payload = {}) => {
     // Forward any active Supabase session so the server can keep candidate
     // accounts out of hirer-only actions.

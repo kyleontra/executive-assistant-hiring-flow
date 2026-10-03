@@ -85,7 +85,7 @@ a{color:inherit}
 .public-profile-footer{padding:14px 28px;border-top:1px solid #edf0f5;color:#8793a5;font-size:11px;text-align:center}
 .public-profile-mobile-cta{display:none}
 button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid #82b5ff;outline-offset:3px}
-@media(max-width:900px){
+@media(max-width:1040px){
   .public-profile-intro.has-video{grid-template-columns:1fr;gap:16px}
   .public-profile-video{aspect-ratio:16/9}
   .public-profile-facts{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -213,7 +213,7 @@ button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid #82
 #publicContactStatus{color:#186e55;font-size:11px;line-height:1.35}
 #publicContactForm button{min-width:132px;padding:11px 14px;border:0;border-radius:8px;background:#086b57;color:#fff;font:800 12px 'DM Sans',sans-serif;cursor:pointer}
 #publicContactForm button:disabled{opacity:.55;cursor:wait}
-@media(max-width:900px){.public-profile-cta{align-items:start}.public-profile-cta-actions{flex-wrap:wrap;justify-content:end}.public-profile-tools{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:1040px){.public-profile-cta{align-items:start}.public-profile-cta-actions{flex-wrap:wrap;justify-content:end}.public-profile-tools{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:680px){
   .public-profile-header{display:none}
   .public-profile-shell{margin:0 auto 84px}
@@ -278,3 +278,72 @@ button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid #82
 .public-profile-portfolio-links a{display:inline-flex;align-items:center;gap:8px;max-width:100%;padding:10px 14px;border:1px solid #dce7ee;border-radius:10px;color:#075d52;background:#f1faf7;font-weight:600;text-decoration:none;overflow-wrap:anywhere}
 .public-profile-portfolio-links a:hover{background:#e0f4ed}
 .public-profile-portfolio-links a:focus-visible{outline:2px solid #087d69;outline-offset:3px}
+
+/* Bio bubble (all widths): bio in its own panel, no "About" heading; info boxes come after the video and bio. */
+.public-profile-story{padding:14px 20px;border:1px solid #e3e9f2;border-radius:13px;background:#fff;box-shadow:0 4px 16px #1933520a}
+.public-profile-story h2{display:none}
+.public-profile-story p{margin:0}
+.public-profile-video-wrap,.public-profile-video{background:#000}
+@media(max-width:680px){
+  .public-profile-intro{order:1}
+  .public-profile-facts{order:2}
+  .public-profile-story{padding:14px 16px;border-radius:12px}
+}
+
+/* Desktop layout: bio + video side by side, then info boxes, Work Experience, Skills/Industries/Tools. */
+.public-profile-contact-top{display:none}
+@media(min-width:1041px){
+  .public-profile-card{display:grid;grid-template-columns:98px minmax(0,1fr) minmax(460px,620px);grid-template-areas:"avatar identity actions" "story story video" "facts facts video" "details details details" "cta cta cta" "footer footer footer";column-gap:24px;row-gap:20px;padding:28px}
+  .public-profile-hero,.public-profile-body,.public-profile-intro{display:contents}
+  .public-profile-avatar{grid-area:avatar;align-self:start}
+  .public-profile-identity{grid-row:1;grid-column:2/4;align-self:start}
+  .public-profile-actions{grid-row:1;grid-column:3;justify-self:end;align-self:start;position:relative;justify-content:flex-end;flex-wrap:nowrap}
+  .public-profile-name-line{flex-wrap:nowrap}
+  .public-profile-actions .public-profile-contact-top{display:inline-flex;border-color:#086b57;background:#086b57;color:#fff}
+  .public-profile-actions .public-profile-contact-top:hover{background:#075d4c}
+  .public-profile-story{grid-area:story;align-self:start}
+  .public-profile-story p{font-size:16px;line-height:1.65}
+  .public-profile-video-wrap{grid-area:video;align-self:stretch}
+  .public-profile-video-wrap .public-profile-video{height:100%;object-fit:cover}
+  .public-profile-card:not(:has(.public-profile-video-wrap)) .public-profile-story{grid-column:1/4}
+  .public-profile-card:not(:has(.public-profile-video-wrap)) .public-profile-facts{grid-column:1/4;grid-template-columns:repeat(4,minmax(0,1fr))}
+  .public-profile-facts{grid-area:facts;align-self:end;grid-template-columns:repeat(2,minmax(0,1fr))}
+  .public-profile-detail-layout{grid-area:details}
+  .public-profile-detail-layout .public-profile-experience-panel{order:1}
+  .public-profile-detail-layout .public-profile-columns{order:2}
+  .public-profile-columns:has(.public-profile-industries-panel){grid-template-columns:repeat(3,minmax(0,1fr))}
+  .public-profile-columns .public-profile-tools{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .public-profile-cta{grid-area:cta}
+  .public-profile-footer{grid-area:footer;margin:0 -28px -28px}
+}
+
+/* In-between widths (tablet / small laptop): stacked, same section order as mobile. */
+@media(min-width:681px) and (max-width:1040px){
+  .public-profile-detail-layout .public-profile-experience-panel{order:1}
+  .public-profile-detail-layout .public-profile-columns{order:2}
+  .public-profile-columns:has(.public-profile-industries-panel){grid-template-columns:repeat(3,minmax(0,1fr))}
+  .public-profile-columns .public-profile-tools{grid-template-columns:1fr}
+  .public-profile-actions .public-profile-contact-top{display:inline-flex;border-color:#086b57;background:#086b57;color:#fff}
+}
+@media(min-width:681px) and (max-width:860px){
+  .public-profile-columns:has(.public-profile-industries-panel){grid-template-columns:1fr}
+  .public-profile-hero{grid-template-columns:98px minmax(0,1fr)}
+  .public-profile-actions{grid-column:2;justify-content:flex-start}
+}
+
+/* Phones: info boxes in a roomier 2x2 grid with larger text. */
+@media(max-width:680px){
+  .public-profile-facts{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .public-profile-fact,.public-profile-fact:nth-child(4){min-height:62px;gap:10px;padding:10px 12px;border-radius:11px}
+  .public-profile-fact-icon{width:34px;height:34px}
+  .public-profile-fact-icon svg{width:18px;height:18px}
+  .public-profile-fact strong,.public-profile-fact:nth-child(4) strong{font-size:13px;line-height:1.25;white-space:normal}
+  .public-profile-fact small{margin-top:3px;font-size:11px;line-height:1.25}
+}
+
+/* Phones: caption at the bottom of the video, more room between the top bar and the name. */
+@media(max-width:680px){
+  .public-profile-video-caption{bottom:14px;left:14px}
+  .public-profile-video-caption[hidden]{display:none}
+  .public-profile-hero{padding-top:16px}
+}

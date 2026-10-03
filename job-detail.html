@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Executive Assistant Job</title>
+    <title>Job | Hire From SA</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
@@ -11,23 +11,60 @@
     <link rel="stylesheet" href="./jobs.css" />
     <link rel="stylesheet" href="./job-apply.css" />
     <link rel="stylesheet" href="./brand.css" />
+    <link rel="stylesheet" href="./job-listing.css" />
   </head>
   <body class="jobs-page">
     <header class="jobs-header"><a class="jobs-brand site-logo-link" href="./jobs.html"><img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a><nav><a class="active" href="./jobs.html">Find jobs</a><a href="./candidate-dashboard.html">My applications</a><a data-employer-link href="./index.html">Post a role</a></nav><a class="text-btn" data-candidate-auth-link href="./candidate-login.html">Candidate sign in →</a></header>
-    <main class="job-detail-main">
-      <a class="back-jobs" href="./jobs.html">← Back to jobs</a>
-      <div class="job-detail-grid">
-        <article class="job-detail-card">
-          <div class="detail-company"><div class="job-company" id="detailInitial">A</div><div><b id="detailCompany">Aster &amp; Co.</b><small>Verified employer</small></div></div>
-          <h1 id="detailTitle">Executive Assistant to CEO</h1>
-          <div class="detail-meta"><span id="detailArrangement">Remote</span><span id="detailEmployment">Full-time</span><span id="detailLocation">South Africa</span><span id="detailPay">$10–$14 / hour</span></div>
-          <section class="detail-section"><h2>About the role</h2><p id="detailDescription"></p></section>
-          <section class="detail-section"><h2>What you’ll do</h2><ul id="detailResponsibilities"></ul></section>
-          <section class="detail-section"><h2>Skills and experience</h2><div class="detail-skills" id="detailSkills"></div></section>
+    <main class="jl-shell">
+      <a class="jl-back" href="./jobs.html"><span aria-hidden="true">←</span> All jobs</a>
+      <div class="jl-grid">
+        <article class="jl-card">
+          <div class="jl-company"><span id="detailInitial" class="jl-initial" aria-hidden="true">H</span><div><b id="detailCompany">Hire From SA employer</b><small><span class="jl-verified">✓ Verified employer</span><span id="detailPosted"></span></small></div></div>
+          <h1 id="detailTitle">Loading job…</h1>
+
+          <dl class="jl-facts">
+            <div class="green"><dt>Pay</dt><dd id="detailPay">-</dd></div>
+            <div class="violet"><dt>Job type</dt><dd id="detailEmployment">-</dd></div>
+            <div class="blue"><dt>Where</dt><dd id="detailLocation">Remote</dd></div>
+            <div class="rose"><dt>Hiring</dt><dd id="detailTimeline">-</dd></div>
+          </dl>
+
+          <section class="jl-section">
+            <h2>About the job</h2>
+            <div id="detailDescription" class="jl-description"></div>
+          </section>
+
+          <section id="detailResponsibilitiesSection" class="jl-section" hidden>
+            <h2>What you'll do</h2>
+            <ul id="detailResponsibilities"></ul>
+          </section>
+
+          <section id="detailSkillsSection" class="jl-section" hidden>
+            <h2>Skills</h2>
+            <div id="detailSkills" class="jl-chips"></div>
+          </section>
+
+          <section id="detailQuestionsSection" class="jl-section" hidden>
+            <h2>Questions you'll answer</h2>
+            <p class="jl-note">The hirer asks every applicant these when they apply.</p>
+            <ol id="detailQuestions" class="jl-questions"></ol>
+          </section>
         </article>
-        <aside class="apply-card"><strong>Interested in this role?</strong><p>Apply from your candidate account and answer the hirer’s questions.</p><button id="showApplication" class="next-btn" type="button">Apply</button><small>Headshot, ID photos, and video are required before applying.</small></aside>
+
+        <aside class="jl-apply">
+          <p class="jl-apply-pay" id="applyPay"></p>
+          <button id="showApplication" class="jl-apply-button" type="button">Apply now</button>
+          <p class="jl-free">Free for candidates. You never pay to apply or get hired.</p>
+          <ol class="jl-steps">
+            <li><b>Create your free profile</b><span>Add your resume and work history.</span></li>
+            <li><b>Get verified</b><span>A headshot, ID photo and short intro video.</span></li>
+            <li><b>Answer and apply</b><span id="applyStepQuestions">Answer the hirer's questions and send your application.</span></li>
+          </ol>
+          <small id="applyHelp" class="jl-help"></small>
+        </aside>
       </div>
     </main>
+    <div class="jl-mobile-apply"><div><b id="mobileApplyTitle"></b><small id="mobileApplyPay"></small></div><button type="button" data-apply-proxy>Apply now</button></div>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./auth-client.js"></script>
     <script src="./platform-client.js"></script>

@@ -3,31 +3,70 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Apply for this role</title>
+    <title>Apply | Hire From SA</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./application-questions.css" />
     <link rel="stylesheet" href="./brand.css" />
+    <link rel="stylesheet" href="./apply-bid.css" />
   </head>
-  <body>
-    <header class="application-header"><a class="site-logo-link" href="./candidate-dashboard.html?tab=jobs"><img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a><span>Job application</span><a href="./candidate-dashboard.html?tab=jobs">Exit</a></header>
-    <main class="application-shell">
-      <section class="application-intro"><p class="eyebrow">APPLY FOR THIS ROLE</p><h1>Answer and apply.</h1><p>Answer the hirer’s questions and submit your application.</p></section>
-      <section class="application-card">
-        <header><p class="eyebrow blue">APPLYING FOR</p><h2 id="applicationRole">Executive Assistant</h2><p id="applicationCompany">Your company</p></header>
-        <p id="authStatus" class="status-box" aria-live="polite">Checking your candidate profile…</p>
-        <form id="questionsForm" novalidate>
-          <section id="applicationQuestions" class="application-questions" hidden>
-            <header><p class="eyebrow blue">HIRER QUESTIONS</p><h3>Tell them why you’re a fit.</h3><p>Every question is required.</p></header>
-            <div id="applicationQuestionList"></div>
-          </section>
-          <div id="applicationResult" class="status-box" aria-live="polite" hidden></div>
-          <button id="submitApplication" type="submit" disabled>Submit application <span>→</span></button>
-        </form>
-        <section id="applicationComplete" class="complete-state" hidden><span>✓</span><h2>Application submitted.</h2><p>Your redacted resume and answers are now in the employer’s hiring inbox.</p><a href="./candidate-dashboard.html?tab=applications">View my applications →</a></section>
+  <body class="ab-page">
+    <header class="ab-header"><a class="site-logo-link" href="./candidate-dashboard.html?tab=jobs"><img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a><a class="ab-exit" href="./candidate-dashboard.html?tab=jobs">Exit</a></header>
+
+    <main class="ab-shell">
+      <p id="applicationResult" class="ab-status" role="status" hidden></p>
+
+      <form id="questionsForm" class="ab-card" novalidate>
+        <p class="ab-kicker">APPLY</p>
+        <h1 id="applicationRole">Loading job…</h1>
+        <p id="applicationCompany" class="ab-company"></p>
+        <dl class="ab-facts">
+          <div class="green"><dt>Pays</dt><dd id="applicationPay">-</dd></div>
+          <div class="violet"><dt>Job type</dt><dd id="applicationType">-</dd></div>
+          <div class="rose"><dt>Hiring</dt><dd id="applicationTimeline">-</dd></div>
+        </dl>
+
+        <section class="ab-section">
+          <h2><span data-step-number>1</span> Introduce yourself</h2>
+          <p class="ab-help">One sentence. This is the first message the hirer sees from you.</p>
+          <textarea id="introMessage" class="ab-intro" rows="3" maxlength="300" required></textarea>
+          <p class="ab-count"><span id="introCount">0</span> / 300</p>
+        </section>
+
+        <section id="applicationQuestions" class="ab-section" hidden>
+          <h2><span data-step-number>2</span> Answer the hirer's questions</h2>
+          <div id="applicationQuestionList" class="ab-questions"></div>
+        </section>
+
+        <section class="ab-section">
+          <h2><span data-step-number>3</span> Bid on the job</h2>
+          <p class="ab-help">This job pays <b id="rateRange">-</b>. That's exactly what you'll be paid. Pick the rate you'd like and the range you'd accept.</p>
+          <div class="ab-rate-grid">
+            <label class="ab-field"><span>Preferred rate</span>
+              <span class="ab-money"><b aria-hidden="true">$</b><input id="bidRate" type="number" inputmode="decimal" min="0" step="0.01" required /><i class="ab-period"></i></span>
+            </label>
+            <div class="ab-field"><span>Range you'd accept</span>
+              <div class="ab-range">
+                <span class="ab-money"><b aria-hidden="true">$</b><input id="bidMin" type="number" inputmode="decimal" min="0" step="0.01" aria-label="Lowest rate you'd accept" required /></span>
+                <em>to</em>
+                <span class="ab-money"><b aria-hidden="true">$</b><input id="bidMax" type="number" inputmode="decimal" min="0" step="0.01" aria-label="Highest rate you'd accept" required /><i class="ab-period"></i></span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <button id="submitApplication" class="ab-submit" type="submit" disabled>Apply <span aria-hidden="true">→</span></button>
+        <p class="ab-free">Free for candidates. You never pay to apply or get hired.</p>
+      </form>
+
+      <section id="applicationComplete" class="ab-card ab-done" hidden>
+        <span class="ab-done-mark" aria-hidden="true">✓</span>
+        <h1>Your application was sent</h1>
+        <p id="completeText">The hirer can now see your rate, your introduction and your profile. You'll get a message here when they reply.</p>
+        <a class="ab-submit" href="./candidate-dashboard.html?tab=applications">View my applications <span aria-hidden="true">→</span></a>
       </section>
     </main>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./auth-client.js"></script>
     <script src="./platform-client.js"></script>

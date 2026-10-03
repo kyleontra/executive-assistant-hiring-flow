@@ -1,0 +1,68 @@
+/* Job listing v2 (job-detail.html): candidate-facing job page with a clear apply path. */
+.jobs-page{background:#f4f6f9}
+.jl-shell{width:min(1100px,calc(100% - 32px));margin:0 auto;padding:22px 0 72px}
+.jl-back{display:inline-flex;align-items:center;gap:8px;margin-bottom:16px;color:#33445e;font:700 14px "DM Sans",sans-serif;text-decoration:none}
+.jl-back:hover{color:#142238;text-decoration:underline;text-underline-offset:3px}
+.jl-grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;align-items:start;gap:20px}
+.jl-card{padding:30px 32px;border:1px solid #dce2ea;border-radius:16px;background:#fff;box-shadow:0 16px 42px rgba(20,34,56,.055)}
+.jl-company{display:flex;align-items:center;gap:12px}
+.jl-initial{display:grid;width:48px;height:48px;flex:none;place-items:center;border-radius:12px;background:#e8f0ff;color:#1f5fcf;font:800 18px Manrope,sans-serif}
+.jl-company b{display:block;color:#142238;font-size:15px}
+.jl-company small{display:flex;flex-wrap:wrap;gap:10px;margin-top:3px;color:#6b7890;font-size:13px}
+.jl-verified{color:#0b7a50;font-weight:700}
+.jl-card h1{margin:18px 0 20px;color:#142238;font:800 clamp(28px,4vw,40px)/1.1 Manrope,sans-serif;letter-spacing:-1.3px}
+.jl-facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 26px}
+.jl-facts div{padding:12px 14px;border:1px solid #edf0f7;border-radius:12px;background:#f7f9fe}
+.jl-facts div.green{background:#f1faf6}
+.jl-facts div.violet{background:#f7f5fe}
+.jl-facts div.blue{background:#f1f7ff}
+.jl-facts div.rose{background:#fff5f7}
+.jl-facts dt{color:#6b7890;font-size:12px;font-weight:700}
+.jl-facts dd{margin:4px 0 0;color:#142238;font:800 15px/1.3 Manrope,sans-serif}
+.jl-section{padding-top:22px;border-top:1px solid #e9eef4}
+.jl-section+.jl-section{margin-top:22px}
+.jl-section h2{margin:0 0 12px;color:#142238;font:800 20px Manrope,sans-serif;letter-spacing:-.4px}
+.jl-description{color:#33445e;font-size:15px;line-height:1.7}
+.jl-description p{margin:0 0 12px}
+.jl-description ul,.jl-section>ul{margin:0 0 14px;padding-left:20px}
+.jl-description li,.jl-section>ul li{margin-bottom:6px}
+.jl-chips{display:flex;flex-wrap:wrap;gap:8px}
+.jl-chips span{padding:7px 11px;border-radius:8px;background:#f1f4f8;color:#33445e;font-size:13px;font-weight:700}
+.jl-note{margin:-4px 0 12px;color:#6b7890;font-size:14px}
+.jl-questions{display:grid;gap:8px;margin:0;padding:0;list-style:none;counter-reset:q}
+.jl-questions li{display:flex;gap:12px;padding:12px 14px;border:1px solid #e3e8ef;border-radius:10px;background:#fafbfd;color:#142238;font-size:15px;counter-increment:q}
+.jl-questions li::before{content:counter(q);display:grid;width:24px;height:24px;flex:none;place-items:center;border-radius:50%;background:#e8f0ff;color:#1f5fcf;font:800 12px Manrope,sans-serif}
+.jl-apply{position:sticky;top:20px;padding:24px;border:1px solid #dce2ea;border-radius:16px;background:#fff;box-shadow:0 16px 42px rgba(20,34,56,.055)}
+.jl-apply-pay{margin:0 0 16px}
+.jl-apply-pay b{display:block;color:#142238;font:800 26px Manrope,sans-serif;letter-spacing:-.6px}
+.jl-apply-pay span{color:#6b7890;font-size:14px;font-weight:600}
+.jl-apply-button{width:100%;height:54px;border:0;border-radius:12px;background:#246fe5;color:#fff;font:800 17px "DM Sans",sans-serif;cursor:pointer;box-shadow:0 10px 24px rgba(36,111,229,.28)}
+.jl-apply-button:hover{background:#1d5fcc}
+.jl-apply-button:disabled{opacity:.6;cursor:default}
+.jl-free{margin:10px 0 18px;color:#0b7a50;font-size:13px;font-weight:700;text-align:center}
+.jl-steps{display:grid;gap:14px;margin:0;padding:18px 0 0;border-top:1px solid #e9eef4;list-style:none;counter-reset:s}
+.jl-steps li{display:grid;grid-template-columns:28px 1fr;column-gap:12px;counter-increment:s}
+.jl-steps li::before{content:counter(s);grid-row:1/3;display:grid;width:28px;height:28px;place-items:center;border-radius:50%;background:#142238;color:#fff;font:800 13px Manrope,sans-serif}
+.jl-steps b{color:#142238;font-size:14px}
+.jl-steps span{color:#6b7890;font-size:13px;line-height:1.45}
+.jl-help{display:block;margin-top:12px;color:#a84e57;font-size:13px;text-align:center}
+.jl-help:empty{display:none}
+.jl-mobile-apply{display:none}
+@media(max-width:900px){
+  .jl-grid{grid-template-columns:1fr}
+  .jl-apply{position:static}
+  .jl-facts{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:640px){
+  .jl-shell{width:calc(100% - 24px);padding:14px 0 100px}
+  .jl-card{padding:22px 18px}
+  .jl-card h1{font-size:28px}
+  .jl-mobile-apply{position:fixed;right:0;bottom:0;left:0;z-index:30;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px calc(10px + env(safe-area-inset-bottom));border-top:1px solid #e3e8ef;background:#fffffff5;box-shadow:0 -6px 22px #18365714;backdrop-filter:blur(12px)}
+  .jl-mobile-apply div{min-width:0}
+  .jl-mobile-apply b{display:block;overflow:hidden;color:#142238;font-size:14px;text-overflow:ellipsis;white-space:nowrap}
+  .jl-mobile-apply small{color:#6b7890;font-size:13px}
+  .jl-mobile-apply button{height:46px;flex:none;padding:0 22px;border:0;border-radius:11px;background:#246fe5;color:#fff;font:800 15px "DM Sans",sans-serif}
+}
+.jl-pay-locked{color:#1f5fcf;text-decoration:underline;text-underline-offset:3px}
+.jl-pay-note{display:grid;gap:4px;padding:12px 14px;border-radius:12px;background:#f1f7ff;color:#33445e!important;font-size:14px!important;line-height:1.45}
+.jl-pay-note b{font-size:16px!important;letter-spacing:0!important}

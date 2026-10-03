@@ -456,7 +456,7 @@ async function loadServerJobs(force = false) {
         });
         write({ serverJobId: job.id });
       }
-      const { jobs } = await window.savaPlatform.publicRequest('listJobs');
+      const { jobs } = await window.savaPlatform.viewerRequest('listJobs');
       serverJobs = (jobs || []).map((job) => ({ ...job, posted: postedLabel(job.createdAt) }));
       serverJobsLoaded = true;
       return serverJobs;
@@ -483,7 +483,7 @@ function renderJobs(filter = '') {
     return matchesSearch && matchesArrangement && matchesType;
   });
   $('#resultCount').textContent = matches.length;
-  root.innerHTML = matches.map((job) => `<a class="job-card" href="./job-detail.html?job=${encodeURIComponent(job.id)}"><div class="job-card-top"><div class="job-company">${escapeHtml(job.initial)}</div><div><h2>${escapeHtml(job.title)}</h2><p class="company-name">${escapeHtml(job.company)}</p></div><span class="posted">${escapeHtml(job.posted)}</span></div><div class="job-tags"><span>${escapeHtml(job.arrangement)}</span><span>${escapeHtml(job.type)}</span><span>${escapeHtml(job.location)}</span></div><p>${escapeHtml(job.description)}</p><div class="job-card-footer"><b>${escapeHtml(job.pay)}</b><span>View job →</span></div></a>`).join('') || '<p class="no-results">No roles match that search.</p>';
+  root.innerHTML = matches.map((job) => `<a class="job-card" href="./job-detail.html?job=${encodeURIComponent(job.id)}"><div class="job-card-top"><div class="job-company">${escapeHtml(job.initial)}</div><div><h2>${escapeHtml(job.title)}</h2><p class="company-name">${escapeHtml(job.company)}</p></div><span class="posted">${escapeHtml(job.posted)}</span></div><div class="job-tags"><span>${escapeHtml(job.arrangement)}</span><span>${escapeHtml(job.type)}</span><span>${escapeHtml(job.location)}</span></div><p>${escapeHtml(job.description)}</p><div class="job-card-footer"><b>${job.payHidden ? 'Sign up to see pay' : escapeHtml(job.pay)}</b><span>View job →</span></div></a>`).join('') || '<p class="no-results">No roles match that search.</p>';
 }
 
 async function bindJobs() {
@@ -497,37 +497,91 @@ async function bindJobs() {
   document.querySelectorAll('.filters input[type="checkbox"]').forEach((input) => input.addEventListener('change', () => renderJobs($('#jobSearch').value)));
 }
 
+function listingDescriptionHtml(value) {
+  // Renders the light formatting the job description editor produces (**bold**, _italic_, bullet lines).
+  const lines = String(value || '').split('\n');
+  const inline = (line) => escapeHtml(line).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/(^|\s)_(.+?)_(?=\s|$)/g, '$1<i>$2</i>');
+  let html = '';
+  let list = '';
+  lines.forEach((line) => {
+    const bullet = line.match(/^\s*(?:•|-|\d+\.)\s+(.*)$/);
+    if (bullet) { list += `<li>${inline(bullet[1])}</li>`; return; }
+    if (list) { html += `<ul>${list}</ul>`; list = ''; }
+    if (line.trim()) html += `<p>${inline(line)}</p>`;
+  });
+  if (list) html += `<ul>${list}</ul>`;
+  return html || '<p>The hirer has not added a description yet.</p>';
+}
+
+function listingDemoJob() {
+  return {
+    id: 'demo-wedding', company: 'Ever After Films', initial: 'E', title: 'Wedding Video Editor', arrangement: 'Remote', type: 'Full-time',
+    location: 'South Africa', hiringTimeline: 'ASAP',
+    // ?as=owner shows the posted rate, ?as=public hides pay, default shows the candidate rate ($2/hour less).
+    ...({ owner: { pay: '$8–$10 / hour', payHidden: false }, public: { pay: '', payHidden: true } }[new URLSearchParams(window.location.search).get('as')] || { pay: '$6–$8 / hour', payHidden: false }), createdAt: new Date(Date.now() - 3 * 86400000).toISOString(),
+    description: 'We film 60+ weddings a year in the US and need an editor who can turn raw footage into emotional, cinematic films.\n\n**What you will do**\n• Edit 3 to 5 minute highlight films and full ceremony cuts\n• Color grade and sync multi-camera audio\n• Deliver highlight reels within 5 days of receiving footage\n\n**What we are looking for**\n• 2+ years editing weddings or events\n• Strong in Premiere Pro or DaVinci Resolve\n• Available for some overlap with US Eastern hours',
+    responsibilities: [], skills: [], questions: [{ text: 'How many weddings have you edited?', type: 'text', options: [] }, { text: 'Share a link to a highlight film you edited.', type: 'text', options: [] }],
+  };
+}
+
 async function bindJobDetail() {
   if (!$('#detailTitle')) return;
-  const id = new URLSearchParams(window.location.search).get('job');
-  await loadServerJobs();
-  const job = jobBoard().find((item) => item.id === id) || jobBoard()[0];
+  const params = new URLSearchParams(window.location.search);
+  const demo = ['localhost', '127.0.0.1'].includes(window.location.hostname) && params.has('demo');
+  const id = params.get('job');
+  let job;
+  if (demo) job = listingDemoJob();
+  else {
+    await loadServerJobs();
+    job = jobBoard().find((item) => item.id === id) || jobBoard()[0];
+  }
   if (!job) {
-    $('#detailTitle').textContent = 'This role is no longer available';
+    $('#detailTitle').textContent = 'This job is no longer available';
     $('#showApplication').disabled = true;
     return;
   }
-  $('#detailInitial').textContent = job.initial;
+  const typeHours = { 'Full-time': 'Full-time · 40 hrs/week', 'Part-time': 'Part-time · 20+ hrs/week', Contract: 'Contract · per project' };
+  const timelineLabels = { ASAP: 'ASAP', 'Within 1-2 weeks': 'In 1-2 weeks', 'Within the month': 'This month', 'Not urgently': 'Flexible' };
+  document.title = `${job.title} | Hire From SA`;
+  $('#detailInitial').textContent = job.initial || String(job.company || 'H').slice(0, 1).toUpperCase();
   $('#detailCompany').textContent = job.company;
+  $('#detailPosted').textContent = job.createdAt ? `Posted ${postedLabel(job.createdAt).toLowerCase().replace(/^(\w{3} \d+)$/i, (match) => match.charAt(0).toUpperCase() + match.slice(1))}` : '';
   $('#detailTitle').textContent = job.title;
-  $('#detailArrangement').textContent = job.arrangement;
-  $('#detailEmployment').textContent = job.type;
-  $('#detailLocation').textContent = job.location;
-  $('#detailPay').textContent = job.pay;
-  $('#detailDescription').textContent = job.description;
-  $('#detailResponsibilities').innerHTML = job.responsibilities.length ? job.responsibilities.map((item) => `<li>${escapeHtml(item)}</li>`).join('') : '<li>Responsibilities are included in the full job description above.</li>';
-  $('#detailSkills').innerHTML = job.skills.length ? job.skills.map((item) => `<span>${escapeHtml(item)}</span>`).join('') : '<span>Role-specific experience</span>';
-  const questions = $('#detailQuestions');
-  if (questions) questions.innerHTML = job.questions.map((question) => {
-    const normalized = normalizeQuestion(question);
-    return `<li><span>${escapeHtml(normalized.text)}</span><small class="question-type-note">${normalized.type === 'multiple-choice' ? 'Multiple choice' : 'Written response'}</small></li>`;
-  }).join('');
+  const signupUrl = `./candidate-signup.html?job=${encodeURIComponent(job.id)}`;
+  if (job.payHidden) {
+    $('#detailPay').innerHTML = `<a class="jl-pay-locked" href="${signupUrl}">Sign up to see pay</a>`;
+  } else {
+    $('#detailPay').textContent = job.pay || 'Not listed';
+  }
+  $('#detailEmployment').textContent = typeHours[job.type] || job.type || 'Not listed';
+  $('#detailLocation').textContent = job.arrangement === 'Remote' || !job.arrangement ? 'Remote' : `${job.arrangement} · ${job.location}`;
+  $('#detailTimeline').textContent = timelineLabels[job.hiringTimeline] || job.hiringTimeline || 'Open';
+  $('#detailDescription').innerHTML = listingDescriptionHtml(job.description);
+  const responsibilities = (job.responsibilities || []).filter(Boolean);
+  $('#detailResponsibilitiesSection').hidden = !responsibilities.length;
+  $('#detailResponsibilities').innerHTML = responsibilities.map((item) => `<li>${escapeHtml(item)}</li>`).join('');
+  const skills = (job.skills || []).filter(Boolean);
+  $('#detailSkillsSection').hidden = !skills.length;
+  $('#detailSkills').innerHTML = skills.map((item) => `<span>${escapeHtml(item)}</span>`).join('');
+  const questions = (job.questions || []).map(questionText).filter(Boolean);
+  $('#detailQuestionsSection').hidden = !questions.length;
+  $('#detailQuestions').innerHTML = questions.map((question) => `<li>${escapeHtml(question)}</li>`).join('');
+  $('#applyStepQuestions').textContent = questions.length ? `Answer ${questions.length} short question${questions.length === 1 ? '' : 's'} and send your application.` : 'Send your application in one click.';
+  $('#applyPay').innerHTML = job.payHidden
+    ? `<span class="jl-pay-note"><b>See what this employer is paying</b>Create a free Hire From SA account to see the pay for this job.</span>`
+    : `<b>${escapeHtml(job.pay || '')}</b><span>${escapeHtml(typeHours[job.type] || job.type || '')}</span>`;
+  $('#mobileApplyTitle').textContent = job.title;
+  $('#mobileApplyPay').textContent = job.payHidden ? 'Sign up to see pay' : (job.pay || '');
+  if (job.payHidden) $('#showApplication').textContent = 'Create a free account';
+  document.querySelector('[data-apply-proxy]')?.addEventListener('click', () => $('#showApplication').click());
+
   $('#showApplication').addEventListener('click', async () => {
+    if (demo) { $('#applyHelp').textContent = 'Demo only: applying is turned off in preview.'; return; }
     sessionStorage.setItem('sava-applying-job', job.id);
     const applyButton = $('#showApplication');
-    const applyHelp = applyButton.closest('.apply-card')?.querySelector('small');
+    const applyHelp = $('#applyHelp');
     applyButton.disabled = true;
-    applyButton.textContent = 'Checking profile…';
+    applyButton.textContent = 'Checking your profile…';
     try {
       const candidate = await window.getVerifiedCandidate?.();
       if (!candidate) {
@@ -542,8 +596,8 @@ async function bindJobDetail() {
       window.location.href = destination;
     } catch (error) {
       applyButton.disabled = false;
-      applyButton.textContent = 'Apply';
-      if (applyHelp) applyHelp.textContent = error.message || 'Your candidate profile could not be checked. Try again.';
+      applyButton.textContent = 'Apply now';
+      applyHelp.textContent = error.message || 'Your candidate profile could not be checked. Try again.';
     }
   });
 }
@@ -559,12 +613,53 @@ function questionsForCandidate(job) {
   return ['How have you supported a customer-facing leader?', 'How do you track customer commitments and risks?', 'Describe a customer process you improved proactively.'];
 }
 
+function buildDemoDashboard() {
+  const role = read();
+  const title = text(role.title) || 'Executive Assistant';
+  const questions = role.questions.map(questionText).filter(Boolean);
+  const asked = questions.length ? questions : ['Why are you a good fit for this role?'];
+  const job = { id: 'demo-job', title, questions: asked.map((question) => ({ text: question, type: 'text', options: [] })) };
+  const initialsPhoto = (name) => {
+    const initials = name.split(' ').map((part) => part[0]).join('').slice(0, 2);
+    return `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120"><rect width="120" height="120" fill="#e8eef8"/><text x="60" y="72" font-family="Arial" font-size="40" font-weight="700" fill="#2b5bb8" text-anchor="middle">${initials}</text></svg>`)}`;
+  };
+  const people = [
+    ['Lerato Mokoena', 7, 92, 'new', 'Seven years supporting founders with inbox, calendar, travel and CRM updates for US-based teams.'],
+    ['Sipho Dlamini', 5, 88, 'new', 'Five years as an executive assistant to a SaaS CEO, managing board prep and investor follow-ups.'],
+    ['Ayanda Khumalo', 6, 85, 'shortlisted', 'Six years coordinating leadership calendars across US and UK time zones in a marketing agency.'],
+    ['Thandi Jacobs', 4, 81, 'new', 'Four years handling client communication, scheduling and invoicing for a real estate brokerage.'],
+    ['Nomvula Zulu', 8, 79, 'interviewing', 'Eight years in operations support, documenting processes and running weekly reporting.'],
+    ['Kagiso Molefe', 3, 76, 'new', 'Three years supporting an e-commerce founder with order follow-ups, email and Shopify admin.'],
+    ['Zinhle Ndlovu', 5, 74, 'shortlisted', 'Five years as an operations assistant, managing vendor calls, travel and expense reports.'],
+    ['Bongani Mthembu', 2, 69, 'new', 'Two years of remote admin support, data entry and appointment setting for a coaching business.'],
+    ['Palesa Naidoo', 6, 66, 'new', 'Six years in customer support and account management, moving into executive support.'],
+    ['Andile Botha', 3, 61, 'new', 'Three years of front office and scheduling work for a medical practice, comfortable with US hours.'],
+  ];
+  const sampleAnswers = ['Yes, I have done this daily in my last role and can share examples.', 'I have managed this for US clients for several years and work 9 to 5 EST.', 'I keep a shared tracker and send a short end-of-day update so nothing slips.'];
+  return {
+    jobs: [job],
+    applications: people.map(([name, years, match, status, summary], index) => ({
+      id: `demo-${index + 1}`,
+      jobId: job.id,
+      job,
+      status,
+      match,
+      answers: asked.map((question, answerIndex) => ({ question, answer: sampleAnswers[(index + answerIndex) % sampleAnswers.length] })),
+      candidate: { name, relevantYears: years, summary, photoUrl: initialsPhoto(name), resumeUrl: '', resumeFileName: '', introUrl: '' },
+    })),
+  };
+}
+
 async function bindApplicants() {
   const candidateList = $('#candidateList');
   if (!candidateList) return;
   let dashboard = null;
   let dashboardError = '';
+  // Localhost-only demo (?demo): fake applicants for the latest draft job, no backend calls.
+  const demoMode = ['localhost', '127.0.0.1'].includes(window.location.hostname) && new URLSearchParams(window.location.search).has('demo');
   try {
+    if (demoMode) dashboard = buildDemoDashboard();
+    else {
     if (!window.savaPlatform) throw new Error('The hiring service did not load.');
     const savedRole = read();
     if (savedRole.published && !savedRole.serverJobId && window.savaPlatform) {
@@ -586,6 +681,7 @@ async function bindApplicants() {
       write({ serverJobId: job.id });
     }
     dashboard = await window.savaPlatform?.employerRequest('employerDashboard', { companyName: read().company || 'Your company' });
+    }
     applicantJobsById = new Map((dashboard?.jobs || []).map((job) => [String(job.id), job]));
     if (dashboard) {
       $('#jobOptions').innerHTML = `<button class="selected" type="button" role="option" aria-selected="true" data-job="all">All active jobs</button>${(dashboard.jobs || []).map((job) => `<button type="button" role="option" aria-selected="false" data-job="${escapeHtml(job.id)}">${escapeHtml(job.title)}</button>`).join('')}`;
@@ -686,6 +782,7 @@ async function bindApplicants() {
   }
 
   async function setCandidateStatus(candidate, status) {
+    if (demoMode) { candidate.dataset.status = status; return; }
     if (candidate.dataset.applicationId && window.savaPlatform) {
       await window.savaPlatform.employerRequest('updateApplication', { applicationId: candidate.dataset.applicationId, status });
       candidate.dataset.status = status;
@@ -1245,6 +1342,7 @@ function bindPublishedStep() {
   fill('pay', Number(role.minRate) > 0 ? rate(role) : '');
   fill('promotion', role.promote && budget > 0 ? `${plan} · $${budget} per day` : 'Not promoted');
   fill('questions', questionCount ? `${questionCount} question${questionCount === 1 ? '' : 's'}` : 'None');
+  if (role.serverJobId) $('#publishedViewApplicants').href = `./inbox.html?job=${encodeURIComponent(role.serverJobId)}`;
   $('#postAnotherJob').addEventListener('click', () => {
     localStorage.removeItem(storageKey);
     window.location.href = './index.html';

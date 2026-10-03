@@ -8,35 +8,40 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="./employer-simple.css" />
-    <link rel="stylesheet" href="./posted-jobs.css" />
-    <link rel="stylesheet" href="./posted-jobs-delete.css" />
     <link rel="stylesheet" href="./brand.css" />
+    <link rel="stylesheet" href="./posted-jobs.css" />
+    <link rel="stylesheet" href="./employer-nav.css" />
   </head>
   <body class="simple-employer-page posted-jobs-page">
     <header class="simple-header">
       <a class="simple-brand site-logo-link" href="./index.html"><img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a>
-      <nav><a href="./talent.html">Talent</a><a href="./applicants.html">Hiring inbox</a><a href="./applicants.html?view=messages">Messages</a><a class="active" href="./posted-jobs.html">Posted jobs</a><a href="./index.html">Post a job</a></nav>
+      <nav><a href="./talent.html">Talent</a><a href="./inbox.html">Messages</a><a class="active" href="./posted-jobs.html">Posted jobs</a><a href="./index.html">Post a job</a></nav>
     </header>
 
-    <main class="posted-jobs-shell">
-      <section class="posted-jobs-heading">
-        <div><p class="simple-kicker">HIRER WORKSPACE</p><h1>Posted jobs</h1><p>See every role you have posted and open its applicant list.</p></div>
-        <a class="posted-primary" href="./index.html">Post another job <span>→</span></a>
+    <main class="pj-shell">
+      <div class="pj-top">
+        <h1>Posted jobs</h1>
+        <a class="pj-primary" href="./index.html" data-new-job><span aria-hidden="true">+</span> Post a job</a>
+      </div>
+
+      <section class="pj-stats" aria-label="Job summary">
+        <div><strong id="pjActive">-</strong><span>Active jobs</span></div>
+        <div><strong id="pjApplicants">-</strong><span>Total applicants</span></div>
+        <div><strong id="pjPromoted">-</strong><span>Promoted jobs</span></div>
       </section>
 
-      <section class="job-summary" aria-label="Job summary">
-        <article><strong id="totalJobs">—</strong><span>Total jobs</span></article>
-        <article><strong id="activeJobs">—</strong><span>Active</span></article>
-        <article><strong id="totalApplicants">—</strong><span>Applicants</span></article>
+      <section class="pj-toolbar" aria-label="Filter posted jobs">
+        <label class="pj-search"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="9" cy="9" r="6"/><path d="m14 14 4 4"/></svg><input id="pjSearch" type="search" placeholder="Search jobs" autocomplete="off" aria-label="Search jobs" /></label>
+        <label><span>Status</span>
+          <select id="pjStatus"><option value="all">All jobs</option><option value="active">Active</option><option value="closed">Closed</option></select>
+        </label>
+        <label><span>Organize by</span>
+          <select id="pjSort"><option value="newest">Newest first</option><option value="applicants">Most applicants</option><option value="az">A to Z</option></select>
+        </label>
       </section>
 
-      <section class="posted-jobs-toolbar" aria-label="Filter posted jobs">
-        <label><span>Search jobs</span><input id="postedJobSearch" type="search" placeholder="Search by title or company" autocomplete="off" /></label>
-        <label><span>Status</span><select id="postedJobStatus"><option value="all">All statuses</option><option value="active">Active</option><option value="closed">Closed</option><option value="draft">Draft</option></select></label>
-      </section>
-
-      <div id="postedJobsStatus" class="posted-jobs-status" role="status">Loading your posted jobs…</div>
-      <section id="postedJobsList" class="posted-jobs-list" aria-live="polite"></section>
+      <p id="pjStatusLine" class="pj-status" role="status">Loading your posted jobs…</p>
+      <section id="pjList" class="pj-list" aria-live="polite"></section>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -44,5 +49,6 @@
     <script src="./employer-auth.js"></script>
     <script src="./platform-client.js"></script>
     <script src="./posted-jobs.js"></script>
+    <script src="./employer-nav.js"></script>
   </body>
 </html>

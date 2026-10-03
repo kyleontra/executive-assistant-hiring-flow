@@ -3,6 +3,7 @@ const publicProfileStatus = document.querySelector('#publicProfileStatus');
 const publicProfileError = document.querySelector('#publicProfileError');
 const PUBLIC_MESSAGES_ENDPOINT = 'https://jyxamdvvnoylaxolhlht.supabase.co/functions/v1/candidate-messages';
 let activePublicProfile = null;
+const BLACK_VIDEO_POSTER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%23000'/%3E%3C/svg%3E";
 
 function profileIcon(name) {
   const paths = {
@@ -12,6 +13,7 @@ function profileIcon(name) {
     briefcase: '<rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18m-11 0v2h4v-2"/>',
     clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
     location: '<path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/>',
+    globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>',
     check: '<path d="m5 12 4 4L19 6"/>',
     tools: '<path d="M14 7a5 5 0 0 0 6 6l-7.5 7.5a2 2 0 0 1-3-3L17 10a5 5 0 0 0 4-6l-4 4-3-1-1-3 4-4a5 5 0 0 0-6 6"/>',
     message: '<path d="M20 11.5a8 8 0 0 1-8 8 9 9 0 0 1-3.5-.7L4 20l1.2-4.3A8 8 0 1 1 20 11.5Z"/>',
@@ -81,32 +83,32 @@ function renderPublicProfile(profile) {
   const hours = Number(profile.availableHoursPerWeek);
   const availability = Number.isInteger(hours) && hours > 0 ? `${hours} hrs/week` : 'Not added';
   const startLabels = { immediately: 'Available now', two_weeks: 'Starts within 2 weeks', one_month: 'Starts within a month', flexible: 'Flexible start' };
-  const location = String(profile.location || '').trim() || 'Not added';
+  const timeZones = publicList(profile.workTimeZones, 4).join(' · ') || 'Not added';
   const experience = (Array.isArray(profile.experience) ? profile.experience : []).filter(entry => entry && (entry.jobTitle || entry.companyName)).slice(0, 20);
   const facts = [
     publicFact('rate', requestedRate, 'Requested Rate', 'green'),
     publicFact('briefcase', yearsLabel, 'Experience', 'violet'),
     publicFact('clock', availability, startLabels[profile.startAvailability] || 'Availability', 'blue'),
-    publicFact('location', location, 'Location', 'rose'),
+    publicFact('globe', timeZones, 'Time Zones', 'rose'),
   ].join('');
   const roleMarkup = experience.map((entry, index) => `<article class="public-profile-role${index > 1 ? ' public-profile-extra-role' : ''}"${index > 1 ? ' hidden' : ''}><h3>${publicEscape(entry.jobTitle)}</h3><small>${publicEscape([entry.companyName, experienceLabel(entry)].filter(Boolean).join('  ·  '))}</small>${entry.description ? `<p>${publicEscape(entry.description)}</p>` : ''}</article>`).join('');
   const backgroundGroups = [
-    industries.length ? `<div class="public-profile-background-group"><p class="public-profile-eyebrow">INDUSTRIES</p>${publicBackgroundTags(industries)}</div>` : '',
     education.length ? `<div class="public-profile-background-group"><p class="public-profile-eyebrow">EDUCATION</p>${publicBackgroundTags(education, 3)}</div>` : '',
     certifications.length ? `<div class="public-profile-background-group"><p class="public-profile-eyebrow">CERTIFICATIONS</p>${publicBackgroundTags(certifications)}</div>` : '',
     languages.length ? `<div class="public-profile-background-group"><p class="public-profile-eyebrow">LANGUAGES</p>${publicBackgroundTags(languages)}</div>` : '',
   ].filter(Boolean).join('');
   const careerContent = experience.length ? `<div class="public-profile-experience">${roleMarkup}</div>` : '';
   const backgroundMarkup = backgroundGroups ? `<details class="public-profile-more-background"><summary>More background <span aria-hidden="true">→</span></summary><div>${backgroundGroups}</div></details>` : '';
-  const careerPanel = careerContent || backgroundGroups ? `<section class="public-profile-panel public-profile-experience-panel"><div class="public-profile-panel-heading"><h2><span class="public-profile-heading-icon" aria-hidden="true">${profileIcon('briefcase')}</span> ${experience.length ? 'Work Experience' : 'Background'}${experience.length && profile.experienceSource === 'resume' ? '<small class="public-profile-resume-source">From resume</small>' : ''}</h2>${experience.length > 2 ? '<button type="button" class="public-profile-view-experience" data-expand-experience aria-expanded="false">View Full Experience <span aria-hidden="true">→</span></button>' : ''}</div>${careerContent}${backgroundMarkup}</section>` : '';
+  const careerPanel = careerContent ? `<section class="public-profile-panel public-profile-experience-panel"><div class="public-profile-panel-heading"><h2><span class="public-profile-heading-icon" aria-hidden="true">${profileIcon('briefcase')}</span> ${experience.length ? 'Work Experience' : 'Background'}${experience.length && profile.experienceSource === 'resume' ? '<small class="public-profile-resume-source">From resume</small>' : ''}</h2>${experience.length > 2 ? '<button type="button" class="public-profile-view-experience" data-expand-experience aria-expanded="false">View Full Experience <span aria-hidden="true">→</span></button>' : ''}</div>${careerContent}</section>` : '';
   const toolMarkup = software.map(tool => {
     const key = tool.toLowerCase();
     const brand = key.includes('google') ? 'google' : key.includes('slack') ? 'slack' : key.includes('notion') ? 'notion' : key.includes('microsoft') || key.includes('office') ? 'microsoft' : key.includes('zoom') ? 'zoom' : 'generic';
     const mark = brand === 'slack' ? '#' : brand === 'microsoft' ? '▦' : tool.slice(0, 1).toUpperCase();
     return `<span><i class="tool-brand-${brand}" aria-hidden="true">${publicEscape(mark)}</i>${publicEscape(tool)}</span>`;
   }).join('');
-  const skillAndTools = skills.length || software.length ? `<div class="public-profile-columns">
+  const skillAndTools = skills.length || industries.length || software.length ? `<div class="public-profile-columns">
     ${skills.length ? `<section class="public-profile-panel public-profile-skills-panel"><div class="public-profile-panel-heading"><h2>Skills</h2><small class="public-profile-resume-source">From resume</small></div><div class="public-profile-skills">${skills.map(skill => `<span>${publicEscape(skill)}</span>`).join('')}</div></section>` : ''}
+    ${industries.length ? `<section class="public-profile-panel public-profile-industries-panel"><div class="public-profile-panel-heading"><h2>Industries</h2></div><div class="public-profile-skills">${industries.map(industry => `<span>${publicEscape(industry)}</span>`).join('')}</div></section>` : ''}
     ${software.length ? `<section class="public-profile-panel public-profile-tools-panel"><div class="public-profile-panel-heading"><h2><span class="public-profile-heading-icon" aria-hidden="true">${profileIcon('tools')}</span> Tools & Software</h2><small class="public-profile-resume-source">From resume</small></div><div class="public-profile-tools">${toolMarkup}</div></section>` : ''}
   </div>` : '';
   const avatar = photo ? `<img src="${publicEscape(photo)}" alt="${publicEscape(name)}" />` : publicEscape(candidateInitials(name));
@@ -125,18 +127,18 @@ function renderPublicProfile(profile) {
         </div>
       </nav>
       <header class="public-profile-hero">
-        <span class="public-profile-avatar">${avatar}${hours > 0 ? '<i aria-hidden="true"></i>' : ''}</span>
+        <span class="public-profile-avatar">${avatar}</span>
         <div class="public-profile-identity">
           <div class="public-profile-name-line"><h1>${publicEscape(name)}</h1>${profile.verified ? '<span class="public-profile-verified"><span aria-hidden="true">✓</span> Vetted by our team</span>' : ''}</div>
           <p class="public-profile-role-line">${publicEscape(role)}${years ? ` <span aria-hidden="true">·</span> ${publicEscape(yearsLabel)} experience` : ''}</p>
           ${idealJobs.length ? `<p class="public-profile-ideal-jobs">Seeking ${publicEscape(idealJobs.join(' · '))}</p>` : ''}
         </div>
-        <div class="public-profile-actions"><button type="button" data-save-public aria-pressed="${saved}">${profileIcon('heart')}<span>${saved ? 'Saved' : 'Save'}</span></button><button type="button" data-share-public>${profileIcon('share')}<span>Share</span></button></div>
+        <div class="public-profile-actions"><button type="button" data-save-public aria-pressed="${saved}">${profileIcon('heart')}<span>${saved ? 'Saved' : 'Save'}</span></button><button type="button" data-share-public>${profileIcon('share')}<span>Share</span></button><button type="button" class="public-profile-contact-top" data-contact-public>${profileIcon('message')}<span>Contact Now</span></button></div>
       </header>
       <div class="public-profile-body ${intro ? 'has-video' : ''}">
         <div class="public-profile-facts">${facts}</div>
         <div class="public-profile-intro ${intro ? 'has-video' : ''}">
-          ${intro ? `<section class="public-profile-video-wrap" aria-label="Video introduction"><video class="public-profile-video" src="${publicEscape(intro)}" controls playsinline preload="metadata" ${photo ? `poster="${publicEscape(photo)}"` : ''} aria-label="${publicEscape(name)} video introduction"></video><span class="public-profile-video-duration" aria-label="Video duration">Video intro</span><button type="button" class="public-profile-play" aria-label="Play ${publicEscape(name)}'s introduction">${profileIcon('play')}</button><span class="public-profile-video-caption">Watch ${publicEscape(firstName)}'s introduction</span></section>` : ''}
+          ${intro ? `<section class="public-profile-video-wrap" aria-label="Video introduction"><video class="public-profile-video" src="${publicEscape(intro)}" controls playsinline preload="metadata" poster="${BLACK_VIDEO_POSTER}" aria-label="${publicEscape(name)} video introduction"></video><span class="public-profile-video-duration" aria-label="Video duration">Video intro</span><button type="button" class="public-profile-play" aria-label="Play ${publicEscape(name)}'s introduction">${profileIcon('play')}</button><span class="public-profile-video-caption">Watch ${publicEscape(firstName)}'s introduction</span></section>` : ''}
           <section class="public-profile-story"><h2>About ${publicEscape(firstName)}</h2>${summary ? `<p>${publicEscape(summary)}</p>` : '<p>Explore this candidate’s skills, tools, and career background below.</p>'}</section>
         </div>
         <div class="public-profile-detail-layout">${careerPanel}${skillAndTools}${portfolioPanel}</div>
@@ -152,7 +154,10 @@ function renderPublicProfile(profile) {
     const play = publicProfileRoot.querySelector('.public-profile-play');
     const duration = publicProfileRoot.querySelector('.public-profile-video-duration');
     video.addEventListener('loadedmetadata', () => { if (Number.isFinite(video.duration)) duration.textContent = `${Math.floor(video.duration / 60)}:${String(Math.floor(video.duration % 60)).padStart(2, '0')}`; });
-    video.addEventListener('play', () => { play.hidden = true; });
+    const caption = publicProfileRoot.querySelector('.public-profile-video-caption');
+    // Phones: hide the native control bar until playback so the caption can sit at the bottom of the video.
+    if (window.matchMedia('(max-width: 680px)').matches) video.removeAttribute('controls');
+    video.addEventListener('play', () => { play.hidden = true; video.controls = true; if (caption) caption.hidden = true; });
     video.addEventListener('pause', () => { play.hidden = false; });
     video.addEventListener('ended', () => { play.hidden = false; });
   }
@@ -244,11 +249,31 @@ function closePublicContact() {
   document.body.classList.remove('public-dialog-open');
 }
 async function loadPublicProfile() {
+  // Localhost-only sample profiles (?demo=demo-1 … demo-20) from the gitignored local-preview folder.
+  const demoId = new URLSearchParams(location.search).get('demo') || '';
+  if (['localhost', '127.0.0.1'].includes(location.hostname) && /^demo-\d+$/.test(demoId)) {
+    try {
+      const people = await (await fetch('./local-preview/demo-candidates.json')).json();
+      const person = people.find((item) => item.id === demoId);
+      if (!person) throw new Error('Sample profile not found');
+      renderPublicProfile(person);
+    } catch {
+      publicProfileStatus.hidden = true;
+      publicProfileError.hidden = false;
+    }
+    return;
+  }
   const shareSlug = new URLSearchParams(location.search).get('profile') || '';
   if (!/^[0-9a-f]{32}$/.test(shareSlug)) { publicProfileStatus.hidden = true; publicProfileError.hidden = false; return; }
   try {
     const result = await window.savaPlatform.publicRequest('publicCandidateProfile', { shareSlug });
     if (!result.profile) throw new Error('Profile unavailable');
+    // Local-only: overlay draft profile text from local-preview/ (gitignored) when previewing on localhost.
+    const draft = new URLSearchParams(location.search).get('draft') || '';
+    if (['localhost', '127.0.0.1'].includes(location.hostname) && /^[a-z0-9-]+$/.test(draft)) {
+      const response = await fetch(`./local-preview/${draft}.json`);
+      if (response.ok) Object.assign(result.profile, await response.json(), { experienceSource: 'draft' });
+    }
     renderPublicProfile(result.profile);
     const intent = new URLSearchParams(location.search).get('contact');
     if (intent === 'message' || intent === 'interview') openPublicContact();

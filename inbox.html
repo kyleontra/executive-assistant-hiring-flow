@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Messages | Hire From SA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./style.css" />
+    <link rel="stylesheet" href="./employer-simple.css" />
+    <link rel="stylesheet" href="./brand.css" />
+    <link rel="stylesheet" href="./inbox.css" />
+    <link rel="stylesheet" href="./employer-nav.css" />
+  </head>
+  <body class="simple-employer-page employer-only">
+    <header class="simple-header">
+      <a class="simple-brand site-logo-link" href="./index.html"><img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a>
+      <nav><a href="./talent.html">Talent</a><a class="active" href="./inbox.html">Messages</a><a href="./posted-jobs.html">Posted jobs</a><a href="./index.html">Post a job</a></nav>
+    </header>
+
+    <main class="ibx-shell">
+      <div class="ibx-top">
+        <h1>Messages</h1>
+        <div class="ibx-filters">
+          <label><span>Active job</span>
+            <select id="ibxJob" aria-label="Active job"><option value="all">All active jobs</option></select>
+          </label>
+          <label><span>Organize by</span>
+            <select id="ibxSort" aria-label="Organize by">
+              <option value="match">Best match</option>
+              <option value="az">A to Z</option>
+              <option value="za">Z to A</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <section id="ibx" class="ibx">
+        <aside class="ibx-list-pane">
+          <label class="ibx-search"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="9" cy="9" r="6"/><path d="m14 14 4 4"/></svg><input id="ibxSearch" type="search" placeholder="Search applicants" autocomplete="off" /></label>
+          <div id="ibxList" class="ibx-list" role="list"></div>
+          <p id="ibxEmpty" class="ibx-empty" hidden>No applicants yet.</p>
+        </aside>
+
+        <section id="ibxThread" class="ibx-thread-pane" aria-live="polite">
+          <header class="ibx-thread-head">
+            <button id="ibxBack" class="ibx-back" type="button" aria-label="Back to applicants">←</button>
+            <span id="ibxAvatar" class="ibx-avatar ibx-avatar-lg" aria-hidden="true"></span>
+            <div class="ibx-who">
+              <a id="ibxName" class="ibx-name" href="#" target="_blank" rel="noopener"></a>
+              <p id="ibxHeadline" class="ibx-headline"></p>
+            </div>
+            <a id="ibxViewProfile" class="ibx-view-profile" href="#" target="_blank" rel="noopener">View profile</a>
+          </header>
+
+          <section class="ibx-match">
+            <div class="ibx-match-top"><b>Match</b><strong id="ibxMatchScore" class="ibx-pill"></strong><span id="ibxYears"></span><span id="ibxBid" class="ibx-bid" hidden></span></div>
+            <p id="ibxMatchSummary" class="ibx-match-summary"></p>
+          </section>
+
+          <div id="ibxMessages" class="ibx-messages"></div>
+
+          <form id="ibxCompose" class="ibx-compose">
+            <textarea id="ibxDraft" rows="1" placeholder="Write a message" aria-label="Write a message"></textarea>
+            <button type="submit">Send</button>
+          </form>
+        </section>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./auth-client.js"></script>
+    <script src="./employer-auth.js"></script>
+    <script src="./platform-client.js"></script>
+    <script src="./inbox.js"></script>
+    <script src="./account-role.js"></script>
+    <script src="./employer-nav.js"></script>
+  </body>
+</html>

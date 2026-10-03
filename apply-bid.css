@@ -1,0 +1,77 @@
+/* Apply v2 (application-questions.html): confirm the job, bid a rate, introduce yourself, answer questions. */
+*{box-sizing:border-box}
+body.ab-page{margin:0;min-height:100vh;background:#f4f6f9;color:#142238;font-family:"DM Sans",sans-serif}
+.ab-header{display:flex;align-items:center;justify-content:space-between;min-height:62px;padding:8px clamp(16px,4vw,48px);border-bottom:1px solid #e3e8ef;background:#fff}
+.ab-exit{color:#33445e;font-weight:700;text-decoration:none}
+.ab-exit:hover{color:#142238;text-decoration:underline;text-underline-offset:3px}
+.ab-shell{width:min(760px,calc(100% - 32px));margin:0 auto;padding:26px 0 72px}
+.ab-card{padding:30px 34px;border:1px solid #dce2ea;border-radius:16px;background:#fff;box-shadow:0 16px 42px rgba(20,34,56,.055)}
+.ab-kicker{margin:0;color:#246fe5;font-size:12px;font-weight:800;letter-spacing:1.6px}
+.ab-card h1{margin:6px 0 4px;font:800 clamp(28px,4vw,36px)/1.1 Manrope,sans-serif;letter-spacing:-1.2px}
+.ab-company{margin:0 0 18px;color:#5e6c82;font-size:15px;font-weight:600}
+.ab-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0 0 6px}
+.ab-facts div{padding:12px 14px;border:1px solid #edf0f7;border-radius:12px;background:#f7f9fe}
+.ab-facts .green{background:#f1faf6}.ab-facts .violet{background:#f7f5fe}.ab-facts .rose{background:#fff5f7}
+.ab-facts dt{color:#6b7890;font-size:12px;font-weight:700}
+.ab-facts dd{margin:4px 0 0;font:800 15px/1.3 Manrope,sans-serif}
+.ab-section{margin-top:24px;padding-top:22px;border-top:1px solid #e9eef4}
+.ab-section h2,.ab-confirm h2{display:flex;align-items:center;gap:10px;margin:0 0 6px;font:800 20px Manrope,sans-serif;letter-spacing:-.4px}
+.ab-section h2 span{display:grid;width:28px;height:28px;place-items:center;border-radius:50%;background:#142238;color:#fff;font-size:13px}
+.ab-help{margin:0 0 14px;color:#5e6c82;font-size:14px;line-height:1.55}
+.ab-help b{color:#0b7a50}
+.ab-rate-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+.ab-rate-grid>.ab-field:first-child{max-width:260px}
+.ab-range{max-width:520px}
+.ab-field{display:grid;gap:7px;color:#142238;font-size:14px;font-weight:700}
+.ab-range{display:flex;align-items:center;gap:8px}
+.ab-range em{color:#5e6c82;font-style:normal;font-weight:500}
+.ab-money{position:relative;display:flex;flex:1;min-width:0;align-items:center;height:50px;padding:0 12px;border:1px solid #c6d1df;border-radius:10px;background:#fff}
+.ab-money:focus-within{border-color:#246fe5;box-shadow:0 0 0 3px #246fe51f}
+.ab-money b{color:#33445e}
+.ab-money input{flex:1;width:100%;min-width:0;height:100%;padding:0 4px;border:0;outline:0;background:none;color:#142238;font:600 16px "DM Sans",sans-serif;-moz-appearance:textfield}
+.ab-money input::-webkit-outer-spin-button,.ab-money input::-webkit-inner-spin-button{margin:0;-webkit-appearance:none}
+.ab-period{color:#6b7890;font-size:13px;font-style:normal;font-weight:600;white-space:nowrap}
+.ab-intro,.ab-question textarea{display:block;width:100%;padding:13px 14px;border:1px solid #c6d1df;border-radius:10px;outline:0;resize:vertical;color:#142238;font:400 15px/1.55 "DM Sans",sans-serif}
+.ab-intro:focus,.ab-question textarea:focus{border-color:#246fe5;box-shadow:0 0 0 3px #246fe51f}
+.ab-count{margin:6px 0 0;color:#8a95a6;font-size:12px;text-align:right}
+.ab-questions{display:grid;gap:16px}
+.ab-question label,.ab-question legend{display:flex;gap:10px;margin-bottom:8px;font-size:15px;font-weight:700}
+.ab-question fieldset{margin:0;padding:0;border:0}
+.ab-q-number{display:grid;width:24px;height:24px;flex:none;place-items:center;border-radius:50%;background:#e8f0ff;color:#1f5fcf;font:800 12px Manrope,sans-serif}
+.ab-question textarea{min-height:96px}
+.ab-options{display:grid;gap:8px}
+.ab-option{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #c6d1df;border-radius:10px;font-weight:600;cursor:pointer}
+.ab-confirm{margin-top:26px;padding:18px 20px;border-radius:12px;background:#f1f7ff}
+.ab-confirm h2{font-size:17px}
+.ab-confirm ul{display:grid;gap:6px;margin:8px 0 0;padding-left:18px;color:#33445e;font-size:14px}
+.ab-submit{display:flex;width:100%;height:54px;align-items:center;justify-content:center;gap:10px;margin-top:20px;border:0;border-radius:12px;background:#246fe5;color:#fff;font:800 17px "DM Sans",sans-serif;text-decoration:none;cursor:pointer;box-shadow:0 10px 24px rgba(36,111,229,.28)}
+.ab-submit:hover{background:#1d5fcc}
+.ab-submit:disabled{opacity:.6;cursor:default}
+.ab-free{margin:10px 0 0;color:#0b7a50;font-size:13px;font-weight:700;text-align:center}
+.ab-status{margin:0 0 14px;padding:12px 14px;border:1px solid #cfe0f7;border-radius:10px;background:#f1f7ff;color:#33445e;font-size:14px}
+.ab-status.error{border-color:#efc9cd;background:#fff7f7;color:#a84e57}
+.ab-status.success{border-color:#bfe5d2;background:#f1faf6;color:#0b6b47}
+.ab-done{text-align:center}
+.ab-done-mark{display:inline-grid;width:56px;height:56px;place-items:center;margin-bottom:12px;border-radius:50%;background:#e6f6ee;color:#0b8a5b;font-size:26px;font-weight:800}
+.ab-done p{color:#5e6c82;font-size:15px;line-height:1.55}
+[hidden]{display:none!important}
+@media(max-width:640px){
+  .ab-shell{width:calc(100% - 24px);padding-top:14px}
+  .ab-card{padding:22px 18px}
+  .ab-facts{grid-template-columns:1fr 1fr}
+  .ab-facts div:last-child{grid-column:1/-1}
+  .ab-rate-grid>.ab-field:first-child{max-width:none}
+}
+.ab-applied{text-align:center}
+.ab-applied h1{margin-top:4px}
+.ab-applied-job{margin:0 0 4px;color:#5e6c82;font-size:15px;font-weight:700}
+.ab-applied-lead{margin:10px 0 20px;color:#33445e;font-size:16px}
+.ab-video{overflow:hidden;aspect-ratio:16/9;border-radius:14px;background:#000}
+.ab-video video{display:block;width:100%;height:100%;background:#000}
+.ab-video-placeholder{display:flex;height:100%;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:#c9d2df;font-size:15px}
+.ab-video-play{display:grid;width:64px;height:64px;place-items:center;border:2px solid #fff;border-radius:50%;color:#fff}
+.ab-video-play svg{width:28px;height:28px;margin-left:4px;fill:currentColor}
+.ab-applied-actions{display:grid;gap:10px;margin-top:22px}
+.ab-applied-actions .ab-submit{margin-top:0}
+.ab-secondary{display:flex;height:48px;align-items:center;justify-content:center;border:1px solid #c6d1df;border-radius:12px;background:#fff;color:#22344f;font:700 15px "DM Sans",sans-serif;text-decoration:none}
+.ab-secondary:hover{background:#f4f6f9}

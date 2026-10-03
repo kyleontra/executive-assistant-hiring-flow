@@ -252,7 +252,7 @@ async function loadJobs() {
   status.textContent = 'Loading open roles…';
   document.querySelector('#jobsRetry').hidden = true;
   try {
-    const data = await window.savaPlatform.publicRequest('listJobs');
+    const data = await window.savaPlatform.viewerRequest('listJobs');
     jobs = (data.jobs || []).filter(job => job.status === 'active');
     populateJobFilters();
     jobsLoaded = true;

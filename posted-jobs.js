@@ -1,108 +1,134 @@
-const postedJobsList = document.querySelector('#postedJobsList');
-const postedJobsStatus = document.querySelector('#postedJobsStatus');
-const postedJobSearch = document.querySelector('#postedJobSearch');
-const postedJobStatus = document.querySelector('#postedJobStatus');
+// Posted jobs v2: every job the hirer posted, with applicants, pay, timeline and promotion at a glance.
+const pjList = document.querySelector('#pjList');
+const pjStatusLine = document.querySelector('#pjStatusLine');
+const pjSearch = document.querySelector('#pjSearch');
+const pjStatus = document.querySelector('#pjStatus');
+const pjSort = document.querySelector('#pjSort');
+const pjDemo = ['localhost', '127.0.0.1'].includes(window.location.hostname) && new URLSearchParams(window.location.search).has('demo');
 
-let postedJobs = [];
-let postedJobApplications = [];
-let applicantCounts = new Map();
+let pjJobs = [];
+let pjApplications = [];
 
-function escapePostedJob(value) {
+function pjEscape(value) {
   return String(value ?? '').replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
 }
 
-function postedDate(value) {
+function pjPostedDate(value) {
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? 'Recently posted' : `Posted ${new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(date)}`;
 }
 
-function updatePostedJobSummary(applications) {
-  document.querySelector('#totalJobs').textContent = String(postedJobs.length);
-  document.querySelector('#activeJobs').textContent = String(postedJobs.filter((job) => job.status === 'active').length);
-  document.querySelector('#totalApplicants').textContent = String(applications.length);
+function pjCounts(jobId) {
+  const applications = pjApplications.filter((application) => String(application.jobId) === String(jobId));
+  return { total: applications.length, fresh: applications.filter((application) => (application.status || 'new') === 'new').length };
 }
 
-function countPostedJobApplications(applications) {
-  return applications.reduce((counts, application) => {
-    const jobId = String(application.jobId);
-    counts.set(jobId, (counts.get(jobId) || 0) + 1);
-    return counts;
-  }, new Map());
+function pjPromotion(job) {
+  const budget = Number(job.promotionBudget);
+  if (!job.promoted || !(budget > 0)) return '';
+  const plan = budget === 5 ? 'Standard' : budget === 10 ? 'Premium' : 'Custom';
+  return `${plan} · $${budget}/day`;
 }
 
-function showPostedJobStatus(message, isError = false) {
-  postedJobsStatus.textContent = message;
-  postedJobsStatus.classList.toggle('error', isError);
-  postedJobsStatus.hidden = false;
+function pjShowStatus(message, isError = false) {
+  pjStatusLine.textContent = message;
+  pjStatusLine.classList.toggle('error', isError);
+  pjStatusLine.hidden = false;
 }
 
-function renderPostedJobs() {
-  const query = postedJobSearch.value.trim().toLowerCase();
-  const status = postedJobStatus.value;
-  const visibleJobs = postedJobs.filter((job) => {
-    const matchesSearch = `${job.title || ''} ${job.company || ''}`.toLowerCase().includes(query);
-    return matchesSearch && (status === 'all' || job.status === status);
-  });
+function pjRenderStats() {
+  document.querySelector('#pjActive').textContent = String(pjJobs.filter((job) => job.status === 'active').length);
+  document.querySelector('#pjApplicants').textContent = String(pjApplications.length);
+  document.querySelector('#pjPromoted').textContent = String(pjJobs.filter((job) => pjPromotion(job)).length);
+}
 
-  postedJobsStatus.hidden = true;
-  if (!visibleJobs.length) {
-    postedJobsList.innerHTML = `<div class="posted-jobs-empty"><h2>${postedJobs.length ? 'No jobs match those filters' : 'No jobs posted yet'}</h2><p>${postedJobs.length ? 'Try another search or status.' : 'Publish your first role and it will appear here.'}</p>${postedJobs.length ? '' : '<a href="./index.html">Post your first job →</a>'}</div>`;
+function pjRender() {
+  const query = pjSearch.value.trim().toLowerCase();
+  const status = pjStatus.value;
+  const visible = pjJobs
+    .filter((job) => `${job.title || ''} ${job.company || ''}`.toLowerCase().includes(query))
+    .filter((job) => status === 'all' || job.status === status)
+    .sort((a, b) => {
+      if (pjSort.value === 'applicants') return pjCounts(b.id).total - pjCounts(a.id).total;
+      if (pjSort.value === 'az') return String(a.title).localeCompare(String(b.title));
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    });
+
+  pjStatusLine.hidden = true;
+  if (!visible.length) {
+    pjList.innerHTML = pjJobs.length
+      ? '<div class="pj-empty"><h2>No jobs match those filters</h2><p>Try another search or status.</p></div>'
+      : '<div class="pj-empty"><h2>No jobs posted yet</h2><p>Post your first job and it will show up here.</p><a class="pj-primary" href="./index.html" data-new-job>+ Post a job</a></div>';
     return;
   }
 
-  postedJobsList.innerHTML = visibleJobs.map((job) => {
-    const applicantCount = applicantCounts.get(String(job.id)) || 0;
-    return `<article class="posted-job-card"><div><div class="posted-job-title-row"><h2>${escapePostedJob(job.title)}</h2><span class="posted-job-status ${escapePostedJob(job.status)}">${escapePostedJob(job.status || 'draft')}</span></div><p class="posted-job-company">${escapePostedJob(job.company)} · ${escapePostedJob(postedDate(job.createdAt))}</p><div class="posted-job-meta"><span>${escapePostedJob(job.arrangement)}</span><span>${escapePostedJob(job.type)}</span><span>${escapePostedJob(job.location)}</span><span>${escapePostedJob(job.pay)}</span></div><div class="posted-job-count"><span>${applicantCount}</span> applicant${applicantCount === 1 ? '' : 's'}</div></div><div class="posted-job-actions"><a href="./job-detail.html?job=${encodeURIComponent(job.id)}">View listing</a><a class="primary" href="./applicants.html?job=${encodeURIComponent(job.id)}">View applicants →</a><button class="posted-job-delete" type="button" data-delete-job="${escapePostedJob(job.id)}">Delete</button></div></article>`;
+  pjList.innerHTML = visible.map((job) => {
+    const counts = pjCounts(job.id);
+    const promotion = pjPromotion(job);
+    const meta = [job.type, job.pay, job.hiringTimeline ? `Hiring: ${job.hiringTimeline}` : ''].filter(Boolean);
+    return `<article class="pj-card">
+      <div>
+        <div class="pj-title-row"><h2>${pjEscape(job.title)}</h2><span class="pj-pill ${pjEscape(job.status)}">${pjEscape(job.status || 'draft')}</span>${promotion ? `<span class="pj-pill promo">${pjEscape(promotion)}</span>` : ''}</div>
+        <p class="pj-posted">${pjEscape(pjPostedDate(job.createdAt))}</p>
+        <div class="pj-meta">${meta.map((item) => `<span>${pjEscape(item)}</span>`).join('')}</div>
+      </div>
+      <div class="pj-side">
+        <div class="pj-actions">
+          <a class="pj-listing" href="./job-detail.html?job=${encodeURIComponent(job.id)}">View listing</a>
+          <a class="primary" href="./inbox.html?job=${encodeURIComponent(job.id)}${pjDemo ? '&demo' : ''}">View applicants →</a>
+        </div>
+        <div class="pj-count"><strong>${counts.total}</strong><span>applicant${counts.total === 1 ? '' : 's'}</span>${counts.fresh ? `<span class="pj-new">${counts.fresh} new</span>` : ''}</div>
+      </div>
+    </article>`;
   }).join('');
 }
 
-async function deletePostedJob(jobId, button) {
-  const job = postedJobs.find((item) => String(item.id) === jobId);
-  if (!job) return;
-  const applicantCount = applicantCounts.get(jobId) || 0;
-  const applicantWarning = applicantCount
-    ? ` and ${applicantCount} applicant record${applicantCount === 1 ? '' : 's'}`
-    : '';
-  if (!window.confirm(`Delete “${job.title || 'this job'}”?\n\nThis permanently deletes the listing${applicantWarning}. This cannot be undone.`)) return;
+function pjDemoData() {
+  const daysAgo = (days) => new Date(Date.now() - days * 86400000).toISOString();
+  const jobs = [
+    { id: 'demo-wedding', title: 'Wedding Video Editor', status: 'active', type: 'Contract', pay: '$8–$15 / hour', hiringTimeline: 'ASAP', promoted: true, promotionBudget: 10, createdAt: daysAgo(3) },
+    { id: 'demo-social', title: 'Social Media Video Editor', status: 'active', type: 'Part-time', pay: '$600–$900 / month', hiringTimeline: 'Within 1-2 weeks', promoted: true, promotionBudget: 5, createdAt: daysAgo(6) },
+    { id: 'demo-ea', title: 'Executive Assistant', status: 'closed', type: 'Full-time', pay: '$5–$8 / hour', hiringTimeline: 'Within the month', promoted: false, createdAt: daysAgo(24) },
+    { id: 'demo-bookkeeper', title: 'Bookkeeper', status: 'closed', type: 'Part-time', pay: '$700–$1,000 / month', hiringTimeline: 'Not urgently', promoted: true, promotionBudget: 5, createdAt: daysAgo(41) },
+    { id: 'demo-setter', title: 'Appointment Setter', status: 'closed', type: 'Full-time', pay: '$4–$6 / hour', hiringTimeline: 'ASAP', promoted: false, createdAt: daysAgo(58) },
+  ];
+  const statuses = ['new', 'new', 'new', 'shortlisted', 'new', 'new', 'new', 'interviewing', 'new', 'shortlisted'];
+  const many = (jobId, count, status = 'interviewing') => Array.from({ length: count }, (_, index) => ({ id: `${jobId}-${index}`, jobId, status }));
+  const applications = [
+    ...statuses.map((status, index) => ({ id: `w${index}`, jobId: 'demo-wedding', status })),
+    ...['new', 'new', 'shortlisted'].map((status, index) => ({ id: `s${index}`, jobId: 'demo-social', status })),
+    ...many('demo-ea', 6),
+    ...many('demo-bookkeeper', 14),
+    ...many('demo-setter', 21),
+  ];
+  return { jobs, applications };
+}
 
-  button.disabled = true;
-  button.textContent = 'Deleting…';
+async function pjLoad() {
   try {
-    await window.savaPlatform.employerRequest('deleteJob', { jobId });
-    postedJobs = postedJobs.filter((item) => String(item.id) !== jobId);
-    postedJobApplications = postedJobApplications.filter((application) => String(application.jobId) !== jobId);
-    applicantCounts = countPostedJobApplications(postedJobApplications);
-    updatePostedJobSummary(postedJobApplications);
-    renderPostedJobs();
-    showPostedJobStatus(`“${job.title || 'Job'}” was deleted.`);
+    let dashboard;
+    if (pjDemo) dashboard = pjDemoData();
+    else {
+      if (!window.savaPlatform) throw new Error('The hiring service did not load.');
+      dashboard = await window.savaPlatform.employerRequest('employerDashboard');
+    }
+    pjJobs = dashboard.jobs || [];
+    pjApplications = dashboard.applications || [];
+    pjRenderStats();
+    pjRender();
   } catch (error) {
-    button.disabled = false;
-    button.textContent = 'Delete';
-    showPostedJobStatus(error.message || 'The job could not be deleted.', true);
+    ['pjActive', 'pjApplicants', 'pjPromoted'].forEach((id) => { document.querySelector(`#${id}`).textContent = '-'; });
+    pjShowStatus(error.message || 'Your posted jobs could not be loaded.', true);
   }
 }
 
-async function loadPostedJobs() {
-  try {
-    if (!window.savaPlatform) throw new Error('The hiring service did not load.');
-    const dashboard = await window.savaPlatform.employerRequest('employerDashboard');
-    postedJobs = dashboard.jobs || [];
-    postedJobApplications = dashboard.applications || [];
-    applicantCounts = countPostedJobApplications(postedJobApplications);
-    updatePostedJobSummary(postedJobApplications);
-    renderPostedJobs();
-  } catch (error) {
-    ['totalJobs', 'activeJobs', 'totalApplicants'].forEach((id) => { document.querySelector(`#${id}`).textContent = '—'; });
-    postedJobsStatus.textContent = error.message || 'Your posted jobs could not be loaded.';
-    postedJobsStatus.classList.add('error');
+pjSearch.addEventListener('input', pjRender);
+pjStatus.addEventListener('change', pjRender);
+pjSort.addEventListener('change', pjRender);
+// "Post a job" always starts a fresh draft.
+document.addEventListener('click', (event) => {
+  if (event.target.closest('[data-new-job]')) {
+    try { localStorage.removeItem('ea-hiring-role'); } catch { /* storage unavailable */ }
   }
-}
-
-postedJobSearch.addEventListener('input', renderPostedJobs);
-postedJobStatus.addEventListener('change', renderPostedJobs);
-postedJobsList.addEventListener('click', (event) => {
-  const button = event.target.closest('[data-delete-job]');
-  if (!button) return;
-  deletePostedJob(String(button.dataset.deleteJob || ''), button);
 });
-loadPostedJobs();
+pjLoad();

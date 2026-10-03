@@ -1,104 +1,275 @@
-const talentForm = document.querySelector('#talentSearchForm');
-const talentInput = document.querySelector('#talentSearch');
-const talentResults = document.querySelector('#talentResults');
-const talentStatus = document.querySelector('#talentStatus');
-const talentSummary = document.querySelector('#talentResultSummary');
-const talentTitle = document.querySelector('#talentResultTitle');
-const clearTalentSearch = document.querySelector('#clearTalentSearch');
-const talentPreviewMode = document.documentElement.dataset.preview === 'true';
-window.getVerifiedEmployer().then((user) => {
+// Search talent v2: one box for keywords or a plain-English sentence, ranked results with the reasons each person matched.
+const stForm = document.querySelector('#stForm');
+const stQuery = document.querySelector('#stQuery');
+const stResults = document.querySelector('#stResults');
+const stStatus = document.querySelector('#stStatus');
+const stSort = document.querySelector('#stSort');
+const stDemo = ['localhost', '127.0.0.1'].includes(window.location.hostname) && new URLSearchParams(window.location.search).has('demo');
+const stState = { candidates: [], results: [], query: '', understood: null };
+
+window.getVerifiedEmployer?.().then((user) => {
   const isMasterReviewer = Boolean(user?.app_metadata?.master && user?.app_metadata?.can_review);
   document.querySelectorAll('[data-master-resume]').forEach((link) => { link.hidden = !isMasterReviewer; });
 }).catch(() => {});
-const talentPreviewCandidates = [
-  { id: 'preview-1', name: 'Naledi Mokoena', primaryRole: 'Paralegal', relevantYears: 5, summary: 'Paralegal experienced in matter preparation, legal research, document review, and deadline coordination for busy legal teams.', experience: [{ jobTitle: 'Senior Paralegal', companyName: 'Mokoena Legal Partners', startDate: '2022-02', endDate: '', currentRole: true, description: 'Prepares case files, conducts legal research, coordinates court deadlines, and supports client intake.' }, { jobTitle: 'Legal Assistant', companyName: 'Cape Advisory Law', startDate: '2019-01', endDate: '2022-01', currentRole: false, description: 'Managed legal documents, correspondence, billing records, and matter calendars.' }] },
-  { id: 'preview-2', name: 'Thandi Jacobs', primaryRole: 'Customer Support Specialist', relevantYears: 6, summary: 'Customer support professional with experience handling escalations, renewals, reporting, and high-volume client communication.', experience: [{ jobTitle: 'Customer Support Specialist', companyName: 'BrightDesk', startDate: '2021-04', endDate: '', currentRole: true, description: 'Owns escalated tickets, customer follow-ups, and weekly service reporting for international clients.' }] },
-  { id: 'preview-3', name: 'Ayanda Khumalo', primaryRole: 'Executive Assistant', relevantYears: 7, summary: 'Executive assistant supporting founders and boards across multiple countries, with strong calendar, travel, and priority-management experience.', experience: [{ jobTitle: 'Executive Assistant to Founders', companyName: 'Northstar Group', startDate: '2020-06', endDate: '', currentRole: true, description: 'Coordinates two founder calendars, board meetings, international travel, and leadership follow-through.' }, { jobTitle: 'Operations Coordinator', companyName: 'Atlas Services', startDate: '2017-03', endDate: '2020-05', currentRole: false, description: 'Managed reporting deadlines, supplier coordination, and internal process documentation.' }] },
-];
 
-function escapeTalent(value) {
+function stEscape(value) {
   return String(value ?? '').replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
 }
-
-function initials(name) {
-  return name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join('').toUpperCase() || 'SA';
+function stInitials(name) {
+  return String(name || '').split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join('').toUpperCase() || 'SA';
 }
 
-function formatMonth(value) {
-  if (!/^\d{4}-\d{2}$/.test(value || '')) return '';
-  return new Intl.DateTimeFormat('en', { month: 'short', year: 'numeric' }).format(new Date(`${value}-01T00:00:00Z`));
+// ---- Query understanding -------------------------------------------------
+const ST_STOP = new Set('a an and any are as at be been but by can could do does for from get good great has have help hire hiring i im in into is it its just know like looking me my need needs of on or our person people someone somebody something strong that the their them they this to us we who will with work would years year yrs yr experience experienced least plus more than also very really can\'t able candidate candidates va virtual managing manage manages handle handling answer answering doing done want wants find give make using use used available hour hours time worked working works directly direct before previously ever alongside closely'.split(' '));
+// Related words: searching the key also looks for these (counted a little lower than an exact hit).
+const ST_RELATED = {
+  spreadsheet: ['excel', 'google sheets'], spreadsheets: ['excel', 'google sheets'], sheets: ['google sheets', 'excel'],
+  bookkeeping: ['quickbooks', 'xero', 'accounts payable', 'reconciliations'], bookkeeper: ['bookkeeping', 'quickbooks', 'xero'], accounting: ['bookkeeping', 'quickbooks', 'xero'], books: ['bookkeeping', 'quickbooks'], invoicing: ['invoices', 'accounts receivable'],
+  legal: ['paralegal', 'legal research', 'clio', 'law firm'], lawyer: ['paralegal', 'legal research', 'law firm'], attorney: ['paralegal', 'law firm'], law: ['paralegal', 'law firm', 'legal research'],
+  ceo: ['ceo support', 'chief executive', 'founder', 'managing partner', 'chief of staff'], founder: ['ceo', 'founders'], founders: ['ceo', 'founder'], executive: ['executive assistant', 'ceo support', 'chief of staff'], executives: ['executive assistant', 'ceo support'], boss: ['ceo support', 'executive assistant'],
+  calendar: ['calendar management', 'scheduling'], scheduling: ['calendar management', 'appointment setting'], inbox: ['inbox management', 'email management'], email: ['inbox management', 'email management'],
+  rep: ['sales representative', 'sales'], reps: ['sales representative', 'sales'], sdr: ['sales', 'appointment setting', 'lead generation'],
+  crm: ['hubspot', 'salesforce', 'gohighlevel'], sales: ['cold calling', 'lead generation', 'appointment setting', 'sdr'], calls: ['cold calling', 'phone support'], phone: ['phone support', 'cold calling'], leads: ['lead generation'], appointments: ['appointment setting'],
+  support: ['customer support', 'zendesk', 'live chat'], customer: ['customer support', 'customer service'], tickets: ['zendesk', 'customer support'], chat: ['live chat'],
+  video: ['video editing', 'premiere pro', 'davinci resolve'], editor: ['video editing', 'premiere pro'], editing: ['video editing', 'premiere pro'], weddings: ['wedding films'], wedding: ['wedding films'],
+  social: ['social media', 'instagram', 'tiktok'], instagram: ['social media'], tiktok: ['social media', 'short-form video'], content: ['social media', 'copywriting', 'canva'],
+  design: ['canva', 'figma', 'graphic design'], designer: ['graphic design', 'canva', 'figma'], logo: ['graphic design'],
+  ecommerce: ['shopify', 'e-commerce', 'order management'], shopify: ['e-commerce'], store: ['shopify', 'e-commerce'],
+  medical: ['medical billing', 'healthcare', 'insurance verification'], healthcare: ['medical billing', 'insurance verification'], billing: ['medical billing', 'invoices'],
+  property: ['real estate', 'property management'], realtor: ['real estate'], estate: ['real estate'],
+  data: ['data entry', 'excel'], typing: ['data entry'],
+  project: ['project management', 'asana', 'clickup'], operations: ['operations', 'sops', 'project management'], sop: ['sops'], sops: ['process documentation'],
+  website: ['wordpress', 'shopify', 'web design'], wordpress: ['web design'],
+  recruiting: ['recruitment', 'sourcing', 'linkedin recruiter'], recruiter: ['recruitment', 'sourcing'],
+  writing: ['copywriting', 'blog writing'], copywriter: ['copywriting'], seo: ['blog writing', 'wordpress'],
+  american: ['us hours'], eastern: ['us hours'], est: ['us hours'], pst: ['us hours'], cst: ['us hours'], overnight: ['us hours'], night: ['us hours'],
+};
+// Preferences boost ranking but never decide on their own who shows up.
+const ST_PREFERENCES = new Set(['us hours']);
+const ST_PHRASES = ['legal research', 'google sheets', 'customer support', 'customer service', 'real estate', 'social media', 'lead generation', 'cold calling', 'appointment setting', 'data entry', 'video editing', 'graphic design', 'calendar management', 'inbox management', 'medical billing', 'project management', 'executive assistant', 'us hours', 'premiere pro', 'davinci resolve', 'accounts payable', 'accounts receivable', 'live chat', 'property management', 'wedding films', 'web design', 'blog writing', 'insurance verification', 'short-form video', 'phone support', 'order management', 'process documentation'];
+
+function stStem(word) { return word.length > 4 && word.endsWith('s') && !word.endsWith('ss') ? word.slice(0, -1) : word; }
+
+function stUnderstand(raw) {
+  let text = ` ${String(raw || '').toLowerCase().replace(/[^a-z0-9+\-\s]/g, ' ').replace(/\s+/g, ' ')} `;
+  const yearsMatch = text.match(/(\d{1,2})\s*\+?\s*(?:years?|yrs?)/);
+  const minYears = yearsMatch ? Number(yearsMatch[1]) : 0;
+  if (yearsMatch) text = text.replace(yearsMatch[0], ' ');
+  const terms = [];
+  const labels = {};
+  const usHours = /\b(us|u s|american|eastern|est|pst|cst)\s*(hours|time|shift|shifts|timezone|time zone)\b/;
+  if (usHours.test(text)) { terms.push('us hours'); text = text.replace(new RegExp(usHours.source, 'g'), ' '); }
+  ST_PHRASES.forEach((phrase) => {
+    if (text.includes(` ${phrase} `)) { terms.push(phrase); text = text.replace(` ${phrase} `, ' '); }
+  });
+  text.split(' ').filter(Boolean).forEach((word) => {
+    if (ST_STOP.has(word) || word.length < 2 || /^\d+$/.test(word)) return;
+    const term = ST_RELATED[word] ? word : stStem(word);
+    if (!terms.includes(term)) { terms.push(term); labels[term] = word; }
+  });
+  return { terms, minYears, labels };
 }
 
-function experienceDate(entry) {
-  const start = formatMonth(entry.startDate);
-  const end = entry.currentRole ? 'Present' : formatMonth(entry.endDate);
-  return [start, end].filter(Boolean).join(' – ');
+// ---- Matching ------------------------------------------------------------
+function stHas(haystack, term) {
+  const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  // Short words must match a whole word ("rep" is not "reporting"); longer ones may continue ("quickbook" finds "QuickBooks").
+  const pattern = term.length < 5 && !term.includes(' ') ? `(^|[^a-z0-9])${escaped}s?([^a-z0-9]|$)` : `(^|[^a-z0-9])${escaped}`;
+  return new RegExp(pattern, 'i').test(haystack);
 }
 
-function renderCandidates(candidates, query) {
-  talentStatus.hidden = true;
-  talentTitle.textContent = query ? `Results for “${query}”` : 'Available candidates';
-  talentSummary.textContent = `${candidates.length} verified candidate${candidates.length === 1 ? '' : 's'}`;
-  clearTalentSearch.hidden = !query;
-  if (!candidates.length) {
-    talentResults.innerHTML = `<div class="talent-empty"><h3>No exact matches yet.</h3><p>Try a broader role, skill, or keyword.</p></div>`;
+function stScore(candidate, understood) {
+  const fields = [
+    ['title', [candidate.primaryRole, ...(candidate.jobTitles || [])], 5],
+    ['skills', candidate.skills || [], 3],
+    ['software', candidate.software || [], 3],
+    ['industries', candidate.industries || [], 2],
+    ['hours', [candidate.hours || ''], 2],
+    ['summary', [candidate.summary || ''], 1],
+  ];
+  let score = 0;
+  let groupsHit = 0;
+  let quality = 0;
+  let coreHit = false;
+  const hits = new Set();
+  understood.terms.forEach((term) => {
+    const variants = [[term, 1], ...(ST_RELATED[term] || []).map((related) => [related, 0.7])];
+    let best = 0;
+    let exact = false;
+    variants.forEach(([variant, weight]) => {
+      fields.forEach(([name, values, fieldWeight]) => {
+        values.forEach((value) => {
+          if (!value || !stHas(value, variant)) return;
+          if (weight === 1 && name !== 'summary') exact = true;
+          best = Math.max(best, fieldWeight * weight);
+          if (name !== 'summary') hits.add(value); else hits.add(variant);
+        });
+      });
+    });
+    if (best > 0) { groupsHit += 1; quality += exact ? 1 : 0.75; if (!ST_PREFERENCES.has(term)) coreHit = true; }
+    score += best;
+  });
+  return { score, groupsHit, quality, coreHit, hits: [...hits] };
+}
+
+function stRank(understood) {
+  const hasTerms = understood.terms.length > 0;
+  return stState.candidates
+    .filter((candidate) => !understood.minYears || candidate.relevantYears >= understood.minYears)
+    .map((candidate) => {
+      if (!hasTerms) return { candidate, match: 0, hits: [] };
+      const { score, quality, coreHit, hits } = stScore(candidate, understood);
+      const hasCoreTerms = understood.terms.some((term) => !ST_PREFERENCES.has(term));
+      if (!score || (hasCoreTerms && !coreHit)) return null;
+      // Direct hits count fully, related-word hits count less, missing terms count nothing.
+      const match = Math.min(99, Math.round(50 + (quality / understood.terms.length) * 45 + Math.min(4, score / 4)));
+      return { candidate, match, hits };
+    })
+    .filter(Boolean);
+}
+
+// ---- Rendering -----------------------------------------------------------
+// Green = strong match, gray = partial, red = weak.
+function stPillClass(match) { return match >= 80 ? '' : match >= 60 ? 'mid' : 'low'; }
+
+function stRender() {
+  const sorted = [...stState.results].sort((a, b) => {
+    if (stSort.value === 'years') return b.candidate.relevantYears - a.candidate.relevantYears;
+    if (stSort.value === 'az') return a.candidate.name.localeCompare(b.candidate.name);
+    return b.match - a.match || b.candidate.relevantYears - a.candidate.relevantYears;
+  });
+  const searching = Boolean(stState.query);
+  document.querySelector('#stTitle').textContent = searching ? `Results for "${stState.query}"` : 'All candidates';
+  document.querySelector('#stSummary').textContent = `${sorted.length} ${sorted.length === 1 ? 'candidate' : 'candidates'}${searching ? ' matched' : ' available'}`;
+  document.querySelector('#stClear').hidden = !searching;
+
+  const understoodLine = document.querySelector('#stUnderstood');
+  const understood = stState.understood;
+  if (searching && understood && (understood.terms.length || understood.minYears)) {
+    understoodLine.innerHTML = `<b>Searching for</b>${understood.terms.map((term) => `<span>${stEscape(understood.labels?.[term] || term)}</span>`).join('')}${understood.minYears ? `<span>${understood.minYears}+ years</span>` : ''}`;
+    understoodLine.hidden = false;
+  } else understoodLine.hidden = true;
+
+  if (!sorted.length) {
+    stResults.innerHTML = `<div class="st-empty"><h3>No exact matches yet</h3><p>Try fewer words, a broader role, or a tool like "Excel" or "QuickBooks".</p></div>`;
     return;
   }
-  talentResults.innerHTML = candidates.map((candidate) => {
-    const photo = candidate.photoUrl
-      ? `<img class="talent-avatar" src="${escapeTalent(candidate.photoUrl)}" alt="" />`
-      : `<span class="talent-avatar" aria-hidden="true">${escapeTalent(initials(candidate.name))}</span>`;
-    const experience = (candidate.experience || []).map((entry, index) => `<div class="experience-row${index > 1 ? ' extra' : ''}"${index > 1 ? ' hidden' : ''}><i aria-hidden="true"></i><span><b>${escapeTalent(entry.jobTitle)}</b><small>${escapeTalent(entry.companyName)}</small></span><span>${escapeTalent(experienceDate(entry))}</span>${entry.description ? `<p class="experience-description">${escapeTalent(entry.description)}</p>` : ''}</div>`).join('');
-    const skills = [...new Set(candidate.skills || [])].slice(0, 12);
-    const signalList = skills.length ? `<section class="talent-signals"><p>SKILLS FROM RESUME</p><div>${skills.map((skill) => `<span>${escapeTalent(skill)}</span>`).join('')}</div></section>` : '';
-    return `<article class="talent-card"><header class="talent-card-head">${photo}<div><h3>${escapeTalent(candidate.name)}</h3><p>${escapeTalent(candidate.primaryRole)}</p></div><span class="talent-years">${Number(candidate.relevantYears || 0)} years relevant</span></header><p class="talent-summary">${escapeTalent(candidate.summary)}</p>${signalList}${candidate.introUrl ? `<details class="talent-intro"><summary>Watch introduction</summary><video src="${escapeTalent(candidate.introUrl)}" controls playsinline preload="none" style="width:100%;max-height:320px;margin-top:12px;border-radius:10px;background:#14233a" aria-label="${escapeTalent(candidate.name)} introduction"></video></details>` : ''}<section class="talent-experience"><p>RELEVANT EXPERIENCE</p>${experience || '<div class="experience-row"><i></i><span><b>Resume indexed</b><small>Searchable role, software, and skill data available above</small></span></div>'}</section>${(candidate.experience || []).length > 2 ? '<button class="talent-card-toggle" type="button" aria-expanded="false">View full experience</button>' : ''}</article>`;
+  stResults.innerHTML = sorted.map(({ candidate, match, hits }) => {
+    const tags = [...new Set([...(candidate.skills || []), ...(candidate.software || [])])].slice(0, 8);
+    const hitSet = new Set(hits.map((hit) => hit.toLowerCase()));
+    const avatar = candidate.photoUrl ? `<img src="${stEscape(candidate.photoUrl)}" alt="" />` : stEscape(stInitials(candidate.name));
+    const name = candidate.profileUrl
+      ? `<a class="st-name" href="${stEscape(candidate.profileUrl)}" target="_blank" rel="noopener">${stEscape(candidate.name)}</a>`
+      : `<span class="st-name">${stEscape(candidate.name)}</span>`;
+    const why = searching && hits.length ? `<p class="st-why">Matched on <b>${[...hits].sort((a, b) => a.length - b.length).slice(0, 3).map(stEscape).join(', ')}</b></p>` : '';
+    return `<article class="st-card">
+      <span class="st-avatar" aria-hidden="true">${avatar}</span>
+      <div>
+        <div class="st-name-row">${name}${searching ? `<span class="st-pill ${stPillClass(match)}">${match}% match</span>` : ''}</div>
+        <p class="st-role">${stEscape(candidate.primaryRole)} · ${candidate.relevantYears} ${candidate.relevantYears === 1 ? 'year' : 'years'} relevant${candidate.hours ? ` · ${stEscape(candidate.hours)}` : ''}</p>
+        <p class="st-summary">${stEscape(candidate.summary)}</p>
+        <div class="st-tags">${tags.map((tag) => `<span class="${hitSet.has(tag.toLowerCase()) ? 'hit' : ''}">${stEscape(tag)}</span>`).join('')}</div>
+        ${why}
+      </div>
+      ${candidate.profileUrl ? `<a class="st-view" href="${stEscape(candidate.profileUrl)}" target="_blank" rel="noopener">View profile</a>` : ''}
+    </article>`;
   }).join('');
 }
 
-async function searchTalent(query = '') {
-  const cleanQuery = query.trim();
-  talentInput.value = cleanQuery;
-  talentStatus.className = 'talent-status';
-  talentStatus.textContent = cleanQuery ? `Searching for ${cleanQuery}…` : 'Loading verified candidates…';
-  talentStatus.hidden = false;
-  talentResults.innerHTML = '';
+// ---- Data ------------------------------------------------------------------
+async function stDemoCandidates() {
+  // Same 20 sample people the profile page opens on localhost (local-preview/ is never deployed).
+  const people = await (await fetch('./local-preview/demo-candidates.json')).json();
+  return people.map((person) => ({
+    id: person.id, name: person.name, primaryRole: person.primaryRole, relevantYears: person.relevantYears, hours: person.hours,
+    summary: person.searchSummary || person.summary, skills: person.skills, software: person.software, industries: person.industries,
+    jobTitles: [...(person.idealJobTitles || []), ...(person.experience || []).map((entry) => entry.jobTitle)],
+    profileUrl: `./candidate-public-profile.html?demo=${person.id}`,
+  }));
+}
+
+function stFromLive(candidate) {
+  return {
+    id: candidate.id,
+    name: candidate.name || 'Candidate',
+    primaryRole: candidate.primaryRole || 'Remote professional',
+    relevantYears: Math.floor(Number(candidate.relevantYears || 0)),
+    hours: '',
+    summary: candidate.summary || '',
+    skills: candidate.skills || [],
+    software: candidate.software || [],
+    industries: candidate.industries || [],
+    jobTitles: candidate.jobTitles || [],
+    photoUrl: candidate.photoUrl || '',
+    profileUrl: /^[0-9a-f]{32}$/.test(candidate.shareSlug || '') ? `./candidate-public-profile.html?profile=${candidate.shareSlug}` : '',
+  };
+}
+
+let stSearchRun = 0;
+const ST_STEPS = ['Reading every candidate profile', 'Comparing skills, tools and experience', 'Ranking your best matches'];
+const stWait = (ms) => new Promise((resolve) => { window.setTimeout(resolve, ms); });
+
+function stShowSearching(query) {
+  document.querySelector('#stTitle').textContent = `Results for "${query}"`;
+  document.querySelector('#stSummary').textContent = 'Searching…';
+  document.querySelector('#stUnderstood').hidden = true;
+  stResults.innerHTML = `<div class="st-searching" role="status">
+      <div class="st-searching-head"><span class="st-orb" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/></svg></span>
+        <div><b>Generating your best matches…</b><ol class="st-steps">${ST_STEPS.map((step) => `<li>${step}</li>`).join('')}</ol></div></div>
+      <div class="st-progress"><i></i></div>
+    </div>${'<div class="st-skeleton"><span></span><div><i></i><i></i><i></i></div></div>'.repeat(3)}`;
+}
+
+async function stSearch(raw) {
+  const query = String(raw || '').trim();
+  const run = ++stSearchRun;
+  stQuery.value = query;
   const url = new URL(window.location.href);
-  if (cleanQuery) url.searchParams.set('q', cleanQuery);
-  else url.searchParams.delete('q');
+  if (query) url.searchParams.set('q', query); else url.searchParams.delete('q');
   window.history.replaceState({}, '', url);
-  if (talentPreviewMode) {
-    const terms = cleanQuery.toLowerCase().split(/\s+/).filter(Boolean);
-    const matches = talentPreviewCandidates.filter((candidate) => {
-      const searchable = JSON.stringify(candidate).toLowerCase();
-      return terms.every((term) => searchable.includes(term));
-    });
-    renderCandidates(matches, cleanQuery);
-    return;
-  }
+  stState.query = query;
+  stState.understood = stUnderstand(query);
+  stStatus.hidden = true;
   try {
-    const result = await window.savaPlatform.employerRequest('searchCandidates', { query: cleanQuery, limit: 50 });
-    renderCandidates(result.candidates || [], cleanQuery);
+    let pause = Promise.resolve();
+    if (query) {
+      stShowSearching(query);
+      const steps = [...stResults.querySelectorAll('.st-steps li')];
+      // Walk through the steps so the search reads as deliberate, not instant.
+      pause = (async () => {
+        for (let index = 0; index < steps.length; index += 1) {
+          if (run !== stSearchRun) return;
+          steps.forEach((step, stepIndex) => { step.className = stepIndex < index ? 'done' : stepIndex === index ? 'active' : ''; });
+          await stWait(index === steps.length - 1 ? 1100 : 1000);
+        }
+      })();
+    }
+    if (!stDemo) {
+      if (!query) { stStatus.textContent = 'Loading candidates…'; stStatus.className = 'st-status'; stStatus.hidden = false; }
+      // The live index is keyword based, so send the understood terms as alternatives and rank them here.
+      const liveQuery = [...stState.understood.terms, ...stState.understood.terms.flatMap((term) => ST_RELATED[term] || [])].join(' or ');
+      const result = await window.savaPlatform.employerRequest('searchCandidates', { query: liveQuery, limit: 50 });
+      stState.candidates = (result.candidates || []).map(stFromLive);
+      stStatus.hidden = true;
+    }
+    await pause;
+    if (run !== stSearchRun) return;
+    stState.results = stRank(stState.understood);
+    stRender();
   } catch (error) {
-    talentStatus.className = 'talent-status error';
-    talentStatus.textContent = error.message || 'Candidate search is unavailable. Please try again.';
-    talentSummary.textContent = 'Candidate search could not load';
+    if (run !== stSearchRun) return;
+    stResults.innerHTML = '';
+    stStatus.textContent = error.message || 'Candidate search is unavailable. Please try again.';
+    stStatus.className = 'st-status error';
+    stStatus.hidden = false;
   }
 }
 
-talentForm.addEventListener('submit', (event) => {
-  event.preventDefault();
-  searchTalent(talentInput.value);
-});
-
-document.querySelectorAll('[data-query]').forEach((button) => button.addEventListener('click', () => searchTalent(button.dataset.query)));
-clearTalentSearch.addEventListener('click', () => searchTalent(''));
-talentResults.addEventListener('click', (event) => {
-  const button = event.target.closest('.talent-card-toggle');
-  if (!button) return;
-  const expanded = button.getAttribute('aria-expanded') === 'true';
-  button.closest('.talent-card').querySelectorAll('.experience-row.extra').forEach((row) => { row.hidden = expanded; });
-  button.setAttribute('aria-expanded', String(!expanded));
-  button.textContent = expanded ? 'View full experience' : 'Show less';
-});
-
-searchTalent(new URLSearchParams(window.location.search).get('q') || '');
+stForm.addEventListener('submit', (event) => { event.preventDefault(); stSearch(stQuery.value); });
+document.querySelectorAll('[data-example]').forEach((button) => button.addEventListener('click', () => stSearch(button.dataset.example)));
+document.querySelector('#stClear').addEventListener('click', () => stSearch(''));
+stSort.addEventListener('change', stRender);
+(async () => {
+  if (stDemo) stState.candidates = await stDemoCandidates();
+  stSearch(new URLSearchParams(window.location.search).get('q') || '');
+})();
