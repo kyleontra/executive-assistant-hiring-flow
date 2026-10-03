@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>My Employees | Hire From SA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./style.css" />
+    <link rel="stylesheet" href="./employer-simple.css" />
+    <link rel="stylesheet" href="./brand.css" />
+    <link rel="stylesheet" href="./post-steps.css" />
+    <link rel="stylesheet" href="./employees.css" />
+  </head>
+  <body class="simple-employer-page employer-only">
+    <header class="simple-header">
+      <a class="simple-brand site-logo-link" href="./index.html"><img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a>
+      <nav><a href="./talent.html">Talent</a><a href="./inbox.html">Messages</a><a href="./posted-jobs.html">Posted jobs</a></nav>
+    </header>
+
+    <main class="em-shell">
+      <div class="em-top">
+        <div>
+          <h1>My Employees</h1>
+          <p id="emPeriod" class="em-sub"></p>
+        </div>
+      </div>
+
+      <section id="emEmpty" class="em-empty" hidden>
+        <span class="em-empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><circle cx="17" cy="9" r="2.6"/><path d="M16.5 14.6c2.5.2 4.3 1.9 5 5.4"/></svg></span>
+        <h2>You do not have any employees yet.</h2>
+        <p>Post a job or search talent to hire your first assistant. Once you hire someone, you will track their hours and pay them here.</p>
+        <div class="em-empty-actions">
+          <a class="post-continue" href="./index.html">Post a job</a>
+          <a class="em-button" href="./talent.html">Search talent</a>
+        </div>
+      </section>
+
+      <div id="emContent" hidden>
+        <section class="em-summary" aria-label="Summary">
+          <div><small>Active employees</small><b id="emActive"></b></div>
+          <div><small>Hours this week</small><b id="emHours"></b></div>
+          <div><small>Amount due</small><b id="emDue"></b><span id="emDueDate"></span></div>
+          <button id="emPayAll" class="post-continue" type="button">Pay now</button>
+        </section>
+
+        <div id="emList" class="em-list"></div>
+
+        <section class="em-history">
+          <h2>Payment history</h2>
+          <div class="em-table-wrap">
+            <table>
+              <thead><tr><th>Date</th><th>Employee</th><th>Period</th><th>Hours</th><th>Amount</th><th></th></tr></thead>
+              <tbody id="emHistory"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <dialog id="emHoursDialog" class="em-dialog">
+      <header><div><h2 id="emHoursTitle"></h2><p id="emHoursSub"></p></div><button class="em-close" type="button" data-close aria-label="Close">×</button></header>
+      <div id="emHoursBody"></div>
+      <footer><span id="emHoursNote" class="em-note"></span><button id="emApprove" class="post-continue" type="button">Approve hours</button></footer>
+    </dialog>
+
+    <dialog id="emPayDialog" class="em-dialog">
+      <header><div><h2>Pay your employees</h2><p id="emPaySub"></p></div><button class="em-close" type="button" data-close aria-label="Close">×</button></header>
+      <div id="emPayBody"></div>
+      <footer><span class="em-note">Example only. No money is charged.</span><button id="emPayConfirm" class="post-continue" type="button">Confirm payment</button></footer>
+    </dialog>
+
+    <dialog id="emEditDialog" class="em-dialog em-dialog-sm">
+      <header><div><h2 id="emEditTitle"></h2><p id="emEditSub"></p></div><button class="em-close" type="button" data-close aria-label="Close">×</button></header>
+      <form id="emEditForm" novalidate></form>
+    </dialog>
+
+    <p id="emToast" class="em-toast" role="status" hidden></p>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./auth-client.js"></script>
+    <script src="./employer-auth.js"></script>
+    <script src="./employees.js"></script>
+    <script src="./account-role.js"></script>
+  </body>
+</html>

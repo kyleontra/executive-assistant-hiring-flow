@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>My Profile | Hire From SA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./style.css" />
+    <link rel="stylesheet" href="./employer-simple.css" />
+    <link rel="stylesheet" href="./brand.css" />
+    <link rel="stylesheet" href="./post-steps.css" />
+    <link rel="stylesheet" href="./employer-profile.css" />
+  </head>
+  <body class="simple-employer-page employer-only">
+    <header class="simple-header">
+      <a class="simple-brand site-logo-link" href="./index.html"><img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a>
+      <nav><a href="./talent.html">Talent</a><a href="./inbox.html">Messages</a><a href="./posted-jobs.html">Posted jobs</a></nav>
+    </header>
+
+    <main class="ep-shell">
+      <h1>My Profile</h1>
+
+      <form id="epProfile" class="ep-card" novalidate>
+        <header><h2>Profile</h2><span class="ep-visibility">Candidates see this</span></header>
+        <div class="ep-photo-row">
+          <span id="epPhoto" class="ep-photo" aria-hidden="true"></span>
+          <div>
+            <p class="ep-photo-title">Profile picture</p>
+            <p class="ep-hint">A photo of you or your company logo. JPG or PNG.</p>
+            <div class="ep-photo-actions">
+              <label class="ep-button">Upload photo<input id="epPhotoInput" type="file" accept="image/png,image/jpeg,image/webp" hidden /></label>
+              <button id="epPhotoRemove" class="ep-link" type="button">Remove</button>
+            </div>
+          </div>
+        </div>
+        <div class="ep-grid">
+          <label class="post-field"><span>Full name</span><input name="fullName" maxlength="80" placeholder="e.g. Kyle Ontra" /></label>
+          <label class="post-field"><span>Your role</span><input name="role" maxlength="60" placeholder="e.g. Founder" /></label>
+        </div>
+        <footer><span class="ep-saved" role="status"></span><button class="post-continue" type="submit">Save</button></footer>
+      </form>
+
+      <form id="epCompany" class="ep-card" novalidate>
+        <header><h2>Company info</h2><span class="ep-visibility">Candidates see this</span></header>
+        <div class="ep-grid">
+          <label class="post-field"><span>Company name</span><input name="companyName" maxlength="120" placeholder="e.g. Ontra Films" /></label>
+          <label class="post-field"><span>Industry</span><input name="industry" maxlength="80" placeholder="e.g. Wedding videography" /></label>
+          <label class="post-field"><span>Company size</span>
+            <select name="companySize"><option value="">Select size</option><option>Just me</option><option>2-10</option><option>11-50</option><option>50+</option></select>
+          </label>
+          <label class="post-field"><span>Location</span><input name="location" maxlength="80" placeholder="e.g. Miami, FL" /></label>
+          <label class="post-field"><span>Time zone</span>
+            <select name="timeZone"><option value="">Select time zone</option><option>Eastern (EST)</option><option>Central (CST)</option><option>Mountain (MST)</option><option>Pacific (PST)</option><option>Alaska (AKST)</option><option>Hawaii (HST)</option><option>Other</option></select>
+          </label>
+          <label class="post-field ep-private"><span>Website <small>Private. Only Hire From SA sees this.</small></span><input name="website" type="url" maxlength="200" placeholder="https://" /></label>
+        </div>
+        <label class="post-field"><span>About the company</span><textarea name="about" maxlength="400" rows="4" placeholder="2-3 sentences candidates read before applying."></textarea><small class="ep-count"><span data-count="about">0</span> / 400</small></label>
+        <footer><span class="ep-saved" role="status"></span><button class="post-continue" type="submit">Save</button></footer>
+      </form>
+
+      <form id="epAccount" class="ep-card" novalidate>
+        <header><h2>Account details</h2><span class="ep-visibility private">Private</span></header>
+        <div class="ep-grid">
+          <div class="post-field"><span>Login email</span><p id="epEmail" class="ep-readonly"></p></div>
+          <div class="post-field"><span>Password</span><a class="ep-button" href="./reset-password.html?account=employer">Change password</a></div>
+          <label class="post-field"><span>Phone number <small>For Hire From SA only. Never shown to candidates.</small></span><input name="phone" type="tel" maxlength="30" placeholder="+1 (555) 000-0000" /></label>
+        </div>
+        <fieldset class="ep-toggles">
+          <legend>Email notifications</legend>
+          <label><input type="checkbox" name="notifyApplied" checked /><span>Someone applied to my job</span></label>
+          <label><input type="checkbox" name="notifyMessage" checked /><span>New message from a candidate</span></label>
+          <label><input type="checkbox" name="notifyBilling" checked /><span>Billing and payment receipts</span></label>
+        </fieldset>
+        <footer><span class="ep-saved" role="status"></span><button class="post-continue" type="submit">Save</button></footer>
+      </form>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./auth-client.js"></script>
+    <script src="./employer-auth.js"></script>
+    <script src="./employer-profile.js"></script>
+    <script src="./account-role.js"></script>
+  </body>
+</html>

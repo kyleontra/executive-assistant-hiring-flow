@@ -27,7 +27,7 @@
 
   function accountLinks(role) {
     if (role === 'employer') {
-      return '<a href="./account.html">Account profile</a><a href="./talent.html">Search talent</a><a href="./applicants.html">Hiring inbox</a>';
+      return '<a href="./employer-profile.html">My Profile</a><a href="./employees.html">My Employees</a><a href="./billing.html">Billing</a>';
     }
     if (document.body.classList.contains('va-dashboard-page')) {
       return '<a href="./candidate-dashboard.html?tab=profile">My Profile</a>';
@@ -39,8 +39,11 @@
     if (!currentMenu) return;
     let photo = '';
     try {
-      const url = new URL(value);
-      if (['https:', 'http:'].includes(url.protocol)) photo = url.href;
+      if (/^data:image\/(png|jpe?g|webp);base64,/.test(String(value))) photo = String(value);
+      else {
+        const url = new URL(value);
+        if (['https:', 'http:'].includes(url.protocol)) photo = url.href;
+      }
     } catch {}
     currentMenu.querySelectorAll('[data-account-avatar]').forEach((avatar) => {
       avatar.replaceChildren();
@@ -93,11 +96,14 @@
     const menu = document.createElement('div');
     menu.className = `sava-account-menu${headerHost() === document.body ? ' sava-account-floating' : ''}`;
     const initials = accountInitials(user);
-    menu.innerHTML = `<button class="sava-account-trigger" type="button" aria-label="Open account menu for ${escapeAccount(name)}" aria-haspopup="menu" aria-expanded="false"><span data-account-avatar data-initials="${escapeAccount(initials)}">${escapeAccount(initials)}</span><i aria-hidden="true"></i></button><section class="sava-account-panel" role="menu" hidden><header><span class="sava-account-panel-avatar" data-account-avatar data-initials="${escapeAccount(initials)}">${escapeAccount(initials)}</span><div><b>${escapeAccount(name)}</b><small>${escapeAccount(user.email || '')}</small><em>${role === 'employer' ? 'Employer account' : 'Candidate account'}</em></div></header><div class="sava-account-links">${accountLinks(role)}</div><button class="sava-account-signout" type="button">Sign out</button></section>`;
+    menu.innerHTML = `<button class="sava-account-trigger" type="button" aria-label="Open account menu for ${escapeAccount(name)}" aria-haspopup="menu" aria-expanded="false"><span data-account-avatar data-initials="${escapeAccount(initials)}">${escapeAccount(initials)}</span></button><section class="sava-account-panel" role="menu" hidden><header><span class="sava-account-panel-avatar" data-account-avatar data-initials="${escapeAccount(initials)}">${escapeAccount(initials)}</span><div><b>${escapeAccount(name)}</b><em>${role === 'employer' ? 'Employer account' : 'Candidate account'}</em></div></header><div class="sava-account-links">${accountLinks(role)}</div><button class="sava-account-signout" type="button">Sign out</button></section>`;
     headerHost().append(menu);
-    if (user.app_metadata?.can_review && !document.body.classList.contains('va-dashboard-page')) menu.querySelector('.sava-account-links').insertAdjacentHTML('beforeend', '<a href="./admin-review.html">Candidate approvals</a><a href="./admin-resumes.html">Resume database</a>');
+    if (user.app_metadata?.can_review && !document.body.classList.contains('va-dashboard-page')) menu.querySelector('.sava-account-links').insertAdjacentHTML('afterend', '<div class="sava-account-admin"><p>Master account</p><a href="./admin-review.html">Candidate approvals</a><a href="./admin-resumes.html">Resume database</a></div>');
     currentMenu = menu;
-    setAccountPhoto(window.savaPendingAccountPhoto || '');
+    // Example build: an employer's photo from My Profile is stored in this browser until the backend saves it.
+    let savedEmployerPhoto = '';
+    if (role === 'employer') { try { savedEmployerPhoto = JSON.parse(localStorage.getItem('hirefromsa:employer-profile') || '{}').photo || ''; } catch { /* ignore */ } }
+    setAccountPhoto(window.savaPendingAccountPhoto || savedEmployerPhoto);
 
     const trigger = menu.querySelector('.sava-account-trigger');
     const panel = menu.querySelector('.sava-account-panel');

@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Billing | Hire From SA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./style.css" />
+    <link rel="stylesheet" href="./employer-simple.css" />
+    <link rel="stylesheet" href="./brand.css" />
+    <link rel="stylesheet" href="./post-steps.css" />
+    <link rel="stylesheet" href="./billing.css" />
+  </head>
+  <body class="simple-employer-page employer-only">
+    <header class="simple-header">
+      <a class="simple-brand site-logo-link" href="./index.html"><img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a>
+      <nav><a href="./talent.html">Talent</a><a href="./inbox.html">Messages</a><a href="./posted-jobs.html">Posted jobs</a></nav>
+    </header>
+
+    <main class="bl-shell">
+      <h1>Billing</h1>
+
+      <section id="blFailed" class="bl-failed" role="alert" hidden>
+        <div><b>Your Visa ending 4242 was declined.</b><p>Update your card so Thandi and Jaco get paid. We will try again tomorrow, and hour logging pauses after 3 days unpaid.</p></div>
+        <button class="post-continue" type="button" data-open="blCardDialog">Update card</button>
+      </section>
+
+      <section class="bl-card bl-next">
+        <div class="bl-next-main">
+          <small>Next charge</small>
+          <b id="blNextAmount">$453</b>
+          <span>Mon, Oct 5 · Visa ending 4242</span>
+          <ul id="blNextRows" class="bl-next-rows"></ul>
+          <a class="bl-link" href="./employees.html">Review hours on My Employees</a>
+        </div>
+        <div class="bl-autopay">
+          <label class="bl-switch"><input id="blAutopay" type="checkbox" checked /><span aria-hidden="true"></span><b>Auto-pay</b></label>
+          <p id="blAutopayText"></p>
+        </div>
+      </section>
+
+      <section class="bl-card">
+        <header><h2>Payment methods</h2><button class="bl-button" type="button" data-open="blCardDialog">Add card</button></header>
+        <ul id="blMethods" class="bl-methods"></ul>
+        <p class="bl-hint">If your default card fails, we charge your backup card so your employees are never paid late. Bank account (ACH) payments are coming soon.</p>
+      </section>
+
+      <section class="bl-card">
+        <header><h2>Spending</h2></header>
+        <div class="bl-stats">
+          <div><small>Last month (September)</small><b id="blMonth"></b></div>
+          <div><small>2026 total</small><b id="blYear"></b></div>
+          <div><small>Paid to employees</small><b id="blToVas"></b></div>
+        </div>
+        <div id="blSplit" class="bl-split" aria-hidden="true"></div>
+        <ul id="blLegend" class="bl-legend"></ul>
+      </section>
+
+      <section class="bl-card">
+        <header>
+          <h2>Billing history</h2>
+          <div class="bl-filters">
+            <select id="blType" aria-label="Type"><option value="all">All charges</option><option value="pay">Employee pay</option><option value="bonus">Bonuses</option><option value="promo">Job promotions</option></select>
+            <select id="blRange" aria-label="Date range"><option value="all">All time</option><option value="30">Last 30 days</option><option value="sep">September 2026</option><option value="aug">August 2026</option></select>
+            <button id="blCsv" class="bl-button" type="button">Download CSV</button>
+          </div>
+        </header>
+        <div class="bl-table-wrap">
+          <table>
+            <thead><tr><th>Date</th><th>Description</th><th>Card</th><th>Status</th><th class="num">Amount</th><th></th></tr></thead>
+            <tbody id="blHistory"></tbody>
+          </table>
+        </div>
+        <p id="blNone" class="bl-none" hidden>No charges match these filters.</p>
+      </section>
+
+      <form id="blDetails" class="bl-card" novalidate>
+        <header><h2>Billing details</h2><span class="bl-tag">Shown on your invoices</span></header>
+        <div class="bl-grid">
+          <label class="post-field"><span>Company name</span><input name="company" maxlength="120" placeholder="e.g. Ontra Films" /></label>
+          <label class="post-field"><span>Receipts email <small>Add your bookkeeper</small></span><input name="email" type="email" maxlength="160" placeholder="billing@company.com" /></label>
+          <label class="post-field bl-wide"><span>Billing address</span><input name="address" maxlength="200" placeholder="Street, city, state, ZIP" /></label>
+          <label class="post-field"><span>Country</span><select name="country"><option>United States</option><option>Canada</option><option>United Kingdom</option><option>Australia</option><option>Other</option></select></label>
+          <label class="post-field"><span>Tax ID <small>Optional</small></span><input name="taxId" maxlength="40" placeholder="EIN or VAT number" /></label>
+        </div>
+        <footer><span class="bl-saved" role="status"></span><button class="post-continue" type="submit">Save</button></footer>
+      </form>
+
+      <section class="bl-card bl-help">
+        <div>
+          <h2>How billing works</h2>
+          <p>Your employees log their hours each day. Every Monday you pay for the approved hours from the week before, and your employees receive their pay within 24 hours. Job promotions are charged once, when you publish the job.</p>
+        </div>
+        <div class="bl-help-links">
+          <button class="bl-button" type="button" data-toast="Example build: this opens a dispute form for the selected charge.">Dispute a charge</button>
+          <a class="bl-button" href="mailto:support@hirefromsa.com">Contact billing support</a>
+        </div>
+      </section>
+    </main>
+
+    <dialog id="blCardDialog" class="bl-dialog">
+      <header><div><h2>Add a card</h2><p>Your card details are handled securely by our payment processor. Hire From SA never stores your full card number.</p></div><button class="bl-close" type="button" data-close aria-label="Close">×</button></header>
+      <div class="bl-stripe">
+        <span>Card number</span><div class="bl-fake-input">1234 1234 1234 1234</div>
+        <div class="bl-grid"><div><span>Expiry</span><div class="bl-fake-input">MM / YY</div></div><div><span>CVC</span><div class="bl-fake-input">CVC</div></div></div>
+        <p class="bl-hint">Example only. In the real version, the secure card form from our payment processor goes here.</p>
+      </div>
+      <footer><button class="bl-button" type="button" data-close>Cancel</button><button id="blAddDemo" class="post-continue" type="button">Add demo card</button></footer>
+    </dialog>
+
+    <p id="blToast" class="bl-toast" role="status" hidden></p>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./auth-client.js"></script>
+    <script src="./employer-auth.js"></script>
+    <script src="./billing.js"></script>
+    <script src="./account-role.js"></script>
+  </body>
+</html>

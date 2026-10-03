@@ -10,6 +10,9 @@ const pages = {
   employerLogin: 'employer-login.html',
   resetPassword: 'reset-password.html',
   account: 'account.html',
+  employerProfile: 'employer-profile.html',
+  employees: 'employees.html',
+  billing: 'billing.html',
   jobs: 'jobs.html',
   jobDetail: 'job-detail.html',
   responsibilities: 'responsibilities.html',
@@ -56,7 +59,7 @@ if (isVercelBuild) {
 const plugins = [{
   name: 'copy-classic-browser-scripts',
   writeBundle() {
-    ['account-menu.css', 'script.js', 'auth-client.js', 'platform-client.js', 'account-role.js', 'account-menu.js', 'account.js', 'home-auth.js', 'employer-auth.js', 'employer-login.js', 'reset-password.js', 'talent.js', 'verification.js', 'id-verification.js', 'candidate-signup.js', 'email-confirmed.js', 'referral.js', 'candidate-resume.js', 'candidate-next-steps.js', 'candidate-profile.js', 'headshot-image.mjs', 'camera-request.mjs', 'candidate-public-profile.js', 'application-questions.js', 'candidate-login.js', 'scheduler-settings.js', 'schedule-interview.js', 'admin-review.js', 'posted-jobs.js', 'inbox.js', 'employer-nav.js', 'applied.js'].forEach(file => {
+    ['account-menu.css', 'script.js', 'auth-client.js', 'platform-client.js', 'account-role.js', 'account-menu.js', 'account.js', 'home-auth.js', 'employer-auth.js', 'employer-login.js', 'reset-password.js', 'talent.js', 'verification.js', 'id-verification.js', 'candidate-signup.js', 'email-confirmed.js', 'referral.js', 'candidate-resume.js', 'candidate-next-steps.js', 'candidate-profile.js', 'headshot-image.mjs', 'camera-request.mjs', 'candidate-public-profile.js', 'application-questions.js', 'candidate-login.js', 'scheduler-settings.js', 'schedule-interview.js', 'admin-review.js', 'posted-jobs.js', 'inbox.js', 'employer-nav.js', 'applied.js', 'employer-profile.js', 'employees.js', 'billing.js'].forEach(file => {
       copyFileSync(resolve(__dirname, file), resolve(__dirname, 'dist', file));
     });
   },

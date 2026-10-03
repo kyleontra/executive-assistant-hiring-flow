@@ -1,0 +1,149 @@
+/* Billing: next charge + auto-pay, payment methods, spending, billing history, billing details. */
+.bl-shell{width:min(900px,calc(100% - 32px));margin:0 auto;padding:28px 0 72px}
+.bl-shell>h1{margin:0 0 20px;color:#142238;font:800 clamp(30px,4vw,40px)/1.1 Manrope,sans-serif;letter-spacing:-1.4px}
+.bl-card{margin-bottom:18px;padding:24px 28px;border:1px solid #dce2ea;border-radius:16px;background:#fff;box-shadow:0 16px 42px rgba(20,34,56,.055)}
+.bl-card>header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.bl-card h2{margin:0;color:#142238;font:800 21px Manrope,sans-serif;letter-spacing:-.4px}
+.bl-button{display:inline-flex;height:40px;align-items:center;justify-content:center;padding:0 14px;border:1px solid #c6d1df;border-radius:9px;background:#fff;color:#22344f;font:700 14px "DM Sans",sans-serif;text-decoration:none;cursor:pointer;white-space:nowrap}
+.bl-button:hover{border-color:#9fb2ca;background:#f7f9fc}
+.bl-link{padding:0;border:0;background:none;color:#1f5fcf;font:700 13px "DM Sans",sans-serif;text-decoration:none;cursor:pointer}
+.bl-link:hover{text-decoration:underline}
+.bl-link.danger{color:#a3434c}
+.bl-hint{margin:12px 0 0;color:#6b7890;font-size:13px;line-height:1.5}
+.bl-tag{padding:4px 10px;border-radius:999px;background:#f1f3f6;color:#5e6c82;font-size:12px;font-weight:700;white-space:nowrap}
+.bl-tag.default{background:#e8f0ff;color:#1f5fcf}
+.bl-shell .post-continue,.bl-dialog .post-continue{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap}
+
+/* Failed payment */
+.bl-failed{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px;padding:16px 20px;border:1px solid #f0c4c8;border-radius:14px;background:#fff4f5}
+.bl-failed b{color:#8f2f38;font-size:15px}
+.bl-failed p{margin:3px 0 0;color:#7a3d43;font-size:14px}
+.bl-failed[hidden]{display:none}
+
+/* Next charge */
+.bl-next{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:28px}
+.bl-next-main{display:grid;align-content:start;gap:4px}
+.bl-next-main small,.bl-stats small{color:#6b7890;font-size:12px;font-weight:700}
+.bl-next-main>b{color:#142238;font:800 36px Manrope,sans-serif;letter-spacing:-1px}
+.bl-next-main>span{color:#5e6c82;font-size:14px}
+.bl-next-rows{display:grid;margin:12px 0 10px;padding:0;list-style:none}
+.bl-next-rows li{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid #eef1f5;color:#22344f;font-size:14px}
+.bl-next-rows small{margin-left:6px;color:#7b889c}
+.bl-next-main .bl-link{justify-self:start;font-size:14px}
+.bl-autopay{align-self:start;padding:18px;border-radius:12px;background:#f7f9fc}
+.bl-autopay p{margin:10px 0 0;color:#5e6c82;font-size:14px;line-height:1.5}
+.bl-switch{display:flex;align-items:center;gap:10px;cursor:pointer}
+.bl-switch input{position:absolute;opacity:0}
+.bl-switch span{position:relative;width:44px;height:26px;flex:none;border-radius:999px;background:#c6d1df;transition:background .15s}
+.bl-switch span::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .15s}
+.bl-switch input:checked+span{background:#0b7a50}
+.bl-switch input:checked+span::after{transform:translateX(18px)}
+.bl-switch input:focus-visible+span{box-shadow:0 0 0 3px #246fe540}
+.bl-switch b{color:#142238;font:800 16px Manrope,sans-serif}
+
+/* Payment methods */
+.bl-methods{display:grid;margin:0;padding:0;list-style:none}
+.bl-methods li{display:flex;align-items:center;gap:14px;padding:14px 0;border-top:1px solid #eef1f5}
+.bl-methods li:first-child{border-top:0;padding-top:4px}
+.bl-methods li>div:first-of-type{flex:1;min-width:0}
+.bl-methods b{color:#142238;font-size:15px}
+.bl-methods p{margin:2px 0 0;color:#6b7890;font-size:13px}
+.bl-brand{display:grid;width:52px;height:34px;flex:none;place-items:center;border-radius:6px;background:#1a1f71;color:#fff;font:800 12px Manrope,sans-serif;letter-spacing:.5px}
+.bl-brand.mastercard{background:#2b2b2b}
+.bl-brand.amex{background:#2e77bb}
+.bl-method-actions{display:flex;gap:14px}
+
+/* Spending */
+.bl-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.bl-stats div{display:grid;gap:3px}
+.bl-stats b{color:#142238;font:800 26px Manrope,sans-serif;letter-spacing:-.6px}
+.bl-split{display:flex;height:10px;gap:3px;margin:20px 0 12px;overflow:hidden;border-radius:999px;background:#eef1f5}
+.bl-split span{height:100%}
+.bl-split .pay,.bl-legend .pay{background:#246fe5}
+.bl-split .bonus,.bl-legend .bonus{background:#0b9e66}
+.bl-split .promo,.bl-legend .promo{background:#e0a32e}
+.bl-legend{display:flex;flex-wrap:wrap;gap:8px 22px;margin:0;padding:0;list-style:none;color:#5e6c82;font-size:13px}
+.bl-legend li{display:flex;align-items:center;gap:7px}
+.bl-legend i{width:10px;height:10px;border-radius:3px}
+.bl-legend b{color:#142238}
+
+/* History */
+.bl-filters{display:flex;flex-wrap:wrap;gap:8px}
+.bl-filters select{height:40px;padding:0 34px 0 12px;border:1px solid #c6d1df;border-radius:9px;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='none' stroke='%23526178' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3 5 4 4 4-4'/%3E%3C/svg%3E") no-repeat right 11px center;color:#142238;font:600 14px "DM Sans",sans-serif;appearance:none;cursor:pointer}
+.bl-table-wrap{margin:0 -28px;overflow-x:auto}
+.bl-card table{width:100%;border-collapse:collapse;font-size:14px}
+.bl-card th{padding:10px 12px;border-bottom:1px solid #e3e8ef;background:#fafbfd;color:#6b7890;font-size:12px;font-weight:700;text-align:left;white-space:nowrap}
+.bl-card td{padding:12px;border-bottom:1px solid #eef1f5;color:#33445e;vertical-align:top;white-space:nowrap}
+.bl-card th:first-child,.bl-card td:first-child{padding-left:28px}
+.bl-card th:last-child,.bl-card td:last-child{padding-right:28px}
+.bl-card tr:last-child td{border-bottom:0}
+.bl-card td b{display:block;color:#142238;white-space:normal}
+.bl-card td small{display:block;margin-top:2px;color:#7b889c;font-size:12px;white-space:normal}
+.bl-card .num{text-align:right}
+.bl-card td.num{color:#142238;font-weight:700}
+.bl-card tr.failed td.num,.bl-card tr.refunded td.num{color:#8a95a6;font-weight:600}
+.bl-card tr.failed td.num{text-decoration:line-through}
+.bl-status{padding:3px 9px;border-radius:999px;background:#e6f6ee;color:#0b6b47;font-size:12px;font-weight:700}
+.bl-status.failed{background:#fde8ea;color:#a3434c}
+.bl-status.refunded{background:#f1f3f6;color:#5e6c82}
+.bl-none{margin:16px 0 0;color:#6b7890;text-align:center}
+
+/* Details */
+.bl-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 16px}
+.bl-wide{grid-column:1/-1}
+.bl-card .post-field{margin-bottom:18px}
+.bl-card .post-field small{margin-left:6px;color:#8a95a6;font-size:12px;font-weight:500}
+.bl-card>footer{display:flex;align-items:center;justify-content:flex-end;gap:14px;padding-top:16px;border-top:1px solid #e7ecf2}
+.bl-saved{color:#0b7a50;font-size:14px;font-weight:600}
+
+/* Help */
+.bl-help{display:flex;align-items:center;justify-content:space-between;gap:24px;background:#f7f9fc;box-shadow:none}
+.bl-help h2{font-size:18px}
+.bl-help p{max-width:520px;margin:6px 0 0;color:#5e6c82;font-size:14px;line-height:1.55}
+.bl-help-links{display:grid;gap:8px}
+
+/* Dialog */
+.bl-dialog{width:min(480px,calc(100% - 24px));padding:0;border:0;border-radius:16px;background:#fff;color:#142238;box-shadow:0 30px 80px rgba(20,34,56,.25)}
+.bl-dialog::backdrop{background:rgba(20,34,56,.45)}
+.bl-dialog>header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:22px 24px 14px;border-bottom:1px solid #eef1f5}
+.bl-dialog h2{margin:0;font:800 21px Manrope,sans-serif}
+.bl-dialog>header p{margin:4px 0 0;color:#5e6c82;font-size:13px;line-height:1.45}
+.bl-close{width:34px;height:34px;flex:none;border:0;border-radius:8px;background:#f3f6fa;color:#33445e;font-size:20px;cursor:pointer}
+.bl-stripe{display:grid;gap:6px;padding:18px 24px}
+.bl-stripe span{color:#142238;font-size:14px;font-weight:700}
+.bl-stripe .bl-grid{gap:0 12px;margin-top:8px}
+.bl-stripe .bl-grid div{display:grid;gap:6px}
+.bl-fake-input{display:flex;height:48px;align-items:center;padding:0 14px;border:1px solid #d3dce8;border-radius:10px;background:#f7f9fc;color:#9aa5b5;font-size:15px}
+.bl-dialog>footer{display:flex;justify-content:flex-end;gap:10px;padding:14px 24px 22px;border-top:1px solid #eef1f5}
+
+.bl-toast{position:fixed;bottom:24px;left:50%;z-index:50;max-width:calc(100% - 32px);margin:0;padding:12px 18px;border-radius:10px;background:#142238;color:#fff;font-size:14px;font-weight:600;box-shadow:0 14px 40px rgba(20,34,56,.3);transform:translateX(-50%)}
+.bl-toast[hidden]{display:none}
+
+@media(max-width:760px){
+  .bl-shell{width:calc(100% - 24px);padding-top:18px}
+  .bl-card{padding:20px 16px}
+  .bl-next{grid-template-columns:1fr;gap:16px}
+  .bl-failed{flex-direction:column;align-items:stretch}
+  .bl-methods li{flex-wrap:wrap}
+  .bl-method-actions{width:100%;padding-left:66px}
+  .bl-stats{grid-template-columns:1fr 1fr}
+  .bl-stats b{font-size:22px}
+  .bl-filters{width:100%;display:grid;grid-template-columns:1fr 1fr}
+  .bl-filters .bl-button{grid-column:1/-1}
+  .bl-table-wrap{margin:0 -16px;overflow:visible}
+  .bl-card table,.bl-card tbody{display:block}
+  .bl-card thead{display:none}
+  .bl-card tr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;padding:14px 16px;border-bottom:1px solid #eef1f5}
+  .bl-card tr:last-child{border-bottom:0}
+  .bl-card td,.bl-card td:first-child,.bl-card td:last-child{padding:0;border:0;white-space:normal}
+  .bl-card td:nth-child(2){grid-row:1;grid-column:1}
+  .bl-card td:nth-child(5){grid-row:1;grid-column:2;font-size:15px}
+  .bl-card td:nth-child(1){grid-row:2;grid-column:1;color:#7b889c;font-size:13px}
+  .bl-card td:nth-child(4){grid-row:2;grid-column:2;text-align:right}
+  .bl-card td:nth-child(3){display:none}
+  .bl-card td:nth-child(6){grid-row:3;grid-column:1/-1;text-align:left}
+  .bl-card td:nth-child(6):empty{display:none}
+  .bl-grid{grid-template-columns:1fr}
+  .bl-help{flex-direction:column;align-items:stretch}
+  .bl-card>footer .post-continue{width:100%}
+}

@@ -19,3 +19,22 @@
 .sava-account-signout:hover{background:#fff0f1!important;color:#af3f49!important}
 .sava-account-floating{position:fixed;top:18px;right:18px;z-index:1000}
 @media(max-width:620px){.sava-account-trigger{width:36px!important;height:36px!important;min-width:36px!important;min-height:36px!important;font-size:10px!important}.sava-account-panel{position:fixed;top:66px;right:10px;width:min(290px,calc(100vw - 20px))}.home-header .header-actions{gap:9px}.simple-header nav{gap:9px}}
+/* Account menu v2: quieter trigger that sits with the nav links; larger, simpler panel. */
+.sava-account-trigger{width:34px!important;height:34px!important;min-width:34px!important;min-height:34px!important;border:1px solid #d3dce8!important;background:#fff!important;color:#142238!important;box-shadow:none!important;font:800 13px/1 "Manrope",sans-serif!important}
+.sava-account-trigger:hover,.sava-account-trigger[aria-expanded="true"]{border-color:#246fe5!important;background:#f2f7ff!important;color:#142238!important}
+.sava-account-trigger i{display:none!important}
+.sava-account-panel{top:calc(100% + 10px);width:260px;padding:10px;border-radius:14px;box-shadow:0 18px 48px rgba(24,48,80,.16)}
+.sava-account-panel>header{gap:12px!important;padding:8px 8px 14px!important}
+.sava-account-panel-avatar{width:44px;height:44px;flex-basis:44px;border:1px solid #d3dce8;background:#fff;color:#142238;font-size:15px}
+.sava-account-panel header b{font:800 15px Manrope,sans-serif}
+.sava-account-panel header em{margin-top:2px;color:#6b7890;font-size:12px;font-weight:600;letter-spacing:0;text-transform:none}
+.sava-account-links{gap:2px!important;margin:8px 0!important}
+.sava-account-links a,.sava-account-soon,.sava-account-admin a{display:flex!important;min-height:40px!important;align-items:center!important;justify-content:space-between;padding:0 10px!important;border-radius:8px!important;color:#22344f!important;font:600 14px "DM Sans",sans-serif!important;text-decoration:none!important}
+.sava-account-links a:hover,.sava-account-admin a:hover{background:#f2f6fb!important;color:#142238!important}
+.sava-account-soon{color:#8a95a6!important;cursor:default}
+.sava-account-soon small{padding:2px 7px;border-radius:999px;background:#f1f3f6;color:#7b889c;font-size:11px;font-weight:700}
+.sava-account-admin{display:grid;gap:2px;margin:0 0 8px;padding-top:8px;border-top:1px solid #e7edf4}
+.sava-account-admin p{margin:2px 10px 4px;color:#8a95a6;font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase}
+.sava-account-signout{height:40px!important;border-top:1px solid #e7edf4!important;border-radius:0 0 8px 8px!important;background:#fff!important;color:#a3434c!important;font:600 14px "DM Sans",sans-serif!important}
+.sava-account-signout:hover{background:#fff4f5!important}
+@media(max-width:620px){.sava-account-trigger{width:32px!important;height:32px!important;min-width:32px!important;min-height:32px!important;font-size:12px!important}}
