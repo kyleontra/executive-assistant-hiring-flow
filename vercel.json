@@ -18,11 +18,6 @@
       "permanent": false
     },
     {
-      "source": "/job-detail.html",
-      "destination": "/candidate-login.html",
-      "permanent": false
-    },
-    {
       "source": "/",
       "destination": "/home.html",
       "permanent": false
