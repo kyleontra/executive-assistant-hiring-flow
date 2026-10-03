@@ -305,8 +305,9 @@ function profileFact(label, value, color, note = '') {
 function profileSelect(name, value, options) {
   return '<select name="' + name + '">' + options.map(([key, label]) => '<option value="' + key + '"' + (value === key ? ' selected' : '') + '>' + label + '</option>').join('') + '</select>';
 }
+const introRecordUrl = () => dashboardDemo ? './candidate-onboarding.html?demo=intro' : './candidate-onboarding.html?intro=1';
 // Before approval: a clear "can't apply yet" banner plus the next steps they can finish while they wait.
-function reviewSteps(photo, onboarding) {
+function reviewSteps(photo, onboarding, intro) {
   const preferences = onboarding?.preferences || {};
   const questionsDone = Boolean(preferences.employmentPreference && preferences.startAvailability && preferences.monthlyIncomeGoalZar);
   const step = (number, done, title, copy, action, extra = '') => '<li class="vp-next-step' + (done ? ' done' : '') + '"><span class="vp-next-num" aria-hidden="true">' + (done ? '✓' : number) + '</span><div class="vp-next-body"><h3>' + title + '</h3><p>' + copy + '</p>' + extra + '</div><div class="vp-next-action">' + (done ? '<span class="vp-next-done">Done</span>' : action) + '</div></li>';
@@ -314,6 +315,7 @@ function reviewSteps(photo, onboarding) {
     + '<section class="vp-next"><h2>Next steps while you wait</h2><p class="vp-next-lead">Finish these now so you\'re ready to apply the moment you\'re approved.</p><ol>'
     + step(1, Boolean(photo), 'Create your Hire From SA profile picture with AI', 'Watch a short video to create it, then upload it. Regular photos and selfies aren\'t accepted.', '<a class="vp-btn" href="./candidate-profile.html' + (dashboardDemo ? '?demo=1' : '') + '">Create my picture</a>')
     + step(2, questionsDone, 'Answer a few questions about the work you want', 'The jobs and industries you want, your pay goal, and when you can start.', '<a class="vp-btn" href="./candidate-questions.html' + (dashboardDemo ? '?demo=1' : '') + '">Answer questions</a>')
+    + step(3, Boolean(intro), 'Record your 1-minute intro video', 'Watch a short video and use the script to introduce yourself to hirers.', '<a class="vp-btn" href="' + introRecordUrl() + '">Record my video</a>')
     + '</ol></section>';
 }
 function renderProfile(profile, intro, onboarding = {}) {
@@ -342,7 +344,7 @@ function renderProfile(profile, intro, onboarding = {}) {
   ];
   const missing = checklist.filter(([done]) => !done);
   const percent = Math.round((checklist.length - missing.length) / checklist.length * 100);
-  const missingChip = ([, label, kind]) => kind === 'photo' ? '<button type="button" data-pick-photo>' + label + '</button>' : kind === 'video' ? (approved ? '<a href="./candidate-onboarding.html?manage=1">' + label + '</a>' : '') : kind === 'resume' ? '<a href="./candidate-resume.html?next=.%2Fcandidate-dashboard.html%3Ftab%3Dprofile">' + label + '</a>' : '<button type="button" data-edit-profile>' + label + '</button>';
+  const missingChip = ([, label, kind]) => kind === 'photo' ? '<button type="button" data-pick-photo>' + label + '</button>' : kind === 'video' ? '<a href="' + (approved ? './candidate-onboarding.html?manage=1' : introRecordUrl()) + '">' + label + '</a>' : kind === 'resume' ? '<a href="./candidate-resume.html?next=.%2Fcandidate-dashboard.html%3Ftab%3Dprofile">' + label + '</a>' : '<button type="button" data-edit-profile>' + label + '</button>';
   const strength = missing.length ? '<section class="vp-strength"><div class="vp-strength-top"><b>Your profile is ' + percent + '% complete</b><span>Complete profiles get more replies from hirers.</span></div><div class="vp-bar"><i style="width:' + percent + '%"></i></div><div class="vp-missing">' + missing.map(missingChip).join('') + '</div></section>' : '';
   const roleRows = experience.map((item, index) => '<article class="vp-role' + (index > 2 ? ' vp-extra-role' : '') + '"' + (index > 2 ? ' hidden' : '') + '><h4>' + portalEscape(item.jobTitle) + '</h4><small>' + portalEscape([item.companyName, [workDateLabel(item.startDate), item.currentRole ? 'Present' : workDateLabel(item.endDate)].filter(Boolean).join(' – ')].filter(Boolean).join('  ·  ')) + '</small>' + (item.description ? '<p>' + portalEscape(item.description) + '</p>' : '') + '</article>').join('');
   const resumeLink = '<a class="vp-link" href="./candidate-resume.html?next=.%2Fcandidate-dashboard.html%3Ftab%3Dprofile">' + (profile.resumeFileName ? 'Replace resume' : 'Upload resume') + '</a>';
@@ -352,7 +354,7 @@ function renderProfile(profile, intro, onboarding = {}) {
       ${shareUrl ? `<div class="vp-top-actions"><a class="vp-btn secondary" href="${portalEscape(shareUrl)}" target="_blank" rel="noopener noreferrer">View as a hirer ↗</a><button type="button" class="vp-btn" data-share-profile="${portalEscape(shareUrl)}">Copy profile link</button><input id="candidateShareUrl" class="vp-share-input" type="text" readonly value="${portalEscape(shareUrl)}" aria-label="Your shareable profile link" tabindex="-1" /></div>` : ''}
     </div>
     <span id="candidateShareStatus" class="vp-share-status" role="status" aria-live="polite"></span>
-    ${approved ? '' : reviewSteps(photo, onboarding)}
+    ${approved ? '' : reviewSteps(photo, onboarding, intro)}
     ${strength}
     <article class="vp-card">
       <header class="vp-hero">
@@ -373,8 +375,8 @@ function renderProfile(profile, intro, onboarding = {}) {
           <div class="vp-facts">${profileFact('Rate', rate, 'green')}${profileFact('Experience', years, 'violet')}${profileFact('Hours/week', hours, 'blue', startLabels[profile.startAvailability])}${profileFact('Location', profile.location, 'rose')}</div>
         </div>
         <section class="vp-video${intro ? '' : ' empty'}">
-          ${intro ? '<video src="' + portalEscape(intro) + '" controls playsinline preload="metadata" aria-label="Your introduction video"></video>' : '<div class="vp-video-empty"><b>No intro video yet</b><span>' + (approved ? 'A one-minute intro helps hirers get to know you before they message.' : 'Recording opens once your identity check is approved.') + '</span></div>'}
-          ${approved ? '<a class="vp-link" href="./candidate-onboarding.html?manage=1">' + (intro ? 'Re-record or manage video' : 'Record your video') + ' →</a>' : ''}
+          ${intro ? '<video src="' + portalEscape(intro) + '" controls playsinline preload="metadata" aria-label="Your introduction video"></video>' : '<div class="vp-video-empty"><b>No intro video yet</b><span>' + (approved ? 'A one-minute intro helps hirers get to know you before they message.' : 'A one-minute intro helps hirers get to know you before they message.') + '</span></div>'}
+          <a class="vp-link" href="${approved ? './candidate-onboarding.html?manage=1' : introRecordUrl()}">${intro ? 'Re-record or manage video' : 'Record your video'} →</a>
         </section>
       </div>
       <section class="vp-section"><div class="vp-section-head"><h3>Work Experience${profile.displayExperienceSource === 'resume' && experience.length ? ' <small>From your resume</small>' : ''}</h3>${resumeLink}</div>

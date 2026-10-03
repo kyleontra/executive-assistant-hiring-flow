@@ -21,8 +21,10 @@ const CONTRACT_URL = 'https://sendlink.co/documents/doc-form/6a99dcb2ea613131e9a
 const manage = new URLSearchParams(location.search).get('manage') === '1';
 // From My Profile: VAs under review can answer the job questions before approval.
 const questionsMode = new URLSearchParams(location.search).get('questions') === '1' || new URLSearchParams(location.search).get('demo') === 'questions';
+// From My Profile: VAs under review can record their 1-minute intro before approval.
+const introMode = new URLSearchParams(location.search).get('intro') === '1' || new URLSearchParams(location.search).get('demo') === 'intro';
 // Local preview only: ?demo=identity|platform|contract|waiting walks the sign-up stages without an account.
-const DEMO_STAGES = ['identity', 'platform', 'contract', 'waiting', 'questions'];
+const DEMO_STAGES = ['identity', 'platform', 'contract', 'waiting', 'questions', 'intro'];
 const demoParam = new URLSearchParams(location.search).get('demo');
 let demoStage = ['localhost', '127.0.0.1'].includes(location.hostname) && DEMO_STAGES.includes(demoParam) ? demoParam : '';
 const demoMode = Boolean(demoStage);
@@ -30,6 +32,7 @@ async function demoRequest(action, body = {}) {
   if (action === 'completeGuide') demoStage = body.guide === 'identity' ? 'platform' : 'contract';
   if (action === 'completeContract') demoStage = 'waiting';
   if (action === 'status' && demoStage === 'questions') return { stage: 'waiting', approved: false, preferences: {}, surveyStep: 1 };
+  if (action === 'status' && demoStage === 'intro') return { stage: 'waiting', approved: false, introSaved: false };
   return { stage: demoStage, contractName: 'Thandi Jacobs' };
 }
 const request = demoMode ? demoRequest : onboardingRequest;
@@ -69,7 +72,7 @@ function renderFocusLayout(html) {
   root.querySelectorAll('.journey-action').forEach(item => item.classList.remove('journey-action', 'secondary'));
 }
 function restoreJourneyLayout() {
-  if (!root.classList.contains('es-shell') && !root.classList.contains('es-focus-shell')) return;
+  if (!['es-shell', 'es-focus-shell', 'pp-shell'].some(name => root.classList.contains(name))) return;
   document.body.className = 'journey-page onboarding-page';
   delete document.body.dataset.accountMenu;
   document.querySelector('.journey-header')?.removeAttribute('hidden');
@@ -312,10 +315,25 @@ async function chooseVideo(file) {
   root.querySelector('#saveIntro').disabled = !root.querySelector('#introConsent').checked;
   message('Watch your recording, confirm sharing with employers, then save it.');
 }
-function renderRecorder(state) {
+// My Profile version: guide video and script on the left, the recorder on the right.
+function profileIntroMarkup(state) {
+  const back = demoMode ? './candidate-dashboard.html?demo=1&review=1&tab=profile' : './candidate-dashboard.html?tab=profile';
+  return `<header class="pp-top"><a href="./home.html" class="es-logo" aria-label="Hire From SA home"><img src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a><a class="pp-back" href="${back}">← Back to My Profile</a></header><div class="pp-main"><div class="pp-heading"><h1>Record your 1-minute intro video</h1><p class="es-lead">Hirers watch this before they message you. Watch the video, then record yours using the script.</p></div><div class="pp-grid"><section class="pp-panel pi-guide"><p class="pp-step"><b>1</b>Watch how to do it</p><div id="introGuidePlayer" class="pp-video"><video src="${guides.intro.src}" poster="${guides.intro.src.replace('.mp4', '.jpg')}" controls playsinline preload="metadata" aria-label="${guides.intro.title}"></video></div><div class="pi-script"><b>Your script</b><p>${introScript}</p><small>Use your own words. Keep your ID and contact details out of the video.</small></div></section><section class="pp-panel pi-recorder"><p class="pp-step"><b>2</b>Record your video</p><div class="intro-preview-frame"><video id="introScreen" class="intro-screen" playsinline controls preload="auto" aria-label="Your introduction recording"></video><p id="introPlaceholder" class="intro-placeholder">Your recording will show here.</p></div><select id="introBackground" hidden><option value="brand" selected>Hire From SA background</option></select><label id="introBackgroundFileLabel" hidden><input id="introBackgroundFile" type="file" accept="image/jpeg,image/png,image/webp" /></label><p class="pi-note">The Hire From SA background is added to camera recordings automatically.</p><div class="pi-buttons">${button('startIntro', 'Record with camera')}${button('stopIntro', 'Stop', true)}${button('playIntro', 'Play back', true)}</div><p id="recordTimer" class="intro-timer"></p><label class="pi-upload">Or upload a video (MP4 or WebM, up to 2 minutes)<input id="introFile" type="file" accept="video/mp4,video/webm" /></label><label class="es-check"><input id="introConsent" type="checkbox" /><span>I agree to show this video on my profile to hirers using Hire From SA.</span></label>${button('saveIntro', 'Save my video →')}${state.introSaved ? button('removeIntro', 'Remove saved video', true) : ''}<p id="journeyStatus" role="status" class="journey-status-line"></p></section></div></div>`;
+}
+function renderRecorder(state, profileMode = false) {
   restoreJourneyLayout();
   selectedVideo = null;
-  root.innerHTML = heading('OPTIONAL PUBLIC INTRODUCTION', 'Record your video to increase your chances of getting hired!', 'Introduce yourself and your experience. Keep your ID and private contact details out of this video.') + `<div class="journey-columns"><div><div class="intro-preview-frame"><video id="introScreen" class="intro-screen" playsinline controls preload="auto" aria-label="Your introduction recording"></video><p id="introPlaceholder" class="intro-placeholder">Record with your camera or upload a video to preview it here.</p></div><div class="intro-background-controls"><label for="introBackground">Video background</label><select id="introBackground"><option value="brand" selected>Hire From SA background</option></select><label id="introBackgroundFileLabel" class="intro-background-file" hidden>Choose background image<input id="introBackgroundFile" type="file" accept="image/jpeg,image/png,image/webp" /></label><p>The Hire From SA background is applied automatically to new camera recordings. The branded background is included in the saved recording. Uploaded videos keep their original background.</p></div><div class="intro-buttons">${button('startIntro','Record with camera')}${button('stopIntro','Stop recording',true)}${button('playIntro','Play recording',true)}</div><p id="recordTimer" class="intro-timer"></p></div><section class="journey-panel"><h2>Make it your own.</h2><p class="journey-script">${introScript}</p><label class="intro-upload-label">Or upload your video<input id="introFile" type="file" accept="video/mp4,video/webm" /></label><p>Up to 2 minutes · MP4 or WebM · 25 MB maximum</p><label class="intro-consent"><input id="introConsent" type="checkbox" /><span>I agree to show this introduction on my candidate profile to employers using Hire From SA.</span></label>${button('saveIntro','Save introduction →')}${button('skipIntro',state.introSaved ? 'Keep saved video and continue' : 'Continue without an intro',true)}${state.introSaved ? button('removeIntro','Remove saved video',true) : ''}<p id="journeyStatus" role="status" class="journey-status-line"></p></section></div>`;
+  if (profileMode) {
+    document.body.className = 'es-page pp-page pq-page pi-page';
+    document.body.dataset.accountMenu = 'off';
+    document.querySelector('.journey-header')?.setAttribute('hidden', '');
+    root.className = 'pp-shell';
+    root.innerHTML = profileIntroMarkup(state);
+    root.querySelectorAll('.journey-action').forEach(item => item.classList.remove('journey-action'));
+    root.querySelector('#saveIntro').classList.add('es-submit');
+    root.querySelectorAll('.pi-buttons button').forEach(item => item.classList.add('es-secondary'));
+    root.querySelector('#removeIntro')?.classList.add('es-secondary');
+  } else root.innerHTML = heading('OPTIONAL PUBLIC INTRODUCTION', 'Record your video to increase your chances of getting hired!', 'Introduce yourself and your experience. Keep your ID and private contact details out of this video.') + `<div class="journey-columns"><div><div class="intro-preview-frame"><video id="introScreen" class="intro-screen" playsinline controls preload="auto" aria-label="Your introduction recording"></video><p id="introPlaceholder" class="intro-placeholder">Record with your camera or upload a video to preview it here.</p></div><div class="intro-background-controls"><label for="introBackground">Video background</label><select id="introBackground"><option value="brand" selected>Hire From SA background</option></select><label id="introBackgroundFileLabel" class="intro-background-file" hidden>Choose background image<input id="introBackgroundFile" type="file" accept="image/jpeg,image/png,image/webp" /></label><p>The Hire From SA background is applied automatically to new camera recordings. The branded background is included in the saved recording. Uploaded videos keep their original background.</p></div><div class="intro-buttons">${button('startIntro','Record with camera')}${button('stopIntro','Stop recording',true)}${button('playIntro','Play recording',true)}</div><p id="recordTimer" class="intro-timer"></p></div><section class="journey-panel"><h2>Make it your own.</h2><p class="journey-script">${introScript}</p><label class="intro-upload-label">Or upload your video<input id="introFile" type="file" accept="video/mp4,video/webm" /></label><p>Up to 2 minutes · MP4 or WebM · 25 MB maximum</p><label class="intro-consent"><input id="introConsent" type="checkbox" /><span>I agree to show this introduction on my candidate profile to employers using Hire From SA.</span></label>${button('saveIntro','Save introduction →')}${button('skipIntro',state.introSaved ? 'Keep saved video and continue' : 'Continue without an intro',true)}${state.introSaved ? button('removeIntro','Remove saved video',true) : ''}<p id="journeyStatus" role="status" class="journey-status-line"></p></section></div>`;
   const screen = root.querySelector('#introScreen');
   screen.hidden = !state.introUrl;
   root.querySelector('#playIntro').disabled = !state.introUrl;
@@ -390,11 +408,11 @@ function renderRecorder(state) {
     lockRecorderActions(true);
     root.querySelector('#startIntro').disabled = true; root.querySelector('#introFile').disabled = true;
     message('Uploading your introduction…');
-    try { await request('saveIntro', form); cleanup(); location.assign('./candidate-dashboard.html'); }
+    try { await request('saveIntro', form); cleanup(); location.assign(profileMode ? (demoMode ? './candidate-dashboard.html?demo=1&review=1&tab=profile' : './candidate-dashboard.html?tab=profile') : './candidate-dashboard.html'); }
     finally { lockRecorderActions(false); root.querySelector('#startIntro').disabled = false; root.querySelector('#introFile').disabled = false; }
   });
   bind('skipIntro', async () => { if (!state.introSaved) await request('skipIntro'); cleanup(); location.assign('./candidate-dashboard.html'); });
-  bind('removeIntro', async () => { await request('removeIntro'); await load(); });
+  bind('removeIntro', async () => { await request('removeIntro'); if (profileMode) { renderRecorder({ ...state, introSaved: false, introUrl: '' }, true); return; } await load(); });
   if (state.introPlaybackError) message(state.introPlaybackError, true);
 }
 async function load() {
@@ -420,6 +438,7 @@ async function load() {
     }
     else if (['platform','intro'].includes(state.stage)) renderGuide(state.stage);
     else if (state.stage === 'waiting' && questionsMode) renderPreferences(state);
+    else if (state.stage === 'waiting' && introMode) renderRecorder(state, true);
     else if (state.stage === 'waiting') renderWaiting(user);
     else if (state.stage === 'recording' || manage) renderRecorder(state);
     else location.replace('./candidate-dashboard.html');

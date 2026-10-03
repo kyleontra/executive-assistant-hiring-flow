@@ -121,8 +121,14 @@ Deno.serve(async (req: Request) => {
       return reply(req, { status: 'pending' });
     }
     if (action === 'skipIntro' || action === 'saveIntro' || action === 'removeIntro') {
-      if (!identityApproved(profile) || !profile?.resume_path || !platformReady || !progress.intro_completed_at) return reply(req, { error: 'Complete your approved onboarding guides first.' }, 403);
-      if (profile.onboarding_preferences_required && !profile.preferences_completed_at) return reply(req, { error: 'Complete your job preferences before your introduction.' }, 403);
+      // VAs under review may record or remove their intro early from My Profile (not skip it).
+      const underReview = !identityApproved(profile) && profile?.verification_status === 'pending';
+      if (underReview) {
+        if (!profile?.resume_path || action === 'skipIntro') return reply(req, { error: 'Record your intro from My Profile.' }, 403);
+      } else {
+        if (!identityApproved(profile) || !profile?.resume_path || !platformReady || !progress.intro_completed_at) return reply(req, { error: 'Complete your approved onboarding guides first.' }, 403);
+        if (profile.onboarding_preferences_required && !profile.preferences_completed_at) return reply(req, { error: 'Complete your job preferences before your introduction.' }, 403);
+      }
       if (action === 'skipIntro') {
         await save({ intro_skipped_at: new Date().toISOString() });
         return reply(req, { status: 'saved' });
@@ -139,7 +145,8 @@ Deno.serve(async (req: Request) => {
       const path = `${user.id}/${crypto.randomUUID()}.${contentType === 'video/mp4' ? 'mp4' : 'webm'}`;
       const { error: uploadError } = await admin.storage.from(BUCKET).upload(path, video, { contentType, cacheControl: '0', upsert: false });
       if (uploadError) throw uploadError;
-      try { await save({ intro_path: path, intro_consent_at: new Date().toISOString(), intro_skipped_at: null }); }
+      // Recording from My Profile includes the guide, so mark it watched too.
+      try { await save({ intro_path: path, intro_consent_at: new Date().toISOString(), intro_skipped_at: null, ...(underReview && !progress.intro_completed_at ? { intro_completed_at: new Date().toISOString() } : {}) }); }
       catch (error) { await admin.storage.from(BUCKET).remove([path]); throw error; }
       if (progress.intro_path) await admin.storage.from(BUCKET).remove([progress.intro_path]);
       return reply(req, { status: 'saved' }, 201);

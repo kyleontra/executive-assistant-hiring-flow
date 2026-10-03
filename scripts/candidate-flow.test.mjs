@@ -604,3 +604,14 @@ test('job questions are one page that saves both parts and returns to My Profile
   assert.match(read('vite.config.js'), /candidate-questions\.html/);
   assert.match(read('candidate-dashboard.js'), /candidate-questions\.html/);
 });
+
+test('VAs under review can record their 1-minute intro from My Profile', () => {
+  const onboarding = read('candidate-onboarding.mjs');
+  const dashboard = read('candidate-dashboard.js');
+  const server = read('supabase/functions/candidate-onboarding/index.ts');
+  assert.match(dashboard, /Record your 1-minute intro video/);
+  assert.match(dashboard, /candidate-onboarding\.html\?intro=1/);
+  assert.match(onboarding, /state\.stage === 'waiting' && introMode\) renderRecorder\(state, true\)/);
+  assert.match(onboarding, /Your script/);
+  assert.match(server, /underReview && \(!profile\.verification_status|underReview\) \{\s*if \(!profile\?\.resume_path \|\| action === 'skipIntro'\)/);
+});
