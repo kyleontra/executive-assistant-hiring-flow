@@ -102,3 +102,23 @@ body.es-page{margin:0;background:#f6f8fc;color:#142238;font-family:"DM Sans",san
 .es-steps-card li{display:flex;align-items:flex-start;gap:12px;font-size:14px;font-weight:700}
 .es-steps-card li b{display:grid;width:28px;height:28px;flex:none;place-items:center;border-radius:50%;background:#e8f0ff;color:#1f5fcf;font:800 13px Manrope,sans-serif}
 .es-steps-card li small{display:block;margin-top:2px;color:#6b7890;font-size:13px;font-weight:500}
+.es-inbox{text-align:center}
+.es-inbox .es-submit{display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}
+.es-inbox-icon{display:grid;width:64px;height:64px;margin:0 auto 18px;place-items:center;border-radius:20px;background:#e8f0ff;color:#1f5fcf;font-size:30px}
+.es-sent-to{display:inline-block;max-width:100%;margin:14px 0 0;padding:8px 14px;border-radius:999px;background:#f1f4f8;color:#4a5a73;font-size:14px;overflow-wrap:anywhere}
+.es-sent-to[hidden]{display:none}
+.es-sent-to b{color:#142238}
+.es-tips{display:grid;gap:8px;margin:18px 0 0;padding:14px 16px;border-radius:12px;background:#f5f7fb;color:#4a5a73;font-size:13.5px;line-height:1.5;text-align:left;list-style:none}
+.es-tips li{display:flex;gap:8px}
+.es-tips li::before{content:"•";color:#246fe5;font-weight:800}
+.es-steps-card li.done b{background:#e6f6ee;color:#0b7a50}
+.es-steps-card li.done small{color:#0b7a50}
+.es-steps-card li.current{margin:-6px -8px;padding:6px 8px;border-radius:10px;background:#f1f6ff}
+.es-steps-card li.current b{background:#246fe5;color:#fff}
+.es-code-label{display:grid;gap:7px;margin-top:18px;color:#33445e;font-size:14px;font-weight:700;text-align:left}
+.es-code-label[hidden]{display:none}
+.es-code-label input{width:100%;height:48px;padding:0 14px;border:1px solid #c6d1df;border-radius:12px;background:#fff;color:#142238;font:500 16px "DM Sans",sans-serif}
+.es-code-label input.es-code{height:64px;text-align:center;font:800 30px Manrope,sans-serif;letter-spacing:14px;padding-left:28px}
+.es-code-label input.es-code::placeholder{color:#c6d1df}
+.es-code-label input:focus{border-color:#246fe5;outline:0;box-shadow:0 0 0 3px #246fe51f}
+.es-inbox .es-secondary{width:100%;cursor:pointer}

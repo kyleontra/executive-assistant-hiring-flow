@@ -6,6 +6,20 @@ const verifyButton = document.querySelector('#verifyCode');
 const resendButton = document.querySelector('#resendCode');
 
 emailInput.value = new URLSearchParams(window.location.search).get('email') || sessionStorage.getItem('sava-verification-email') || '';
+// check-email.html never asks for the email again: it comes from sign-up or VA Login.
+// Without it, VA Login signs them in and sends unconfirmed accounts straight back here.
+const sentTo = document.body.dataset?.page === 'check-email' && document.querySelector('#sentTo');
+if (sentTo) {
+  // Local preview only: ?demo shows the screen without a real sign-up.
+  if (!emailInput.value && window.location.hostname === 'localhost' && new URLSearchParams(window.location.search).has('demo')) emailInput.value = 'thandi.jacobs@example.com';
+  if (emailInput.value) {
+    document.querySelector('#sentToEmail').textContent = emailInput.value;
+    sentTo.hidden = false;
+  } else {
+    window.location.replace('./candidate-login.html');
+  }
+}
+const resultBase = (result.className || '').includes('portal-result') ? 'portal-result' : 'form-result show';
 const requestedAccount = new URLSearchParams(window.location.search).get('account') || sessionStorage.getItem('sava-account-role') || 'candidate';
 
 function verifiedDestination(user) {
@@ -15,14 +29,15 @@ function verifiedDestination(user) {
   return './candidate-resume.html';
 }
 
-if (requestedAccount === 'employer') {
+if (requestedAccount === 'employer' && document.querySelector('#verificationIntro')) {
   document.querySelector('#verificationIntro').textContent = 'One quick confirmation, then you can search candidates and start hiring.';
   document.querySelector('#verificationSteps').innerHTML = '<span>✓</span><b>Account created</b><span>2</span><b>Confirm email</b><span>3</span><b>Search talent</b>';
 }
 
 function showResult(message, type) {
   result.textContent = message;
-  result.className = `form-result show ${type}`;
+  result.className = `${resultBase} ${type}`;
+  result.hidden = false;
 }
 
 codeInput.addEventListener('input', () => {
@@ -44,7 +59,7 @@ form.addEventListener('submit', async (event) => {
     sessionStorage.removeItem('sava-account-role');
     window.location.assign(requestedAccount === 'employer' ? (sessionStorage.getItem('sava-employer-next') || './talent.html') : './candidate-resume.html');
   } catch (error) {
-    showResult(error.message || 'That code could not be verified. Request a new code and try again.', 'error');
+    showResult(/expired|invalid/i.test(error.message || '') ? 'That code is wrong or has expired. Check your latest email, or tap Resend code for a new one.' : error.message || 'That code could not be verified. Request a new code and try again.', 'error');
     verifyButton.disabled = false;
     verifyButton.innerHTML = 'Verify email <span>→</span>';
   }

@@ -61,7 +61,8 @@ test('signup collects only name, email and password and redirects after HTTP 201
   assert.deepEqual(h.navigations, ['./check-email.html']);
   assert.doesNotMatch(read('candidate-signup.html'), /calendarLink|resumeInput|<video/);
   assert.match(read('check-email.html'), /We sent you a six-digit code\./);
-  assert.match(read('check-email.html'), /href="\.\/email-confirmed\.html">Enter verification code/);
+  assert.match(read('check-email.html'), /id="verificationCode"/);
+  assert.match(read('check-email.html'), /src="\.\/email-confirmed\.js"/);
 });
 
 test('registration failure stays on signup and allows retry', async () => {

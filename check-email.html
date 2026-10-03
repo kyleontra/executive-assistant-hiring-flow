@@ -3,29 +3,60 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Check your inbox — Hire From SA</title>
+    <meta name="theme-color" content="#1f5fcf" />
+    <title>Check your inbox - Hire From SA</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./candidate-signup.css" />
-    <link rel="stylesheet" href="./candidate-next-steps.css" />
     <link rel="stylesheet" href="./brand.css" />
-    <link rel="stylesheet" href="./candidate-flow-layout.css" />
+    <link rel="stylesheet" href="./employer-signup.css" />
   </head>
-  <body class="onboarding-page">
-    <header class="signup-header"><a class="site-logo-link" href="./home.html"><img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a><a href="./home.html">Home</a></header>
-    <main class="next-steps-shell inbox-shell">
-      <section class="next-steps-card inbox-card">
-        <span class="inbox-icon" aria-hidden="true">✉</span>
-        <p class="eyebrow blue">ACCOUNT CREATED</p>
-        <h1>Check your inbox.</h1>
-        <p class="lead">We sent you a six-digit code. Use it to confirm your email and continue setting up your account.</p>
-        <a class="next-steps-primary" href="./email-confirmed.html">Enter verification code <span>→</span></a>
-        <p class="next-steps-help">Received a six-digit code? Use it to confirm your email. Check Spam or Promotions if the email hasn’t arrived.</p>
-        <a class="next-steps-secondary" href="./email-confirmed.html">Resend or use a different email</a>
+  <body class="es-page" data-account-menu="off" data-page="check-email">
+    <main class="es-shell">
+      <aside class="es-side">
+        <a href="./home.html" class="es-logo" aria-label="Hire From SA home"><img src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a>
+        <div class="es-side-copy">
+          <h2>You're almost in.</h2>
+          <ul>
+            <li>Free to join, always</li>
+            <li>Apply to remote jobs from home</li>
+            <li>Get paid the rate you agree, no fees</li>
+          </ul>
+        </div>
+        <div class="es-side-card es-steps-card" aria-hidden="true">
+          <strong>Your profile in 3 steps</strong>
+          <ol>
+            <li class="done"><b>✓</b><span>Create your account<small>Done</small></span></li>
+            <li class="current"><b>2</b><span>Confirm your email<small>Enter the 6-digit code we send you</small></span></li>
+            <li><b>3</b><span>Build your profile<small>Add your resume and start applying</small></span></li>
+          </ol>
+        </div>
+      </aside>
+
+      <section class="es-main">
+        <div class="es-top"><a href="./home.html" class="es-logo es-logo-mobile" aria-label="Hire From SA home"><img src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a><p>Wrong account? <a href="./candidate-signup.html">Start over</a></p></div>
+
+        <form id="verificationForm" class="es-card es-login es-inbox" novalidate>
+          <span class="es-inbox-icon" aria-hidden="true">✉</span>
+          <p class="es-kicker">ACCOUNT CREATED</p>
+          <h1>Check your inbox</h1>
+          <p class="es-lead">We sent you a six-digit code. Enter it below to confirm your email.</p>
+          <p id="sentTo" class="es-sent-to" hidden>Sent to <b id="sentToEmail"></b></p>
+          <input id="verificationEmail" name="email" type="hidden" />
+          <label class="es-code-label">Six-digit code<input id="verificationCode" class="es-code" name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" required placeholder="------" autofocus /></label>
+          <p id="confirmationResult" class="portal-result" aria-live="polite" hidden></p>
+          <button id="verifyCode" class="es-submit" type="submit">Verify email <span aria-hidden="true">→</span></button>
+          <ul class="es-tips">
+            <li>The email comes from Hire From SA with the subject "Your Hire From SA verification code".</li>
+            <li>Not there after a minute? Check your Spam or Promotions folder.</li>
+          </ul>
+          <div class="es-divider"><span>Didn't get it?</span></div>
+          <button id="resendCode" class="es-secondary" type="button">Resend code</button>
+        </form>
       </section>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./auth-client.js"></script>
+    <script src="./email-confirmed.js"></script>
   </body>
 </html>
