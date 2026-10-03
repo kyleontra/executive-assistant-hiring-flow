@@ -18,15 +18,16 @@ const demoJobs = [
 const demoData = {
   profile: { applicationReady: true, verificationStatus: 'verified' },
   applications: [
-    { id: 'demo-app-1', status: 'shortlisted', submittedAt: new Date(Date.now() - 2 * 864e5).toISOString(), job: demoJobs[0],
+    { id: 'demo-app-1', status: 'shortlisted', bid: { rate: 7, min: 6, max: 8, period: 'hour' }, submittedAt: new Date(Date.now() - 2 * 864e5).toISOString(), job: demoJobs[0],
       messages: [
         { sender: 'candidate', body: 'Hi, my name is Thandi, and I think I would be a good fit for your role because I have edited over 40 wedding films in the last two years.', createdAt: new Date(Date.now() - 2 * 864e5).toISOString() },
         { sender: 'employer', body: 'Thanks Thandi! Could you send a link to your favourite highlight film?', createdAt: new Date(Date.now() - 864e5).toISOString() },
       ] },
-    { id: 'demo-app-2', status: 'new', submittedAt: new Date(Date.now() - 5 * 864e5).toISOString(), job: demoJobs[1],
+    { id: 'demo-app-2', status: 'new', bid: { rate: 6, min: 5, max: 7, period: 'hour' }, submittedAt: new Date(Date.now() - 5 * 864e5).toISOString(), job: demoJobs[1],
       messages: [{ sender: 'candidate', body: 'Hi, my name is Thandi, and I think I would be a good fit for your role because I supported two founders as their EA for three years.', createdAt: new Date(Date.now() - 5 * 864e5).toISOString() }] },
   ],
-  conversations: [],
+  conversations: [{ id: 'demo-thread-direct', company: 'Harbor Accounting', roleName: 'Bookkeeping Assistant', updatedAt: new Date(Date.now() - 3 * 36e5).toISOString(),
+    messages: [{ sender: 'employer', body: 'Hi Thandi, I saw your profile and think you would be great for our bookkeeping role. Would you be open to a quick call this week?', createdAt: new Date(Date.now() - 3 * 36e5).toISOString() }] }],
 };
 let dashboardData;
 let candidate;
@@ -158,18 +159,56 @@ function prepareConversations(data) {
   document.querySelector('#messageCount').textContent = String(conversations.length);
   renderMessages();
 }
+let messageSearch = '';
+let threadOpenOnPhone = false;
+function threadTime(value) {
+  const date = new Date(value);
+  if (!value || Number.isNaN(date.getTime())) return '';
+  const days = Math.floor((Date.now() - date.getTime()) / 864e5);
+  return days < 1 ? date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : days < 7 ? date.toLocaleDateString('en-US', { weekday: 'short' }) : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+function threadUnread(thread) {
+  const last = thread.messages?.at(-1);
+  return Boolean(last && last.sender !== 'candidate');
+}
+function bidLabel(bid) {
+  if (!bid) return '';
+  const money = value => '$' + Number(value).toLocaleString('en-US', { maximumFractionDigits: 2 });
+  return 'Your bid ' + money(bid.rate) + ' / ' + bid.period + ' · would accept ' + money(bid.min) + '–' + money(bid.max);
+}
 function renderMessages() {
   const root = document.querySelector('#candidateMessages');
-  if (!conversations.length) { root.innerHTML = emptyState('No conversations yet.', 'Messages from hirers and conversations about your applications will appear here.'); return; }
+  if (!conversations.length) { root.innerHTML = emptyState('No messages yet.', 'When you apply to a job, your introduction starts a conversation with the hirer here.', '<button type="button" class="va-button" data-open-tab="jobs">Apply for jobs →</button>'); return; }
+  const sort = document.querySelector('#messageSort')?.value || 'recent';
+  const query = messageSearch.trim().toLowerCase();
+  const visible = conversations.filter(thread => !query || [thread.roleName, thread.messages?.at(-1)?.body].join(' ').toLowerCase().includes(query))
+    .sort((a, b) => (sort === 'unread' ? Number(threadUnread(b)) - Number(threadUnread(a)) : 0) || String(b.updatedAt || '').localeCompare(String(a.updatedAt || '')));
   const selected = conversations.find(thread => thread.id === selectedConversation) || conversations[0];
-  const list = conversations.map(thread => '<button type="button" class="va-thread-option" aria-pressed="' + String(thread.id === selected.id) + '" data-thread-id="' + portalEscape(thread.id) + '"><span class="va-thread-company">' + companyAvatar(thread.company, thread.logoUrl) + '<b>' + portalEscape(thread.company || 'Hirer') + '</b></span><span class="va-thread-role">' + portalEscape(thread.roleName || 'Conversation') + '</span><small>' + portalEscape(thread.messages?.at(-1)?.body?.slice(0, 95) || 'Start a conversation') + '</small></button>').join('');
-  const messages = (selected.messages || []).map(message => '<article class="candidate-message ' + (message.sender === 'candidate' ? 'candidate' : 'employer') + '"><p>' + portalEscape(message.body) + '</p><time>' + dateLabel(message.createdAt, true) + '</time></article>').join('');
-  const job = dashboardData?.applications?.find(application => application.id === selected.applicationId)?.job;
-  const jobPost = job?.id ? '<details class="va-thread-job-post"><summary>View job post</summary><div><p class="va-job-company">' + portalEscape(job.company || selected.company || 'Hirer') + '</p><h4>' + portalEscape(job.title || selected.roleName || 'Role') + '</h4><p class="va-thread-job-meta">' + portalEscape([job.arrangement, job.type, job.location].filter(Boolean).join(' · ')) + '</p><strong>' + portalEscape(job.pay || 'Pay not listed') + '</strong><p class="va-thread-job-description">' + portalEscape(job.description || 'The job description is no longer available.') + '</p>' + (job.responsibilities?.length ? '<h5>Responsibilities</h5><ul>' + job.responsibilities.map(item => '<li>' + portalEscape(item) + '</li>').join('') + '</ul>' : '') + (job.skills?.length ? '<h5>Skills</h5><p>' + portalEscape(job.skills.join(' · ')) + '</p>' : '') + '</div></details>' : '';
-  root.innerHTML = '<div class="va-inbox"><aside class="va-thread-list" aria-label="Conversations">' + list + '</aside><section class="candidate-conversation"><div class="conversation-heading">' + companyAvatar(selected.company, selected.logoUrl) + '<div><p class="portal-kicker">' + portalEscape(selected.company || 'HIRER') + '</p><h3>' + portalEscape(selected.roleName || 'Conversation') + '</h3></div></div>' + jobPost + '<div class="candidate-thread" role="log" aria-label="Conversation messages">' + (messages || '<p class="thread-empty">No messages yet. Say hello to the hirer below.</p>') + '</div><form class="candidate-message-form"><label>Message<textarea name="message" maxlength="2000" rows="3" placeholder="Write a message to the hirer…" required></textarea></label><div><span class="send-status" role="status" aria-live="polite"></span><button type="submit">Send message →</button></div></form></section></div>';
+  const list = visible.map(thread => {
+    const last = thread.messages?.at(-1);
+    const preview = last ? (last.sender === 'candidate' ? 'You: ' : '') + last.body : 'No messages yet';
+    return '<button type="button" class="vm-item' + (thread.id === selected.id ? ' active' : '') + (threadUnread(thread) ? ' unread' : '') + '" data-thread-id="' + portalEscape(thread.id) + '"><span class="vm-avatar" aria-hidden="true">' + portalEscape(String(thread.roleName || 'H').trim().charAt(0).toUpperCase()) + '</span><b>' + portalEscape(thread.roleName || 'Conversation') + '</b><time>' + portalEscape(threadTime(last?.createdAt || thread.updatedAt)) + '</time><p>' + (threadUnread(thread) ? '<i class="vm-dot" aria-label="Unread"></i>' : '') + '<span>' + portalEscape(String(preview).slice(0, 90)) + '</span></p></button>';
+  }).join('') || '<p class="vm-empty">No conversations match your search.</p>';
+  const application = dashboardData?.applications?.find(item => item.id === selected.applicationId);
+  const job = application?.job;
+  const status = application ? (['new','shortlisted','interviewing','rejected','hired'].includes(application.status) ? application.status : 'new') : '';
+  const firstCandidate = (selected.messages || []).findIndex(message => message.sender === 'candidate');
+  const messages = (selected.messages || []).map((message, index) => {
+    const mine = message.sender === 'candidate';
+    const label = application && mine && index === firstCandidate && index === 0 ? '<span class="vm-msg-label">Your introduction</span>' : '';
+    return '<article class="vm-msg' + (mine ? ' you' : '') + '">' + label + portalEscape(message.body) + '<small>' + (mine ? 'You · ' : 'Hirer · ') + portalEscape(dateLabel(message.createdAt, true)) + '</small></article>';
+  }).join('');
+  const context = application
+    ? '<section class="vm-context"><span class="vm-pill ' + status + '">' + portalEscape(statusLabel(status)) + '</span><span>Applied ' + portalEscape(dateLabel(application.submittedAt)) + '</span>' + (job?.pay ? '<span>Job pays ' + portalEscape(job.pay) + '</span>' : '') + (application.bid ? '<span class="vm-bid">' + portalEscape(bidLabel(application.bid)) + '</span>' : '') + '</section>'
+    : '<section class="vm-context"><span class="vm-pill direct">Direct message</span><span>A hirer reached out to you.</span></section>';
+  root.innerHTML = '<div class="vm' + (threadOpenOnPhone ? ' showing-thread' : '') + '"><aside class="vm-list-pane"><label class="vm-search"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="9" cy="9" r="6"/><path d="m14 14 4 4"/></svg><input id="messageSearch" type="search" placeholder="Search messages" autocomplete="off" value="' + portalEscape(messageSearch) + '" /></label><div class="vm-list" aria-label="Conversations">' + list + '</div></aside>'
+    + '<section class="vm-thread-pane"><header class="vm-thread-head"><button type="button" class="vm-back" data-thread-back aria-label="Back to conversations">←</button><span class="vm-avatar vm-avatar-lg" aria-hidden="true">' + portalEscape(String(selected.roleName || 'H').trim().charAt(0).toUpperCase()) + '</span><div class="vm-who"><h2>' + portalEscape(selected.roleName || 'Conversation') + '</h2><p>' + (job?.id ? '<a class="vm-view-role" href="./job-detail.html?job=' + encodeURIComponent(job.id) + '" target="_blank" rel="noopener">View role →</a><span>' + portalEscape([JOB_TYPE_HOURS[job.type] || job.type, job.arrangement].filter(Boolean).join(' · ')) + '</span>' : '<span>Direct message from a hirer</span>') + '</p></div>' + '</header>'
+    + context
+    + '<div class="vm-messages" role="log" aria-label="Conversation messages">' + (messages || '<p class="vm-empty">No messages yet. Say hello to the hirer below.</p>') + '</div>'
+    + '<form class="candidate-message-form vm-compose"><textarea name="message" maxlength="2000" rows="1" placeholder="Write a message" aria-label="Write a message" required></textarea><button type="submit">Send</button><span class="send-status" role="status" aria-live="polite"></span></form></section></div>';
   const composer = root.querySelector('textarea');
   if (composer) composer.value = drafts.get(selected.id) || '';
-  const log = root.querySelector('.candidate-thread');
+  const log = root.querySelector('.vm-messages');
   if (log) log.scrollTop = log.scrollHeight;
 }
 function saveDraft() {
@@ -179,9 +218,7 @@ function saveDraft() {
 async function refreshInbox() {
   if (inboxLoading || messageSending || !dashboardData) return;
   inboxLoading = true;
-  const button = document.querySelector('#refreshInbox'), status = document.querySelector('#inboxStatus');
-  button.disabled = true;
-  status.hidden = false; status.textContent = 'Checking for new messages…';
+  const status = document.querySelector('#inboxStatus');
   try {
     const data = await window.savaPlatform.candidateRequest('candidateDashboard');
     if (!data.profile?.applicationReady) { window.location.replace('./candidate-onboarding.html'); return; }
@@ -193,8 +230,8 @@ async function refreshInbox() {
     if (jobsLoaded) renderJobs();
     lastInboxRefresh = Date.now();
     status.hidden = true;
-  } catch (error) { status.textContent = error.message || 'Could not refresh messages. Your existing conversations and draft are still here.'; }
-  finally { inboxLoading = false; button.disabled = false; }
+  } catch (error) { status.hidden = false; status.textContent = error.message || 'Could not refresh messages. Your existing conversations and draft are still here.'; }
+  finally { inboxLoading = false; }
 }
 async function loadProfile() {
   if (profileLoading) return;
@@ -439,7 +476,7 @@ document.querySelector('#candidateProfile').addEventListener('submit', async eve
   }
 });
 document.querySelector('#candidateReady').addEventListener('click', async event => {
-  const action = event.target.closest('[data-open-tab], [data-view-application], [data-thread-id], [data-application-conversation], [data-retry-profile], [data-job-id], [data-job-back], [data-share-profile]');
+  const action = event.target.closest('[data-open-tab], [data-view-application], [data-thread-id], [data-application-conversation], [data-retry-profile], [data-job-id], [data-job-back], [data-thread-back], [data-share-profile]');
   if (!action) return;
   if (action.dataset.openTab) switchTab(action.dataset.openTab);
   if ('viewApplication' in action.dataset) {
@@ -447,8 +484,9 @@ document.querySelector('#candidateReady').addEventListener('click', async event 
     const card = [...applicationsRoot.querySelectorAll('[data-application-id]')].find(item => item.dataset.applicationId === action.dataset.viewApplication);
     card?.scrollIntoView?.({ block: 'center', behavior: 'smooth' });
   }
-  if (action.dataset.threadId) { saveDraft(); selectedConversation = action.dataset.threadId; renderMessages(); }
-  if (action.dataset.applicationConversation) { saveDraft(); selectedConversation = conversations.find(thread => thread.applicationId === action.dataset.applicationConversation)?.id; renderMessages(); switchTab('messages'); }
+  if (action.dataset.threadId) { saveDraft(); selectedConversation = action.dataset.threadId; threadOpenOnPhone = true; renderMessages(); }
+  if ('threadBack' in action.dataset) { saveDraft(); threadOpenOnPhone = false; renderMessages(); }
+  if (action.dataset.applicationConversation) { saveDraft(); selectedConversation = conversations.find(thread => thread.applicationId === action.dataset.applicationConversation)?.id; threadOpenOnPhone = true; renderMessages(); switchTab('messages'); }
   if ('retryProfile' in action.dataset) { profileLoaded = false; loadProfile(); }
   if (action.dataset.jobId) { selectedJobId = action.dataset.jobId; renderJobs(); document.querySelector('#jobBrowser').classList.add('showing-detail'); if (window.matchMedia('(max-width: 760px)').matches) window.scrollTo(0, 0); }
   if ('jobBack' in action.dataset) document.querySelector('#jobBrowser').classList.remove('showing-detail');
@@ -479,7 +517,7 @@ document.querySelector('#candidateMessages').addEventListener('submit', async ev
   form.elements.message.disabled = true;
   button.disabled = true; status.textContent = 'Sending…';
   try {
-    const result = await window.savaPlatform.candidateRequest(thread.id.startsWith('application:') ? 'candidateSendMessage' : 'candidateSendThreadMessage', thread.id.startsWith('application:') ? { applicationId: thread.applicationId, message } : { threadId: thread.id, message });
+    const result = dashboardDemo ? {} : await window.savaPlatform.candidateRequest(thread.id.startsWith('application:') ? 'candidateSendMessage' : 'candidateSendThreadMessage', thread.id.startsWith('application:') ? { applicationId: thread.applicationId, message } : { threadId: thread.id, message });
     drafts.delete(thread.id);
     if (result.threadId && result.threadId !== thread.id) {
       if (selectedConversation === thread.id) selectedConversation = result.threadId;
@@ -492,8 +530,15 @@ document.querySelector('#candidateMessages').addEventListener('submit', async ev
     renderApplications(dashboardData.applications || []);
   } catch (error) { status.textContent = error.message || 'Message failed to send.'; } finally { button.disabled = false; form.elements.message.disabled = false; messageSending = false; }
 });
-document.querySelector('#candidateMessages').addEventListener('input', saveDraft);
-document.querySelector('#refreshInbox').addEventListener('click', refreshInbox);
+document.querySelector('#candidateMessages').addEventListener('input', event => {
+  if (event.target.id !== 'messageSearch') { saveDraft(); return; }
+  messageSearch = event.target.value;
+  const caret = event.target.selectionStart;
+  saveDraft(); renderMessages();
+  const search = document.querySelector('#messageSearch');
+  search.focus(); search.setSelectionRange(caret, caret);
+});
+document.querySelector('#messageSort').addEventListener('change', () => { saveDraft(); renderMessages(); });
 document.querySelector('#refreshProfile').addEventListener('click', () => { profileLoaded = false; loadProfile(); });
 // Only fetch while the inbox is visible. Drafts stay local and survive refreshes.
 window.setInterval?.(() => { if (!document.hidden && activeTab === 'messages' && Date.now() - lastInboxRefresh >= 30000) refreshInbox(); }, 30000);

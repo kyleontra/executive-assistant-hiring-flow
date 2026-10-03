@@ -1,0 +1,77 @@
+/* VA Messages tab (candidate-dashboard.html): same two-pane layout as the hirer Messages page (inbox.html). */
+.vm-panel{width:min(1180px,100%);margin:0 auto}
+.vm-top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}
+.vm-top h1{margin:0;color:#142238;font:800 30px/1.1 Manrope,sans-serif;letter-spacing:-1px}
+.vm-top label{display:flex;align-items:center;gap:8px;color:#6b7890;font-size:12px;font-weight:700}
+.vm-top select{min-width:180px;height:40px;padding:0 36px 0 12px;border:1px solid #c6d1df;border-radius:9px;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='none' stroke='%23526178' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3 5 4 4 4-4'/%3E%3C/svg%3E") no-repeat right 12px center;color:#142238;font:600 14px "DM Sans",sans-serif;appearance:none;cursor:pointer}
+.vm-status{margin:0 0 12px;padding:10px 14px;border:1px solid #efc9cd;border-radius:10px;background:#fff7f7;color:#a84e57;font-size:14px}
+.vm-status[hidden]{display:none}
+.vm{display:grid;grid-template-columns:390px minmax(0,1fr);height:calc(100svh - 160px);min-height:540px;overflow:hidden;border:1px solid #dce2ea;border-radius:14px;background:#fff;box-shadow:0 16px 42px rgba(20,34,56,.055)}
+.vm-list-pane{display:flex;min-height:0;flex-direction:column;border-right:1px solid #e3e8ef}
+.vm-search{display:flex;align-items:center;gap:8px;height:40px;margin:12px;padding:0 12px;border:1px solid #dce3ec;border-radius:9px;background:#f7f9fc}
+.vm-search svg{width:16px;height:16px;flex:none;fill:none;stroke:#7b889c;stroke-width:2;stroke-linecap:round}
+.vm-search input{flex:1;min-width:0;border:0;outline:0;background:none;color:#142238;font:500 14px "DM Sans",sans-serif}
+.vm-list{flex:1;overflow-y:auto}
+.vm-item{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:4px 12px;width:100%;padding:12px 14px;border:0;border-bottom:1px solid #eef1f5;border-left:3px solid transparent;background:#fff;font:inherit;text-align:left;cursor:pointer}
+.vm-item:hover{background:#f7f9fc}
+.vm-item.active{border-left-color:#246fe5;background:#f1f6ff}
+.vm-item .vm-avatar{grid-row:1/3}
+.vm-item b{overflow:hidden;color:#142238;font-size:15px;font-weight:700;text-overflow:ellipsis;white-space:nowrap}
+.vm-item time{color:#7b889c;font-size:12px;white-space:nowrap}
+.vm-item p{grid-column:2/4;display:flex;align-items:center;gap:8px;min-width:0;margin:0;color:#5e6c82;font-size:13px}
+.vm-item p span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vm-item.unread b{font-weight:800}
+.vm-item.unread p span{color:#142238;font-weight:600}
+.vm-dot{width:11px;height:11px;flex:none;border-radius:50%;background:#246fe5;box-shadow:0 0 0 3px #246fe52e}
+.vm-avatar{display:grid;width:44px;height:44px;place-items:center;border-radius:12px;background:#e8eef8;color:#2b5bb8;font:800 15px Manrope,sans-serif}
+.vm-avatar-lg{width:48px;height:48px;font-size:17px}
+.vm-empty{padding:24px;color:#6b7890;text-align:center}
+.vm-thread-pane{display:flex;min-width:0;min-height:0;flex-direction:column}
+.vm-thread-head{display:flex;align-items:center;gap:14px;padding:14px 18px;border-bottom:1px solid #e3e8ef}
+.vm-back{display:none;padding:0 4px;border:0;background:none;color:#142238;font-size:22px;cursor:pointer}
+.vm-who{flex:1;min-width:0}
+.vm-who h2{margin:0;overflow:hidden;color:#142238;font:800 19px Manrope,sans-serif;letter-spacing:-.3px;text-overflow:ellipsis;white-space:nowrap}
+.vm-who p{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;margin:3px 0 0;color:#5e6c82;font-size:13px}
+.vm-view-role{color:#1f5fcf;font-weight:700;text-decoration:none}
+.vm-view-role:hover{text-decoration:underline;text-underline-offset:3px}
+.vm-view-job{flex:none;display:inline-flex;align-items:center;height:38px;padding:0 14px;border:1px solid #c6d1df;border-radius:9px;background:#fff;color:#22344f;font:700 13px "DM Sans",sans-serif;text-decoration:none;white-space:nowrap}
+.vm-view-job:hover{background:#f4f6f9}
+.vm-context{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;padding:12px 18px;border-bottom:1px solid #e3e8ef;background:#fafbfd;color:#5e6c82;font-size:13px}
+.vm-pill{padding:3px 9px;border-radius:999px;background:#e8f0ff;color:#1f5fcf;font-size:12px;font-weight:700}
+.vm-pill.shortlisted,.vm-pill.interviewing{background:#fff4dc;color:#9a6512}
+.vm-pill.hired{background:#e6f6ee;color:#0b7a50}
+.vm-pill.rejected{background:#f1f3f6;color:#5e6c82}
+.vm-pill.direct{background:#f7f5fe;color:#5b3fc4}
+.vm-bid{padding:3px 9px;border-radius:999px;background:#e6f6ee;color:#0b7a50;font-weight:700}
+.vm-messages{display:flex;flex:1;min-height:0;flex-direction:column;gap:10px;overflow-y:auto;padding:18px}
+.vm-msg{max-width:72%;padding:10px 13px;border-radius:12px;background:#f1f4f8;color:#142238;font-size:14px;line-height:1.5;white-space:pre-wrap}
+.vm-msg.you{align-self:flex-end;background:#e8f0ff}
+.vm-msg small{display:block;margin-top:5px;color:#7b889c;font-size:11px}
+.vm-msg-label{display:block;margin-bottom:4px;color:#5e6c82;font-size:12px;font-weight:700}
+.vm-compose{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px;padding:12px 18px;border-top:1px solid #e3e8ef}
+.vm-compose textarea{flex:1;height:44px;min-height:44px;max-height:140px;padding:11px 13px;border:1px solid #c6d1df;border-radius:10px;outline:0;resize:vertical;color:#142238;font:400 14px/1.5 "DM Sans",sans-serif}
+.vm-compose textarea:focus{border-color:#246fe5;box-shadow:0 0 0 3px #246fe51f}
+.vm-compose button{height:44px;padding:0 20px;border:0;border-radius:10px;background:#246fe5;color:#fff;font:700 14px "DM Sans",sans-serif;cursor:pointer}
+.vm-compose button:hover{background:#1d5fcc}
+.vm-compose button:disabled{opacity:.6;cursor:default}
+.vm-compose .send-status{flex-basis:100%;color:#6b7890;font-size:12px}
+.vm-compose .send-status:empty{display:none}
+/* Phones: list first; opening a conversation fills the screen with a back arrow. */
+@media(max-width:760px){
+  .vm-top h1{font-size:26px}
+  .vm-top select{min-width:150px}
+  .vm{grid-template-columns:1fr;height:calc(100svh - 150px);min-height:460px}
+  .vm-list-pane{border-right:0}
+  .vm-thread-pane{display:none}
+  .vm.showing-thread .vm-list-pane{display:none}
+  .vm.showing-thread .vm-thread-pane{display:flex}
+  .vm-back{display:block}
+  .vm-thread-head{gap:10px;padding:12px}
+  .vm-avatar-lg{display:none}
+  .vm-who h2{font-size:17px}
+  .vm-context,.vm-messages,.vm-compose{padding-right:12px;padding-left:12px}
+  .vm-msg{max-width:86%}
+}
+/* Keep the dashboard content close to the header (no empty band at the top). */
+.va-dashboard-page .portal-shell{padding-top:14px!important}
+@media(max-width:1000px){.vm{grid-template-columns:320px minmax(0,1fr)}}

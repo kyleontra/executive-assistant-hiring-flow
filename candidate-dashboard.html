@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="./candidate-flow-layout.css" />
     <link rel="stylesheet" href="./candidate-dashboard.css" />
     <link rel="stylesheet" href="./va-jobs.css" />
+    <link rel="stylesheet" href="./va-messages.css" />
     <link rel="stylesheet" href="./account-menu.css" data-sava-account-styles />
   </head>
   <body class="va-dashboard-page">
@@ -35,7 +36,13 @@
         <a href="./candidate-onboarding.html">Finish up next steps <span>→</span></a>
       </section>
       <section id="candidateReady" hidden>
-        <section id="panel-messages" role="tabpanel" aria-labelledby="tab-messages" tabindex="0" hidden><div class="va-section-heading va-section-toolbar"><div><h2>Messages</h2><p>Keep your conversations with hirers in one place.</p></div><button id="refreshInbox" type="button" class="va-button secondary">Refresh</button></div><p id="inboxStatus" role="status" aria-live="polite" hidden></p><div id="candidateMessages"></div></section>
+        <section id="panel-messages" class="vm-panel" role="tabpanel" aria-labelledby="tab-messages" tabindex="0" hidden>
+          <div class="vm-top"><h1>Messages</h1>
+            <label><span>Organize by</span><select id="messageSort" aria-label="Organize by"><option value="recent">Most recent</option><option value="unread">Unread first</option></select></label>
+          </div>
+          <p id="inboxStatus" class="vm-status" role="status" aria-live="polite" hidden></p>
+          <div id="candidateMessages"></div>
+        </section>
         <section id="panel-applications" role="tabpanel" aria-labelledby="tab-applications" tabindex="0"><div class="va-section-heading"><h2>Your applications</h2><p>Follow the roles you’ve applied to and what happens next.</p></div><div id="candidateApplications" class="portal-applications"></div></section>
         <section id="panel-profile" role="tabpanel" aria-label="My Profile" tabindex="0" hidden><div class="va-section-heading va-section-toolbar"><div><h2>My Profile</h2><p>Your details, introduction and resume, all together.</p></div><button id="refreshProfile" type="button" class="va-button secondary">Refresh</button></div><p id="profilePhotoStatus" class="va-photo-status" role="status" aria-live="polite" hidden></p><div id="candidateProfile"></div></section>
         <section id="panel-jobs" class="vj-panel" role="tabpanel" aria-labelledby="tab-jobs" tabindex="0" hidden>
