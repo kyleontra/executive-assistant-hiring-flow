@@ -75,3 +75,10 @@ body.ab-page{margin:0;min-height:100vh;background:#f4f6f9;color:#142238;font-fam
 .ab-applied-actions .ab-submit{margin-top:0}
 .ab-secondary{display:flex;height:48px;align-items:center;justify-content:center;border:1px solid #c6d1df;border-radius:12px;background:#fff;color:#22344f;font:700 15px "DM Sans",sans-serif;text-decoration:none}
 .ab-secondary:hover{background:#f4f6f9}
+/* Applied page: tighter top so the buttons sit higher on screen. */
+.ab-shell:has(.ab-applied){padding-top:14px}
+.ab-applied{padding-top:20px}
+.ab-applied .ab-done-mark{width:40px;height:40px;margin-bottom:6px;font-size:20px}
+.ab-applied h1{margin:0 0 2px}
+.ab-applied-lead{margin:6px 0 14px}
+.ab-applied-actions{margin-top:14px}
