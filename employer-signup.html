@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#1f5fcf" />
+    <meta name="description" content="Create your free Hire From SA account and start hiring vetted South African assistants." />
+    <title>Sign up — Hire From SA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./brand.css" />
+    <link rel="stylesheet" href="./employer-signup.css" />
+  </head>
+  <body class="es-page">
+    <main class="es-shell">
+      <aside class="es-side">
+        <a href="./home.html" class="es-logo" aria-label="Hire From SA home"><img src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a>
+        <div class="es-side-copy">
+          <h2>Hire vetted South African assistants.</h2>
+          <ul>
+            <li>Search talent and watch one-minute intro videos</li>
+            <li>Post jobs and get applications with each VA's bid</li>
+            <li>Message, interview and hire in one place</li>
+          </ul>
+        </div>
+        <div class="es-side-card" aria-hidden="true">
+          <div class="es-side-card-top"><b class="av">AK</b><div><strong>Ayanda K.</strong><small>Executive Assistant · 5 years</small></div><span>✓ Vetted</span></div>
+          <p>"Hi, I'm Ayanda. I've supported two founders as their EA for five years."</p>
+          <em>Bid $7/hr · would accept $6–$8</em>
+        </div>
+      </aside>
+
+      <section class="es-main">
+        <div class="es-top"><a href="./home.html" class="es-logo es-logo-mobile" aria-label="Hire From SA home"><img src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a><p>Already have an account? <a href="./employer-login.html">Employer Login</a></p></div>
+
+        <!-- Step 1: account details -->
+        <form id="employerSignupForm" class="es-card" novalidate>
+          <p class="es-kicker">FREE TO START</p>
+          <h1>Start hiring</h1>
+          <p class="es-lead">Create your account in under a minute.</p>
+          <div class="es-grid">
+            <label>First name<input name="firstName" type="text" autocomplete="given-name" maxlength="60" required /></label>
+            <label>Last name<input name="lastName" type="text" autocomplete="family-name" maxlength="60" required /></label>
+            <label class="wide">Work email<input name="email" type="email" autocomplete="email" maxlength="254" placeholder="you@yourcompany.com" required /><small data-hint="email">Use your company email. Personal emails like Gmail or Yahoo aren't accepted.</small></label>
+            <label class="wide">Phone number
+              <span class="es-phone"><select name="countryCode" aria-label="Country code">
+                <option value="+1" selected>🇺🇸 +1</option><option value="+1 CA">🇨🇦 +1</option><option value="+44">🇬🇧 +44</option><option value="+61">🇦🇺 +61</option><option value="+64">🇳🇿 +64</option><option value="+27">🇿🇦 +27</option><option value="+353">🇮🇪 +353</option><option value="+49">🇩🇪 +49</option><option value="+31">🇳🇱 +31</option><option value="+33">🇫🇷 +33</option><option value="+34">🇪🇸 +34</option><option value="+39">🇮🇹 +39</option><option value="+41">🇨🇭 +41</option><option value="+46">🇸🇪 +46</option><option value="+971">🇦🇪 +971</option><option value="+972">🇮🇱 +972</option><option value="+65">🇸🇬 +65</option><option value="+852">🇭🇰 +852</option><option value="+91">🇮🇳 +91</option><option value="+52">🇲🇽 +52</option><option value="+55">🇧🇷 +55</option>
+              </select><input name="phone" type="tel" autocomplete="tel-national" inputmode="tel" maxlength="20" placeholder="(555) 123-4567" required /></span></label>
+            <label class="wide">Business website<input name="website" type="text" inputmode="url" autocomplete="url" autocapitalize="none" spellcheck="false" maxlength="200" placeholder="yourcompany.com" required /></label>
+            <fieldset class="wide es-size"><legend>Company size</legend>
+              <div>
+                <label><input type="radio" name="companySize" value="0" required /><span>Just me</span></label>
+                <label><input type="radio" name="companySize" value="1-5" /><span>1–5</span></label>
+                <label><input type="radio" name="companySize" value="6-25" /><span>6–25</span></label>
+                <label><input type="radio" name="companySize" value="26-100" /><span>26–100</span></label>
+                <label><input type="radio" name="companySize" value="100+" /><span>100+</span></label>
+              </div>
+            </fieldset>
+          </div>
+          <p id="signupError" class="es-error" role="alert" hidden></p>
+          <button id="signupButton" class="es-submit" type="submit">Sign Up <span aria-hidden="true">→</span></button>
+          <p class="es-fine">By signing up you agree to be contacted about your account. VAs never see your phone number.</p>
+        </form>
+
+        <!-- Step 2: confirm email with a code and choose a password -->
+        <form id="employerVerifyForm" class="es-card" hidden novalidate>
+          <p class="es-kicker">ONE LAST STEP</p>
+          <h1>Check your email</h1>
+          <p class="es-lead">We sent a 6-digit code to <b id="verifyEmail"></b>. Enter it and choose a password so you can log back in.</p>
+          <div class="es-grid">
+            <label class="wide">6-digit code<input name="code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456" required /></label>
+            <label class="wide">Create a password<input name="password" type="password" autocomplete="new-password" minlength="8" maxlength="128" required /><small>At least 8 characters.</small></label>
+          </div>
+          <p id="verifyError" class="es-error" role="alert" hidden></p>
+          <button id="verifyButton" class="es-submit" type="submit">Start hiring <span aria-hidden="true">→</span></button>
+          <p class="es-fine">No code? Check spam, or <button type="button" class="es-link" id="resendCode">send a new code</button>. Wrong email? <button type="button" class="es-link" id="changeEmail">Go back</button></p>
+        </form>
+      </section>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./auth-client.js"></script>
+    <script src="./employer-signup.js"></script>
+  </body>
+</html>
