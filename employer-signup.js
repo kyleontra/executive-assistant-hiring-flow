@@ -96,7 +96,7 @@
       if (error) throw new Error('That code is wrong or expired. Check your email or send a new code.');
       const { error: passwordError } = await window.savaAuth.auth.updateUser({ password });
       if (passwordError) throw passwordError;
-      window.location.assign('./index.html');
+      window.location.assign('./talent.html');
     } catch (error) {
       showError(errorNode, error.message || 'Something went wrong. Please try again.');
       button.disabled = false; button.innerHTML = 'Start hiring <span aria-hidden="true">→</span>';
