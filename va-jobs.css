@@ -1,0 +1,72 @@
+/* VA "Apply for jobs" tab (candidate-dashboard.html): matches the job post, apply page and hirer Messages. */
+.vj-panel{width:min(1100px,100%);margin:0 auto}
+.vj-top{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:16px}
+.vj-top h1{margin:0;color:#142238;font:800 30px/1.1 Manrope,sans-serif;letter-spacing:-1px}
+.vj-top p{margin:0;color:#6b7890;font-size:14px;font-weight:600}
+.vj-toolbar{display:grid;grid-template-columns:minmax(0,1fr) 180px 180px;align-items:end;gap:12px;margin-bottom:16px}
+.vj-toolbar label{display:grid;gap:5px;color:#6b7890;font-size:12px;font-weight:700}
+.vj-toolbar select{height:44px;padding:0 36px 0 12px;border:1px solid #c6d1df;border-radius:10px;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='none' stroke='%23526178' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3 5 4 4 4-4'/%3E%3C/svg%3E") no-repeat right 12px center;color:#142238;font:600 14px "DM Sans",sans-serif;appearance:none;cursor:pointer}
+.vj-search{display:flex!important;align-items:center;gap:8px;height:44px;padding:0 14px;border:1px solid #c6d1df;border-radius:10px;background:#fff}
+.vj-search svg{width:16px;height:16px;flex:none;fill:none;stroke:#7b889c;stroke-width:2;stroke-linecap:round}
+.vj-search input{flex:1;min-width:0;border:0;outline:0;background:none;color:#142238;font:500 15px "DM Sans",sans-serif}
+.vj-toolbar select:focus,.vj-search:focus-within{border-color:#246fe5;outline:0;box-shadow:0 0 0 3px #246fe51f}
+
+.vj-browser{display:grid;grid-template-columns:360px minmax(0,1fr);gap:16px;align-items:start}
+.vj-browser.is-empty{grid-template-columns:1fr}
+.vj-browser.is-empty .vj-detail{display:none}
+.vj-list{display:grid;align-content:start;gap:10px;max-height:calc(100svh - 250px);overflow-y:auto;padding:2px;scrollbar-width:thin}
+.vj-card{display:grid;gap:6px;width:100%;padding:16px 18px;border:1px solid #dce2ea;border-radius:14px;background:#fff;color:#142238;font:inherit;text-align:left;cursor:pointer;box-shadow:0 8px 24px rgba(20,34,56,.04);transition:border-color .15s,box-shadow .15s}
+.vj-card:hover{border-color:#b9c9e0}
+.vj-card[aria-pressed=true]{border-color:#246fe5;box-shadow:0 0 0 3px #246fe51f}
+.vj-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.vj-card-top b{font:800 17px/1.3 Manrope,sans-serif;letter-spacing:-.3px}
+.vj-card-posted{color:#6b7890;font-size:12px}
+.vj-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.vj-meta span{padding:5px 9px;border-radius:8px;background:#f1f4f8;color:#33445e;font-size:12px;font-weight:600}
+.vj-meta .pay{background:#e6f6ee;color:#0b7a50;font-weight:700}
+.vj-pill{flex:none;padding:3px 9px;border-radius:999px;font-size:12px;font-style:normal;font-weight:700}
+.vj-pill.applied{background:#e6f6ee;color:#0b7a50}
+
+.vj-detail{position:sticky;top:96px;max-height:calc(100svh - 120px);overflow-y:auto;padding:28px 30px;border:1px solid #dce2ea;border-radius:16px;background:#fff;box-shadow:0 16px 42px rgba(20,34,56,.055);scrollbar-width:thin}
+.vj-back{display:none}
+.vj-posted{margin:0;color:#6b7890;font-size:13px;font-weight:600}
+.vj-detail h2{margin:6px 0 18px;color:#142238;font:800 clamp(26px,3vw,34px)/1.1 Manrope,sans-serif;letter-spacing:-1.1px}
+.vj-facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 18px}
+.vj-facts div{padding:12px 14px;border:1px solid #edf0f7;border-radius:12px;background:#f7f9fe}
+.vj-facts .green{background:#f1faf6}.vj-facts .violet{background:#f7f5fe}.vj-facts .blue{background:#f1f7ff}.vj-facts .rose{background:#fff5f7}
+.vj-facts dt{color:#6b7890;font-size:12px;font-weight:700}
+.vj-facts dd{margin:4px 0 0;color:#142238;font:800 14px/1.3 Manrope,sans-serif}
+.vj-apply{display:flex;height:52px;align-items:center;justify-content:center;gap:10px;border-radius:12px;background:#246fe5;color:#fff;font:800 17px "DM Sans",sans-serif;text-decoration:none;box-shadow:0 10px 24px rgba(36,111,229,.28)}
+.vj-apply:hover{background:#1d5fcc}
+.vj-free{margin:8px 0 0;color:#0b7a50;font-size:13px;font-weight:700;text-align:center}
+.vj-applied-box{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:14px 16px;border-radius:12px;background:#f1faf6;color:#0b6b47;font-size:15px}
+.vj-secondary{height:42px;padding:0 16px;border:1px solid #c6d1df;border-radius:10px;background:#fff;color:#22344f;font:700 14px "DM Sans",sans-serif;cursor:pointer}
+.vj-secondary:hover{background:#f4f6f9}
+.vj-section{margin-top:22px;padding-top:20px;border-top:1px solid #e9eef4}
+.vj-section h3{margin:0 0 10px;color:#142238;font:800 18px Manrope,sans-serif;letter-spacing:-.3px}
+.vj-description{margin:0;color:#33445e;font-size:15px;line-height:1.7;white-space:pre-wrap}
+.vj-section ul{margin:0;padding-left:20px;color:#33445e;font-size:15px;line-height:1.6}
+.vj-chips{display:flex;flex-wrap:wrap;gap:8px}
+.vj-chips span{padding:7px 11px;border-radius:8px;background:#f1f4f8;color:#33445e;font-size:13px;font-weight:700}
+.vj-questions{display:grid;gap:8px;margin:0;padding:0;list-style:none;counter-reset:q}
+.vj-questions li{display:flex;gap:12px;padding:12px 14px;border:1px solid #e3e8ef;border-radius:10px;background:#fafbfd;color:#142238;font-size:15px;counter-increment:q}
+.vj-questions li::before{content:counter(q);display:grid;width:24px;height:24px;flex:none;place-items:center;border-radius:50%;background:#e8f0ff;color:#1f5fcf;font:800 12px Manrope,sans-serif}
+
+@media(max-width:1000px){
+  .vj-browser{grid-template-columns:300px minmax(0,1fr)}
+  .vj-facts{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+/* Phones: the list fills the screen; tapping a job opens it full width with a back button. */
+@media(max-width:760px){
+  .vj-top h1{font-size:26px}
+  .vj-toolbar{grid-template-columns:1fr 1fr}
+  .vj-toolbar .vj-search{grid-column:1/-1}
+  .vj-browser{grid-template-columns:1fr}
+  .vj-list{max-height:none;overflow:visible}
+  .vj-detail{display:none;position:static;max-height:none;overflow:visible;padding:20px 18px}
+  .vj-browser.showing-detail .vj-list{display:none}
+  .vj-browser.showing-detail .vj-detail{display:block}
+  .vj-browser.showing-detail ~ *,.vj-panel:has(.showing-detail) .vj-toolbar,.vj-panel:has(.showing-detail) .vj-top{display:none}
+  .vj-back{display:inline-flex;margin:0 0 14px;padding:0;border:0;background:none;color:#33445e;font:700 14px "DM Sans",sans-serif;cursor:pointer}
+  .vj-card[aria-pressed=true]{border-color:#dce2ea;box-shadow:0 8px 24px rgba(20,34,56,.04)}
+}

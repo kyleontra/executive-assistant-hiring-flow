@@ -7,6 +7,27 @@ const tabs = ['jobs', 'messages', 'applications', 'profile'];
 const navTabs = ['jobs', 'messages', 'applications'];
 let activeTab = new URLSearchParams(window.location.search).get('tab') || 'applications';
 if (!tabs.includes(activeTab)) activeTab = 'applications';
+// Localhost-only preview (?demo): a signed-in VA with sample applications, messages and jobs. Nothing is sent.
+const dashboardDemo = ['localhost', '127.0.0.1'].includes(window.location.hostname) && new URLSearchParams(window.location.search).has('demo');
+const demoJobs = [
+  { id: 'demo-wedding', company: 'Ever After Films', title: 'Wedding Video Editor', arrangement: 'Remote', type: 'Full-time', location: 'South Africa', pay: '$6–$8 / hour', payMin: 6, payMax: 8, payPeriod: 'hour', hiringTimeline: 'ASAP', createdAt: new Date(Date.now() - 3 * 864e5).toISOString(), questions: [{ text: 'How many weddings have you edited?' }, { text: 'Share a link to a highlight film you edited.' }], status: 'active', description: 'Edit wedding highlight films and full ceremony videos from raw footage. You will receive footage within a week of each wedding and deliver a first cut within 10 days.', skills: ['Premiere Pro', 'Color grading', 'Music sync'] },
+  { id: 'demo-ea', company: 'Northline Realty', title: 'Executive Assistant to the CEO', arrangement: 'Remote', type: 'Full-time', location: 'South Africa', pay: '$5–$7 / hour', payMin: 5, payMax: 7, payPeriod: 'hour', hiringTimeline: 'Within 1-2 weeks', createdAt: new Date(Date.now() - 6 * 864e5).toISOString(), status: 'active', description: 'Manage the CEO calendar, inbox and travel, prepare meeting notes and keep projects moving across a small real estate team.', skills: ['Google Workspace', 'Calendar management', 'Written English'] },
+  { id: 'demo-bookkeeper', company: 'Harbor Accounting', title: 'Bookkeeping Assistant', arrangement: 'Remote', type: 'Full-time', location: 'South Africa', pay: '$1,100–$1,300 / month', payMin: 1100, payMax: 1300, payPeriod: 'month', hiringTimeline: 'Not urgently', createdAt: new Date(Date.now() - 10 * 864e5).toISOString(), status: 'active', description: 'Reconcile accounts in QuickBooks, categorize transactions and prepare monthly reports for small business clients.', skills: ['QuickBooks', 'Xero', 'Attention to detail'] },
+  { id: 'demo-cs', company: 'Brightside Dental', title: 'Customer Support Assistant', arrangement: 'Remote', type: 'Part-time', location: 'South Africa', pay: '$4–$5 / hour', payMin: 4, payMax: 5, payPeriod: 'hour', hiringTimeline: 'Within the month', createdAt: new Date(Date.now() - 864e5).toISOString(), status: 'active', description: 'Answer patient emails and chats, book appointments and send reminders for a three-location dental practice.', skills: ['Customer service', 'Scheduling'] },
+];
+const demoData = {
+  profile: { applicationReady: true, verificationStatus: 'verified' },
+  applications: [
+    { id: 'demo-app-1', status: 'shortlisted', submittedAt: new Date(Date.now() - 2 * 864e5).toISOString(), job: demoJobs[0],
+      messages: [
+        { sender: 'candidate', body: 'Hi, my name is Thandi, and I think I would be a good fit for your role because I have edited over 40 wedding films in the last two years.', createdAt: new Date(Date.now() - 2 * 864e5).toISOString() },
+        { sender: 'employer', body: 'Thanks Thandi! Could you send a link to your favourite highlight film?', createdAt: new Date(Date.now() - 864e5).toISOString() },
+      ] },
+    { id: 'demo-app-2', status: 'new', submittedAt: new Date(Date.now() - 5 * 864e5).toISOString(), job: demoJobs[1],
+      messages: [{ sender: 'candidate', body: 'Hi, my name is Thandi, and I think I would be a good fit for your role because I supported two founders as their EA for three years.', createdAt: new Date(Date.now() - 5 * 864e5).toISOString() }] },
+  ],
+  conversations: [],
+};
 let dashboardData;
 let candidate;
 let conversations = [];
@@ -104,7 +125,7 @@ function switchTab(tab, updateUrl = true) {
     window.history.replaceState(null, '', '?' + params.toString());
   }
   if (!dashboardData) return;
-  if (tab === 'profile' && (!profileLoaded || Date.now() - profileLoadedAt > 45 * 60 * 1000)) loadProfile();
+  if (tab === 'profile' && !dashboardDemo && (!profileLoaded || Date.now() - profileLoadedAt > 45 * 60 * 1000)) loadProfile();
   if (tab === 'jobs' && !jobsLoaded) loadJobs();
   if (tab === 'messages' && Date.now() - lastInboxRefresh > 30000) refreshInbox();
 }
@@ -249,10 +270,10 @@ async function loadJobs() {
   if (jobsLoading) return;
   jobsLoading = true;
   const status = document.querySelector('#jobsStatus');
-  status.textContent = 'Loading open roles…';
+  status.textContent = 'Loading open jobs…';
   document.querySelector('#jobsRetry').hidden = true;
   try {
-    const data = await window.savaPlatform.viewerRequest('listJobs');
+    const data = dashboardDemo ? { jobs: demoJobs } : await window.savaPlatform.viewerRequest('listJobs');
     jobs = (data.jobs || []).filter(job => job.status === 'active');
     populateJobFilters();
     jobsLoaded = true;
@@ -262,35 +283,56 @@ async function loadJobs() {
     document.querySelector('#jobsRetry').hidden = false;
   } finally { jobsLoading = false; }
 }
+const JOB_TYPE_HOURS = { 'Full-time': 'Full-time · 40 hrs/week', 'Part-time': 'Part-time · 20+ hrs/week', Contract: 'Contract · per project' };
+const JOB_TIMELINES = { ASAP: 'ASAP', 'Within 1-2 weeks': 'In 1-2 weeks', 'Within the month': 'This month', 'Not urgently': 'Flexible' };
+function postedLabel(value) {
+  const days = Math.floor((Date.now() - new Date(value).getTime()) / 864e5);
+  if (!value || Number.isNaN(days)) return '';
+  return days < 1 ? 'Posted today' : days === 1 ? 'Posted yesterday' : days < 30 ? 'Posted ' + days + ' days ago' : 'Posted ' + dateLabel(value);
+}
+// Compare hourly and monthly jobs on one scale for "Highest pay".
+function hourlyPay(job) {
+  const top = Number(job.payMax || job.payMin || 0);
+  return job.payPeriod === 'month' ? top / 173 : top;
+}
 function populateJobFilters() {
-  const options = (selector, values, placeholder) => {
-    const select = document.querySelector(selector);
-    const current = select.value;
-    select.innerHTML = '<option value="">' + portalEscape(placeholder) + '</option>' + [...new Set(values.filter(Boolean))].sort().map(value => '<option value="' + portalEscape(value) + '">' + portalEscape(value) + '</option>').join('');
-    if (select.options && [...select.options].some(option => option.value === current)) select.value = current;
-  };
-  options('#jobArrangement', jobs.map(job => job.arrangement), 'All work setups');
-  options('#jobType', jobs.map(job => job.type), 'All job types');
+  const select = document.querySelector('#jobType');
+  const current = select.value;
+  select.innerHTML = '<option value="">All job types</option>' + [...new Set(jobs.map(job => job.type).filter(Boolean))].sort().map(value => '<option value="' + portalEscape(value) + '">' + portalEscape(value) + '</option>').join('');
+  if ([...select.options].some(option => option.value === current)) select.value = current;
+}
+function jobQuestions(job) {
+  return (Array.isArray(job.questions) ? job.questions : []).map(question => typeof question === 'string' ? question : question?.text).map(text => String(text || '').trim()).filter(Boolean);
 }
 function renderJobDetail(job, applied) {
   const detail = document.querySelector('#candidateJobDetail');
-  if (!job) { detail.hidden = true; detail.innerHTML = ''; return; }
-  detail.hidden = false;
-  const applicationId = applied ? dashboardData.applications.find(application => application.job?.id === job.id)?.id : '';
-  const action = applied
-    ? '<button type="button" class="va-button secondary" data-view-application="' + portalEscape(applicationId || '') + '">View application →</button>'
-    : '<a class="va-button" href="./application-questions.html?job=' + encodeURIComponent(job.id) + '">Apply for this role →</a>';
-  detail.innerHTML = '<div class="va-job-detail-heading"><p class="va-job-company">' + portalEscape(job.company || 'Hirer') + '</p><div class="va-job-title-row"><h3>' + portalEscape(job.title || 'Open role') + '</h3>' + action + '</div><div class="va-job-tags">' + [job.arrangement,job.type,job.location].filter(Boolean).map(tag => '<span>' + portalEscape(tag) + '</span>').join('') + '</div><b class="va-job-pay">' + portalEscape(job.pay || '') + '</b></div><div class="va-job-description"><h4>About the role</h4><p>' + portalEscape(job.description || 'The hirer has not added a full role description yet.') + '</p>' + (job.responsibilities?.length ? '<h4>What you’ll do</h4><ul>' + job.responsibilities.map(item => '<li>' + portalEscape(item) + '</li>').join('') + '</ul>' : '') + (job.skills?.length ? '<h4>Skills that help</h4><div class="va-skills">' + job.skills.map(skill => '<span>' + portalEscape(skill) + '</span>').join('') + '</div>' : '') + '</div>';
+  if (!job) { detail.innerHTML = ''; return; }
+  const application = applied ? dashboardData.applications.find(item => item.job?.id === job.id) : null;
+  const questions = jobQuestions(job);
+  const action = application
+    ? '<div class="vj-applied-box"><b>✓ You applied ' + portalEscape(dateLabel(application.submittedAt)) + '</b><button type="button" class="vj-secondary" data-application-conversation="' + portalEscape(application.id) + '">View conversation</button></div>'
+    : '<a class="vj-apply" href="./application-questions.html?job=' + encodeURIComponent(job.id) + '">Apply now <span aria-hidden="true">→</span></a><p class="vj-free">Free for candidates. You never pay to apply or get hired.</p>';
+  detail.innerHTML = '<button type="button" class="vj-back" data-job-back>← All jobs</button>'
+    + '<p class="vj-posted">' + portalEscape(postedLabel(job.createdAt)) + '</p><h2>' + portalEscape(job.title || 'Open job') + '</h2>'
+    + '<dl class="vj-facts"><div class="green"><dt>Pay</dt><dd>' + portalEscape(job.pay || 'Not listed') + '</dd></div><div class="violet"><dt>Job type</dt><dd>' + portalEscape(JOB_TYPE_HOURS[job.type] || job.type || 'Not listed') + '</dd></div><div class="blue"><dt>Where</dt><dd>' + portalEscape(job.arrangement || 'Remote') + '</dd></div><div class="rose"><dt>Hiring</dt><dd>' + portalEscape(JOB_TIMELINES[job.hiringTimeline] || job.hiringTimeline || 'Open') + '</dd></div></dl>'
+    + action
+    + '<section class="vj-section"><h3>About the job</h3><p class="vj-description">' + portalEscape(job.description || 'The hirer has not added a description yet.') + '</p></section>'
+    + (job.responsibilities?.length ? '<section class="vj-section"><h3>What you’ll do</h3><ul>' + job.responsibilities.map(item => '<li>' + portalEscape(item) + '</li>').join('') + '</ul></section>' : '')
+    + (job.skills?.length ? '<section class="vj-section"><h3>Skills that help</h3><div class="vj-chips">' + job.skills.map(skill => '<span>' + portalEscape(skill) + '</span>').join('') + '</div></section>' : '')
+    + (questions.length ? '<section class="vj-section"><h3>Questions you’ll answer</h3><ol class="vj-questions">' + questions.map(question => '<li>' + portalEscape(question) + '</li>').join('') + '</ol></section>' : '');
+  detail.scrollTop = 0;
 }
 function renderJobs() {
   const query = document.querySelector('#jobSearch').value.trim().toLowerCase();
-  const arrangement = document.querySelector('#jobArrangement').value;
   const type = document.querySelector('#jobType').value;
-  const matches = jobs.filter(job => [job.title,job.company,job.description,...(job.skills || [])].join(' ').toLowerCase().includes(query) && (!arrangement || job.arrangement === arrangement) && (!type || job.type === type));
-  document.querySelector('#jobsStatus').textContent = matches.length + ' open role' + (matches.length === 1 ? '' : 's') + (query ? ' matching your search' : '');
+  const sort = document.querySelector('#jobSort').value;
+  const matches = jobs.filter(job => [job.title,job.description,...(job.skills || [])].join(' ').toLowerCase().includes(query) && (!type || job.type === type))
+    .sort((a, b) => sort === 'pay' ? hourlyPay(b) - hourlyPay(a) : String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+  document.querySelector('#jobsStatus').textContent = matches.length + ' open job' + (matches.length === 1 ? '' : 's') + (query || type ? ' match your search' : '');
   const applied = new Set((dashboardData.applications || []).map(application => application.job?.id));
   if (!matches.some(job => job.id === selectedJobId)) selectedJobId = matches[0]?.id || '';
-  document.querySelector('#candidateJobs').innerHTML = matches.length ? matches.map(job => '<button type="button" class="va-job-listing" data-job-id="' + portalEscape(job.id) + '" aria-pressed="' + String(job.id === selectedJobId) + '"><span class="va-job-company">' + portalEscape(job.company || 'Hirer') + '</span><b>' + portalEscape(job.title || 'Open role') + '</b><span class="va-job-meta">' + portalEscape([job.location,job.arrangement,job.type].filter(Boolean).join(' · ')) + '</span><span class="va-job-snippet">' + portalEscape(String(job.description || '').slice(0,125)) + (String(job.description || '').length > 125 ? '…' : '') + '</span><span class="va-job-listing-footer"><strong>' + portalEscape(job.pay || '') + '</strong><em>' + (applied.has(job.id) ? 'Applied ✓' : 'View role →') + '</em></span></button>').join('') : emptyState(query || arrangement || type ? 'No matching roles.' : 'No open roles right now.', query || arrangement || type ? 'Try changing your search or filters.' : 'Check back soon for new opportunities.');
+  document.querySelector('#jobBrowser').classList.toggle('is-empty', !matches.length);
+  document.querySelector('#candidateJobs').innerHTML = matches.length ? matches.map(job => '<button type="button" class="vj-card" data-job-id="' + portalEscape(job.id) + '" aria-pressed="' + String(job.id === selectedJobId) + '"><span class="vj-card-top"><b>' + portalEscape(job.title || 'Open job') + '</b>' + (applied.has(job.id) ? '<em class="vj-pill applied">Applied</em>' : '') + '</span><span class="vj-card-posted">' + portalEscape(postedLabel(job.createdAt)) + '</span><span class="vj-meta"><span class="pay">' + portalEscape(job.pay || 'Pay not listed') + '</span><span>' + portalEscape(job.type || '') + '</span>' + (job.hiringTimeline ? '<span>Hiring ' + portalEscape(JOB_TIMELINES[job.hiringTimeline] || job.hiringTimeline) + '</span>' : '') + '</span></button>').join('') : emptyState(query || type ? 'No matching jobs.' : 'No open jobs right now.', query || type ? 'Try a different search or job type.' : 'Check back soon for new jobs.');
   renderJobDetail(matches.find(job => job.id === selectedJobId), applied.has(selectedJobId));
 }
 async function loadCandidateDashboard() {
@@ -298,6 +340,16 @@ async function loadCandidateDashboard() {
   loading = true;
   portalStatus.hidden = false; portalStatus.className = 'portal-status'; portalStatus.textContent = 'Loading your dashboard…';
   document.querySelector('#dashboardRetry').hidden = true;
+  if (dashboardDemo) {
+    dashboardData = demoData;
+    document.querySelector('#candidateReady').hidden = false;
+    prepareConversations(demoData);
+    renderApplications(demoData.applications);
+    portalStatus.hidden = true;
+    switchTab(activeTab, false);
+    loading = false;
+    return;
+  }
   try {
     candidate = await window.getVerifiedCandidate();
     if (!candidate) { window.location.replace('./candidate-login.html?next=' + encodeURIComponent('./candidate-dashboard.html?tab=' + activeTab)); return; }
@@ -387,7 +439,7 @@ document.querySelector('#candidateProfile').addEventListener('submit', async eve
   }
 });
 document.querySelector('#candidateReady').addEventListener('click', async event => {
-  const action = event.target.closest('[data-open-tab], [data-view-application], [data-thread-id], [data-application-conversation], [data-retry-profile], [data-job-id], [data-share-profile]');
+  const action = event.target.closest('[data-open-tab], [data-view-application], [data-thread-id], [data-application-conversation], [data-retry-profile], [data-job-id], [data-job-back], [data-share-profile]');
   if (!action) return;
   if (action.dataset.openTab) switchTab(action.dataset.openTab);
   if ('viewApplication' in action.dataset) {
@@ -398,7 +450,8 @@ document.querySelector('#candidateReady').addEventListener('click', async event 
   if (action.dataset.threadId) { saveDraft(); selectedConversation = action.dataset.threadId; renderMessages(); }
   if (action.dataset.applicationConversation) { saveDraft(); selectedConversation = conversations.find(thread => thread.applicationId === action.dataset.applicationConversation)?.id; renderMessages(); switchTab('messages'); }
   if ('retryProfile' in action.dataset) { profileLoaded = false; loadProfile(); }
-  if (action.dataset.jobId) { selectedJobId = action.dataset.jobId; renderJobs(); }
+  if (action.dataset.jobId) { selectedJobId = action.dataset.jobId; renderJobs(); document.querySelector('#jobBrowser').classList.add('showing-detail'); if (window.matchMedia('(max-width: 760px)').matches) window.scrollTo(0, 0); }
+  if ('jobBack' in action.dataset) document.querySelector('#jobBrowser').classList.remove('showing-detail');
   if (action.dataset.shareProfile) {
     const status = document.querySelector('#candidateShareStatus');
     try {
@@ -445,7 +498,7 @@ document.querySelector('#refreshProfile').addEventListener('click', () => { prof
 // Only fetch while the inbox is visible. Drafts stay local and survive refreshes.
 window.setInterval?.(() => { if (!document.hidden && activeTab === 'messages' && Date.now() - lastInboxRefresh >= 30000) refreshInbox(); }, 30000);
 document.querySelector('#jobSearch').addEventListener('input', () => { if (jobsLoaded) renderJobs(); });
-document.querySelector('#jobArrangement').addEventListener('change', () => { if (jobsLoaded) renderJobs(); });
+document.querySelector('#jobSort').addEventListener('change', () => { if (jobsLoaded) renderJobs(); });
 document.querySelector('#jobType').addEventListener('change', () => { if (jobsLoaded) renderJobs(); });
 document.querySelector('#jobsRetry').addEventListener('click', loadJobs);
 document.querySelector('#dashboardRetry').addEventListener('click', loadCandidateDashboard);

@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="./onboarding-videos.css" />
     <link rel="stylesheet" href="./candidate-flow-layout.css" />
     <link rel="stylesheet" href="./candidate-dashboard.css" />
+    <link rel="stylesheet" href="./va-jobs.css" />
     <link rel="stylesheet" href="./account-menu.css" data-sava-account-styles />
   </head>
   <body class="va-dashboard-page">
@@ -37,19 +38,18 @@
         <section id="panel-messages" role="tabpanel" aria-labelledby="tab-messages" tabindex="0" hidden><div class="va-section-heading va-section-toolbar"><div><h2>Messages</h2><p>Keep your conversations with hirers in one place.</p></div><button id="refreshInbox" type="button" class="va-button secondary">Refresh</button></div><p id="inboxStatus" role="status" aria-live="polite" hidden></p><div id="candidateMessages"></div></section>
         <section id="panel-applications" role="tabpanel" aria-labelledby="tab-applications" tabindex="0"><div class="va-section-heading"><h2>Your applications</h2><p>Follow the roles you’ve applied to and what happens next.</p></div><div id="candidateApplications" class="portal-applications"></div></section>
         <section id="panel-profile" role="tabpanel" aria-label="My Profile" tabindex="0" hidden><div class="va-section-heading va-section-toolbar"><div><h2>My Profile</h2><p>Your details, introduction and resume, all together.</p></div><button id="refreshProfile" type="button" class="va-button secondary">Refresh</button></div><p id="profilePhotoStatus" class="va-photo-status" role="status" aria-live="polite" hidden></p><div id="candidateProfile"></div></section>
-        <section id="panel-jobs" role="tabpanel" aria-labelledby="tab-jobs" tabindex="0" hidden>
-          <div class="va-section-heading"><h2>Find your next role</h2><p>Search open roles, compare the details and apply with your saved profile.</p></div>
-          <div class="va-job-searchbar">
-            <label class="va-search-label">Search roles<input id="jobSearch" type="search" placeholder="Search by role, company or skill…" /></label>
-            <label>Work setup<select id="jobArrangement"><option value="">All work setups</option></select></label>
+        <section id="panel-jobs" class="vj-panel" role="tabpanel" aria-labelledby="tab-jobs" tabindex="0" hidden>
+          <div class="vj-top"><h1>Apply for jobs</h1><p id="jobsStatus" role="status" aria-live="polite"></p></div>
+          <div class="vj-toolbar">
+            <label class="vj-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input id="jobSearch" type="search" placeholder="Search jobs or skills" aria-label="Search jobs" /></label>
             <label>Job type<select id="jobType"><option value="">All job types</option></select></label>
+            <label>Organize by<select id="jobSort"><option value="newest">Newest</option><option value="pay">Highest pay</option></select></label>
           </div>
-          <p id="jobsStatus" role="status" aria-live="polite"></p>
-          <div class="va-job-browser">
-            <div id="candidateJobs" class="va-job-list" aria-label="Open roles"></div>
-            <aside id="candidateJobDetail" class="va-job-detail" aria-live="polite"></aside>
+          <div id="jobBrowser" class="vj-browser">
+            <div id="candidateJobs" class="vj-list" aria-label="Open jobs"></div>
+            <aside id="candidateJobDetail" class="vj-detail" aria-live="polite"></aside>
           </div>
-          <button id="jobsRetry" class="va-button" type="button" hidden>Reload roles</button>
+          <button id="jobsRetry" class="va-button" type="button" hidden>Reload jobs</button>
         </section>
       </section>
     </main>
