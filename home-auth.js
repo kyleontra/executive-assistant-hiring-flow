@@ -16,11 +16,4 @@
     });
   });
 
-  window.getVerifiedEmployer?.().then((user) => {
-    if (!user) return;
-    const accountLink = document.querySelector('.hl-employer-login');
-    if (!accountLink) return;
-    accountLink.setAttribute('href', './talent.html');
-    accountLink.textContent = 'Dashboard';
-  });
 })();

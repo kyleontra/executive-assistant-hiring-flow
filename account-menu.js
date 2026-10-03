@@ -84,7 +84,8 @@
     });
     currentMenu = null;
     document.documentElement.dataset.authState = user ? 'signed-in' : 'signed-out';
-    if (!user) return;
+    // Pages with their own fixed header links (the home page) opt out of the account menu.
+    if (!user || document.body.dataset.accountMenu === 'off') return;
 
     const role = accountRole(user);
     const loginSelector = role === 'employer' ? 'a[href^="./employer-login.html"]' : 'a[href^="./candidate-login.html"]';
