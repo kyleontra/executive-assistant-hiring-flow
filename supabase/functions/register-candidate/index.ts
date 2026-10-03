@@ -93,8 +93,8 @@ Deno.serve(async (request) => {
     if (!firstName || !lastName || !/^\S+@\S+\.\S+$/.test(email)) {
       return reply(request, { error: 'Enter a valid first name, last name, and email address.' }, 400);
     }
-    if (password.length < 10 || password.length > 128) {
-      return reply(request, { error: 'Choose a password between 10 and 128 characters.' }, 400);
+    if (password.length < 8 || password.length > 128) {
+      return reply(request, { error: 'Choose a password between 8 and 128 characters.' }, 400);
     }
     if (calendarLink) {
       try {

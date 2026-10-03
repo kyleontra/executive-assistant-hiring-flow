@@ -115,7 +115,7 @@ test('candidate and employer login pages offer code-based password recovery', ()
   const page = read('reset-password.html');
   const source = read('reset-password.js');
   assert.match(page, /id="resetCode"[^>]+pattern="\[0-9\]\{6\}"/);
-  assert.match(page, /id="newPassword"[^>]+minlength="10"/);
+  assert.match(page, /id="newPassword"[^>]+minlength="8"/);
   assert.match(source, /signInWithOtp/);
   assert.match(source, /shouldCreateUser: false/);
   assert.match(source, /type: 'email'/);

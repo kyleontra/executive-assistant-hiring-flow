@@ -274,7 +274,7 @@ async function mount() {
   const demoCss = document.createElement('link'); demoCss.rel = 'stylesheet'; demoCss.href = '/scripts/full-onboarding-demo.css'; document.head.append(demoCss);
   toolbar();
   if (['check-email', 'email-confirmed'].includes(page)) note('No email is sent in this demo. Use verification code 123456 with the email you entered at signup.');
-  if (page === 'candidate-signup' || page === 'candidate-login') note('Use test details and any password of at least 10 characters. The password is not stored.');
+  if (page === 'candidate-signup' || page === 'candidate-login') note('Use test details and any password of at least 8 characters. The password is not stored.');
   if (['id-verification', 'verification'].includes(page)) note('Demo only: use sample ID images. These files and recordings stay in this browser.');
   if (page === 'candidate-resume' && saved.resumeParseNote) note(saved.resumeParseNote);
   if (page === 'candidate-dashboard') note('Sample companies, applications and messages. Your uploaded headshot, resume, intro video and saved profile details are retained. ' + (saved.resumeParseNote || ''));
