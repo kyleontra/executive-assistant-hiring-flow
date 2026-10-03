@@ -3,7 +3,7 @@ import { createVirtualBackground } from './virtual-background.mjs';
 export async function prepareVideoBackground(options, { create = createVirtualBackground, timeoutMs = 30000 } = {}) {
   let expired = false;
   let timer;
-  const timeoutError = () => new Error('The background took too long to start. Try again, choose No effect, or upload your video.');
+  const timeoutError = () => new Error('The background took too long to start. Retry the camera or upload your video.');
   const setup = Promise.resolve().then(() => create({
     ...options,
     onError(error) { if (!expired) options.onError?.(error); },

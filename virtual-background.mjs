@@ -51,7 +51,7 @@ async function loadBrandImage() {
 
 export async function createVirtualBackground({ video, cameraStream, mode, imageFile, onError }) {
   if (!backgroundOptions.has(mode) || mode === 'none') throw new Error('Choose a virtual background first.');
-  if (!HTMLCanvasElement.prototype.captureStream) throw new Error('This browser cannot record a virtual background. Choose No effect or upload a video.');
+  if (!HTMLCanvasElement.prototype.captureStream) throw new Error('This browser cannot record a virtual background. Retry in a supported browser or upload a video.');
 
   let backgroundMode = mode;
   let backgroundImage = mode === 'custom' ? await loadCustomImage(imageFile) : mode === 'brand' ? await loadBrandImage() : null;
@@ -164,7 +164,7 @@ export async function createVirtualBackground({ video, cameraStream, mode, image
   };
   // Paint a composited frame before MediaRecorder starts so the video cannot begin with a raw frame.
   render(performance.now());
-  if (stopped) throw new Error('The virtual background could not start. Choose another background or No effect.');
+  if (stopped) throw new Error('The virtual background could not start. Retry the camera or upload a video.');
   canvasStream = canvas.captureStream(24);
   const outputStream = new MediaStream([...canvasStream.getVideoTracks(), ...cameraStream.getAudioTracks()]);
   return {

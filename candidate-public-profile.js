@@ -151,6 +151,7 @@ function renderPublicProfile(profile) {
     <span id="sharePublicStatus" class="public-profile-toast" role="status" aria-live="polite"></span>`;
   const video = publicProfileRoot.querySelector?.('.public-profile-video');
   if (video) {
+    import('./video-thumbnail.mjs').then(({ applyVideoThumbnail }) => applyVideoThumbnail(video, { fallback: photo })).catch(() => {});
     const play = publicProfileRoot.querySelector('.public-profile-play');
     const duration = publicProfileRoot.querySelector('.public-profile-video-duration');
     video.addEventListener('loadedmetadata', () => { if (Number.isFinite(video.duration)) duration.textContent = `${Math.floor(video.duration / 60)}:${String(Math.floor(video.duration % 60)).padStart(2, '0')}`; });

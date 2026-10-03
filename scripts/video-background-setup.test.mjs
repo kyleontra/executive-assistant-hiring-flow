@@ -11,7 +11,7 @@ test('a stalled background returns a retryable error and cleans up a late result
     timeoutMs: 10,
     create(options) { callback = options.onError; return new Promise(resolve => { finish = resolve; }); },
   });
-  await assert.rejects(pending, /took too long.*No effect/);
+  await assert.rejects(pending, /took too long.*Retry/);
   callback(new Error('old take'));
   finish({ stop() { stopped++; } });
   await new Promise(resolve => setImmediate(resolve));

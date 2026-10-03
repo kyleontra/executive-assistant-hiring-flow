@@ -1,3 +1,4 @@
+import { applyVideoThumbnail } from './video-thumbnail.mjs';
 import { onboardingRequest } from './onboarding-client.mjs';
 import { prepareHeadshot } from './headshot-image.mjs';
 const PHOTO_ENDPOINT = 'https://jyxamdvvnoylaxolhlht.supabase.co/functions/v1/submit-profile-photo';
@@ -394,6 +395,7 @@ function renderProfile(profile, intro) {
         </form>
       </section>
     </div>`;
+  applyVideoThumbnail(root.querySelector('video'), { fallback: photo });
   root.querySelector('video')?.addEventListener('error', () => { profileLoaded = false; root.querySelector('.vp-video').insertAdjacentHTML('beforeend', '<p role="alert" class="vp-muted">Your video could not play. <button type="button" class="vp-link" data-retry-profile>Reload profile</button></p>'); });
   window.savaPendingAccountPhoto = photo;
   window.savaSetAccountPhoto?.(photo);
