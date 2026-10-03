@@ -3,37 +3,69 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#1d6be8" />
-    <title>Record South African ID video</title>
+    <meta name="theme-color" content="#1f5fcf" />
+    <title>Record your ID video - Hire From SA</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./video-review.css" />
     <link rel="stylesheet" href="./brand.css" />
-    <link rel="stylesheet" href="./onboarding-videos.css" />
-    <link rel="stylesheet" href="./candidate-flow-layout.css" />
+    <link rel="stylesheet" href="./employer-signup.css" />
   </head>
-  <body class="onboarding-page">
-    <header class="video-header"><a href="./jobs.html" class="video-brand site-logo-link"><img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a><span>Private ID review</span><a href="./jobs.html">Exit</a></header>
-    <main class="video-shell">
-      <aside class="video-aside"><p class="eyebrow">BEFORE YOU APPLY</p><h1>Record your ID video.</h1><p>Your headshot and ID photos are saved. Record a short private video, then watch the platform guide and complete your contract.</p><div class="flow-steps"><span>✓</span><b>Headshot</b><span>✓</span><b>ID photos</b><span class="active">3</span><b>Short video</b></div></aside>
-      <section class="video-main">
-        <section id="recordPanel" class="video-card">
-          <p class="eyebrow blue">APPLICATION READINESS · STEP 3 OF 3</p><h2>Record a 10-second ID video.</h2><p class="lead">State your full name and where you are from, then hold the front of your South African ID in the frame.</p>
-          <p id="authStatus" class="status-box" aria-live="polite">Checking your verified account…</p><button id="retryAccount" type="button" hidden>Retry loading account</button><a id="signInAgain" href="./candidate-login.html?next=./verification.html" hidden>Sign in again to continue</a>
-          <div class="camera-stage">
+  <body class="es-page" data-account-menu="off">
+    <main class="es-shell">
+      <aside class="es-side">
+        <a href="./home.html" class="es-logo" aria-label="Hire From SA home"><img src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a>
+        <div class="es-side-copy">
+          <h2>Verify your ID so hirers can trust you.</h2>
+          <ul>
+            <li>Only our review team sees this video</li>
+            <li>Hirers never see your ID video</li>
+            <li>It only takes 10 seconds</li>
+          </ul>
+        </div>
+        <div class="es-side-card es-steps-card" aria-hidden="true">
+          <strong>Your profile in 5 steps</strong>
+          <ol>
+            <li class="done"><b>✓</b><span>Create your account<small>Done</small></span></li>
+            <li class="done"><b>✓</b><span>Confirm your email<small>Done</small></span></li>
+            <li class="done"><b>✓</b><span>Add your resume<small>Done</small></span></li>
+            <li class="current"><b>4</b><span>Verify your ID<small>Photos of your ID and a short video</small></span></li>
+            <li><b>5</b><span>Sign your contract<small>Watch a short video, then sign</small></span></li>
+          </ol>
+        </div>
+      </aside>
+
+      <section class="es-main">
+        <div class="es-top"><a href="./home.html" class="es-logo es-logo-mobile" aria-label="Hire From SA home"><img src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a></div>
+
+        <section id="recordPanel" class="es-card es-login es-video">
+          <p id="authStatus" class="es-verified" aria-live="polite">Checking your account…</p>
+          <p class="es-kicker">STEP 4 OF 5</p>
+          <h1>Record a 10-second ID video</h1>
+          <p class="es-lead">Say your full name and where you're from, then hold the front of your South African ID up to the camera. We'll show you what to say.</p>
+          <ol class="es-substeps" aria-label="This step has two parts">
+            <li class="done"><b>✓</b>ID photos</li>
+            <li class="current"><b>2</b>Short ID video</li>
+          </ol>
+          <button id="retryAccount" class="es-secondary" type="button" hidden>Retry loading account</button><a id="signInAgain" class="es-inline-link" href="./candidate-login.html?next=./verification.html" hidden>Sign in again to continue</a>
+
+          <div class="camera-stage es-stage">
             <canvas id="cameraCanvas" width="720" height="405" aria-label="Camera preview"></canvas>
             <video id="cameraPreview" autoplay playsinline muted></video>
             <video id="recordedPreview" controls controlslist="nodownload noplaybackrate" playsinline hidden></video>
-            <div id="cameraPlaceholder" class="camera-placeholder"><span>◉</span><b>Camera is off</b><p>Start your camera, then follow the guided prompts.</p></div>
+            <div id="cameraPlaceholder" class="camera-placeholder"><span aria-hidden="true">◉</span><b>Your camera is off</b><p>Turn it on below. We'll guide you through what to say.</p></div>
             <div class="camera-guide"><i></i><i></i><i></i><i></i></div>
             <div id="recordingScript" class="recording-script" aria-live="polite" hidden><span id="scriptStep"></span><b id="scriptText"></b></div>
           </div>
-          <div id="cameraResult" class="status-box" aria-live="polite" hidden></div>
-          <div class="camera-actions"><button id="startCamera" class="primary-action" disabled>Turn on camera &amp; microphone</button><button id="recordId" class="secondary-action" disabled>Start 10-second recording</button><button id="submitReview" class="primary-action" disabled>Save video and continue <span>→</span></button></div>
-          <div class="video-upload-divider"><span>or</span></div>
-          <label class="video-upload" for="videoUpload"><b>Upload a video instead</b><span>Use an MP4 or WebM file up to 4 MB if your camera is unavailable.</span><input id="videoUpload" type="file" accept="video/mp4,video/webm,.mp4,.webm" /></label>
-          <p class="help-text">This preview is only for checking your recording. Your submitted video is stored privately for the review team; applicants are not given a download link.</p>
+          <div id="cameraResult" class="portal-result" aria-live="polite" hidden></div>
+          <div class="es-video-actions">
+            <button id="startCamera" class="es-secondary" type="button" disabled>Turn on camera</button>
+            <button id="recordId" class="es-secondary es-record" type="button" disabled><span aria-hidden="true">●</span> Start recording</button>
+          </div>
+          <button id="submitReview" class="es-submit" type="button" disabled>Save video and continue <span aria-hidden="true">→</span></button>
+
+          <label class="es-video-upload" for="videoUpload"><b>Camera not working? Upload a video instead</b><span>MP4 or WebM, up to 4 MB</span><input id="videoUpload" type="file" accept="video/mp4,video/webm,.mp4,.webm" /></label>
+          <p class="es-privacy help-text">🔒 Your video is stored privately for our review team and never shown to hirers.</p>
         </section>
       </section>
     </main>

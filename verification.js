@@ -28,7 +28,7 @@ function showResult(message, type) {
   const target = $('#cameraResult');
   target.textContent = message;
   target.hidden = false;
-  target.className = `status-box ${type}`;
+  target.className = `portal-result ${type}`;
 }
 
 function stopCamera() {
@@ -180,21 +180,18 @@ async function requireVerifiedAccount() {
   if (demoMode) {
     verified = true;
     $('#submitReview').disabled = submittingVideo || !recordingReady;
-    document.querySelector('.video-aside h1').textContent = 'Finish the demo.';
-    document.querySelector('.video-aside > p').textContent = 'Record and preview a short test video locally. Demo recordings are never uploaded.';
-    document.querySelector('.help-text').textContent = 'This recording stays in your browser and is discarded when you leave or restart the demo.';
-    $('#authStatus').textContent = 'Demo mode — record and preview the full video locally. Nothing will be uploaded or added to the review queue.';
-    $('#authStatus').className = 'status-box success';
-    $('#startCamera').textContent = 'Turn on camera & microphone';
-    $('#submitReview').innerHTML = 'Complete demo <span>→</span>';
+    $('#authStatus').textContent = 'Demo mode: your video is never uploaded';
+    $('#authStatus').className = 'es-verified success';
+    $('#startCamera').textContent = 'Turn on camera';
+    $('#submitReview').innerHTML = 'Complete demo <span aria-hidden="true">→</span>';
     return;
   }
   const user = await window.getVerifiedCandidate();
   if (!user) {
     document.querySelector('#signInAgain').hidden = false;
-    $('#authStatus').textContent = 'You can test the camera now. Sign in before sending the video for review.';
-    $('#authStatus').className = 'status-box';
-    $('#startCamera').textContent = 'Test camera & microphone';
+    $('#authStatus').textContent = 'You can test your camera now. Sign in before sending your video.';
+    $('#authStatus').className = 'es-verified';
+    $('#startCamera').textContent = 'Test camera';
     return;
   }
   try {
@@ -203,7 +200,7 @@ async function requireVerifiedAccount() {
     reviewReference = state.reviewReference || '';
   } catch (error) {
     $('#authStatus').textContent = (['TimeoutError', 'AbortError'].includes(error?.name) ? 'The request took too long. Check your connection and try again. Your saved progress is kept.' : error.message) || 'Your saved ID photos could not be checked. Refresh to try again.';
-    $('#authStatus').className = 'status-box error';
+    $('#authStatus').className = 'es-verified error';
     $('#retryAccount').hidden = false;
     return;
   }
@@ -213,9 +210,9 @@ async function requireVerifiedAccount() {
   }
   verified = true;
   $('#submitReview').disabled = submittingVideo || !recordingReady;
-  $('#authStatus').textContent = `Email confirmed for ${user.email}. Your ID photo reference is ready.`;
-  $('#authStatus').className = 'status-box success';
-  $('#startCamera').textContent = 'Turn on camera & microphone';
+  $('#authStatus').textContent = `Signed in: ${user.email}`;
+  $('#authStatus').className = 'es-verified success';
+  $('#startCamera').textContent = 'Turn on camera';
 }
 
 $('#startCamera').addEventListener('click', async () => {
@@ -250,7 +247,7 @@ $('#recordId').addEventListener('click', () => {
   const video = $('#cameraPreview');
   if (!video.videoWidth) { showResult('The camera is still loading. Wait a moment, then try again.', 'error'); return; }
   const chunks = [];
-  const script = [['STEP 1 OF 5', 'Say clearly: “My name is [your full name].”'], ['STEP 2 OF 5', 'Say clearly: “I am from [your city and province].”'], ['STEP 3 OF 5', 'Hold the front of your South African ID in the frame.'], ['STEP 4 OF 5', 'Tilt the ID gently left, then right, to reduce glare.'], ['STEP 5 OF 5', 'Hold the ID steady while we finish recording.']];
+  const script = [['PROMPT 1 OF 5', 'Say clearly: “My name is [your full name].”'], ['PROMPT 2 OF 5', 'Say clearly: “I am from [your city and province].”'], ['PROMPT 3 OF 5', 'Hold the front of your South African ID in the frame.'], ['PROMPT 4 OF 5', 'Tilt the ID gently left, then right, to reduce glare.'], ['PROMPT 5 OF 5', 'Hold the ID steady while we finish recording.']];
   const setScript = (index) => { $('#scriptStep').textContent = script[index][0]; $('#scriptText').textContent = script[index][1]; $('#recordingScript').hidden = false; };
   const mimeType = preferredRecorderType();
   const videoTrack = cameraStream.getVideoTracks()[0];
@@ -272,7 +269,7 @@ $('#recordId').addEventListener('click', () => {
     $('#cameraPreview').srcObject = null;
     stopCamera();
     $('#startCamera').disabled = false;
-    $('#startCamera').textContent = 'Turn camera back on';
+    $('#startCamera').textContent = 'Retake video';
     $('#recordId').disabled = true;
     showRecordedVideo(candidateVideo);
   });
@@ -303,7 +300,7 @@ $('#videoUpload').addEventListener('change', async event => {
   recordingHasAudio = false;
   $('#cameraPreview').srcObject = null; $('#recordingScript').hidden = true;
   $('.camera-stage').classList.remove('live'); $('.camera-stage').classList.add('recorded');
-  $('#startCamera').disabled = false; $('#startCamera').textContent = 'Use camera instead'; $('#recordId').disabled = true;
+  $('#startCamera').disabled = false; $('#startCamera').textContent = 'Use camera'; $('#recordId').disabled = true;
   showRecordedVideo(file);
 });
 
@@ -331,7 +328,7 @@ $('#submitReview').addEventListener('click', async () => {
     if (!response.ok) throw new Error(payload.error || 'The video could not be sent.');
     window.location.assign('./candidate-onboarding.html');
   } catch (error) {
-    button.innerHTML = 'Save video and continue <span>→</span>';
+    button.innerHTML = 'Save video and continue <span aria-hidden="true">→</span>';
     showResult(['TimeoutError', 'AbortError'].includes(error?.name) ? 'The request took too long. Your recording is still here. Check your connection and retry.' : error.message || 'The video could not be sent. Please try again.', 'error');
   } finally {
     submittingVideo = false;
@@ -351,7 +348,7 @@ requireVerifiedAccount().catch(accountLoadFailed);
 function accountLoadFailed(error) {
   const status = document.querySelector('#authStatus');
   status.textContent = error.message || 'Your account could not be checked. Retry to continue.';
-  status.className = 'status-box error';
+  status.className = 'es-verified error';
   if (/sign.in|expired/i.test(error.message || '')) document.querySelector('#signInAgain').hidden = false;
   document.querySelector('#retryAccount').hidden = false;
 }

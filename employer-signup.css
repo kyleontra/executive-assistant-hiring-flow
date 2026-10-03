@@ -204,3 +204,35 @@ body.es-page{margin:0;background:#f6f8fc;color:#142238;font-family:"DM Sans",san
 .es-check{display:flex;align-items:flex-start;gap:10px;margin-top:16px;color:#33445e;font-size:14px;font-weight:600;line-height:1.45;cursor:pointer}
 .es-check input{width:18px;height:18px;flex:none;margin:1px 0 0;accent-color:#246fe5}
 @media (max-width:420px){.es-substeps li{font-size:12px}.es-id-drop{min-height:130px}}
+.es-substeps li.done{background:#eaf8f2;color:#0b6b47}
+.es-substeps li.done b{background:#0b7a50;color:#fff}
+.es-stage{position:relative;min-height:300px;margin-top:16px;overflow:hidden;border-radius:16px;background:#102039}
+.es-stage canvas,.es-stage video{display:none;width:100%;height:auto;aspect-ratio:16/9;object-fit:cover}
+.es-stage.live{min-height:0;aspect-ratio:16/9}
+.es-stage.live #cameraCanvas{display:block}
+.es-stage.recorded{min-height:0}
+.es-stage.recorded #recordedPreview{display:block}
+.es-stage .camera-placeholder{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;color:#eaf1fb;text-align:center}
+.es-stage .camera-placeholder span{display:grid;width:52px;height:52px;margin-bottom:12px;place-items:center;border-radius:50%;background:#ffffff18;color:#8db7ff;font-size:24px}
+.es-stage .camera-placeholder b{font-size:16px}
+.es-stage .camera-placeholder p{max-width:280px;margin:6px 0 0;color:#b6c8e0;font-size:13.5px;line-height:1.5}
+.es-stage.live .camera-placeholder,.es-stage.recorded .camera-placeholder,.es-stage.recorded .camera-guide{display:none}
+.es-stage .camera-guide{position:absolute;inset:18% 12%;border:2px dashed #ffffff80;border-radius:12px;pointer-events:none}
+.es-stage .recording-script{position:absolute;z-index:2;right:12px;bottom:12px;left:12px;padding:10px 14px;border-radius:12px;background:#102039d9;color:#fff;backdrop-filter:blur(8px)}
+.es-stage .recording-script[hidden]{display:none}
+.es-stage .recording-script span,.es-stage .recording-script b{display:block}
+.es-stage .recording-script span{margin-bottom:3px;color:#9fc3ff;font-size:11px;font-weight:800;letter-spacing:1px}
+.es-stage .recording-script b{font-size:15px;line-height:1.35}
+.es-video-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.es-video-actions .es-secondary{height:48px;cursor:pointer}
+.es-video-actions .es-secondary:disabled{opacity:.55;cursor:default}
+.es-record:not(:disabled){border-color:#e04b4b;background:#e04b4b;color:#fff}
+.es-record:not(:disabled):hover{background:#cc3c3c}
+.es-record span{margin-right:4px;font-size:12px}
+.es-video .es-submit{margin-top:14px}
+.es-video-upload{position:relative;display:grid;gap:2px;margin-top:14px;padding:13px 16px;border:1px dashed #c6d1df;border-radius:12px;background:#f8faff;text-align:center;cursor:pointer}
+.es-video-upload:hover{border-color:#246fe5;background:#eef4ff}
+.es-video-upload b{color:#1f5fcf;font-size:14px}
+.es-video-upload span{color:#6b7890;font-size:12.5px}
+.es-video-upload input{position:absolute;width:1px;height:1px;opacity:0}
+@media (max-width:420px){.es-stage{min-height:220px}}
