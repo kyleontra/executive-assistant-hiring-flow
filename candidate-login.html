@@ -3,30 +3,50 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Candidate sign in — Hire From SA</title>
+    <meta name="theme-color" content="#1f5fcf" />
+    <title>VA Login — Hire From SA</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./candidate-portal.css" />
-    <link rel="stylesheet" href="./reset-password.css" />
     <link rel="stylesheet" href="./brand.css" />
-    <link rel="stylesheet" href="./candidate-flow-layout.css" />
+    <link rel="stylesheet" href="./employer-signup.css" />
   </head>
-  <body class="portal-auth-page onboarding-page">
-    <header class="portal-header"><a class="site-logo-link" href="./home.html"><img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a><nav><a href="./employer-login.html">For hirers</a></nav></header>
-    <main class="portal-auth-shell">
-      <section class="portal-auth-card">
-        <p class="portal-kicker">CANDIDATE PORTAL</p>
-        <h1>Welcome back.</h1>
-        <p>Sign in to track applications and message hirers.</p>
-        <form id="candidateLoginForm">
-          <label>Email address<input id="loginEmail" type="email" autocomplete="email" required /></label>
-          <label>Password<input id="loginPassword" type="password" autocomplete="current-password" minlength="8" required /></label>
-          <p class="portal-forgot"><a href="./reset-password.html?account=candidate">Forgot password?</a></p>
+  <body class="es-page" data-account-menu="off">
+    <main class="es-shell">
+      <aside class="es-side">
+        <a href="./home.html" class="es-logo" aria-label="Hire From SA home"><img src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a>
+        <div class="es-side-copy">
+          <h2>Get hired by U.S. businesses.</h2>
+          <ul>
+            <li>Apply to remote jobs for free</li>
+            <li>Chat with hirers and book interviews</li>
+            <li>Get paid the rate you agree, no fees</li>
+          </ul>
+        </div>
+        <div class="es-side-card" aria-hidden="true">
+          <div class="es-side-card-top"><b class="av">NR</b><div><strong>Northline Realty</strong><small>Executive Assistant to the CEO</small></div><span class="es-new">New message</span></div>
+          <p>"Thanks Thandi! Your intro video was great. Are you free for a quick call Thursday?"</p>
+          <em>Your bid $7/hr · Pending</em>
+        </div>
+      </aside>
+
+      <section class="es-main">
+        <div class="es-top"><a href="./home.html" class="es-logo es-logo-mobile" aria-label="Hire From SA home"><img src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a><p>Hiring? <a href="./employer-login.html">Employer Login</a></p></div>
+
+        <form id="candidateLoginForm" class="es-card es-login">
+          <p class="es-kicker">VA LOGIN</p>
+          <h1>Welcome back</h1>
+          <p class="es-lead">Log in to see your messages, applications and new jobs.</p>
+          <div class="es-grid">
+            <label class="wide">Email<input id="loginEmail" type="email" autocomplete="email" autocapitalize="none" spellcheck="false" placeholder="you@email.com" required /></label>
+            <label class="wide"><span class="es-label-row">Password<a href="./reset-password.html?account=candidate">Forgot password?</a></span>
+              <span class="es-password"><input id="loginPassword" type="password" autocomplete="current-password" minlength="8" required /><button type="button" class="es-show" data-toggle-password aria-label="Show password">Show</button></span></label>
+          </div>
           <p id="loginResult" class="portal-result" aria-live="polite" hidden></p>
-          <button id="candidateLoginButton" type="submit">Sign in <span>→</span></button>
+          <button id="candidateLoginButton" class="es-submit" type="submit">Log in <span aria-hidden="true">→</span></button>
+          <div class="es-divider"><span>New to Hire From SA?</span></div>
+          <a class="es-secondary" href="./candidate-signup.html">Create your free VA profile</a>
         </form>
-        <p class="portal-switch">New to Hire From SA? <a href="./candidate-signup.html">Create an account</a></p>
       </section>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

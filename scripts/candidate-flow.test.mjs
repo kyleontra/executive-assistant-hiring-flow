@@ -82,25 +82,20 @@ test('public registration creates candidate accounts only and fails closed witho
   assert.doesNotMatch(candidateRegistration, /input\.(?:role|accountRole|account_role)/);
 });
 
-test('hirer self-registration is absent from the UI and blocked by the server', async () => {
-  const page = read('employer-login.html');
-  const client = read('employer-login.js');
+test('hirer self-registration requires a work email and creates an unconfirmed employer account', () => {
+  const login = read('employer-login.html');
+  const page = read('employer-signup.html');
+  const client = read('employer-signup.js');
   const server = read('supabase/functions/register-employer/index.ts');
-  assert.doesNotMatch(page, /employerSignupForm|Create employer account/);
-  assert.match(page, /Hirer accounts are invite-only/);
-  assert.doesNotMatch(client, /register-employer|signUp|employerSignup/);
-  assert.doesNotMatch(server, /auth\.signUp|account_role: 'employer'/);
-
-  let handler;
-  const source = stripTypeScriptTypes(server, { mode: 'strip' });
-  vm.runInNewContext(source, { Deno: { serve: (fn) => { handler = fn; } }, Response, Set });
-  const response = await handler(new Request('https://example.invalid', {
-    method: 'POST',
-    headers: { origin: 'https://www.hirefromsa.com', 'content-type': 'application/json' },
-    body: JSON.stringify({ email: 'would-be-hirer@example.invalid', password: 'fixture-password' }),
-  }));
-  assert.equal(response.status, 403);
-  assert.match((await response.json()).error, /invite-only/);
+  assert.match(login, /href="\.\/employer-signup\.html"/);
+  assert.match(page, /id="employerSignupForm"/);
+  assert.match(page, /name="companySize"/);
+  assert.match(client, /isWorkEmail/);
+  assert.match(client, /verifyOtp/);
+  assert.match(server, /FREE_DOMAINS/);
+  assert.match(server, /email_confirm: false/);
+  assert.match(server, /account_role: 'employer'/);
+  assert.doesNotMatch(server, /auth\.signUp/);
 });
 
 test('employer login sends unverified accounts back to email confirmation', () => {

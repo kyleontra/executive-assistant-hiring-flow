@@ -27,7 +27,7 @@ loginForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   if (!loginForm.reportValidity() || loginButton.disabled) return;
   loginButton.disabled = true;
-  loginButton.textContent = 'Signing in…';
+  loginButton.textContent = 'Logging in…';
   loginResult.hidden = true;
   try {
     const { data, error } = await window.savaAuth.auth.signInWithPassword({
@@ -37,7 +37,7 @@ loginForm.addEventListener('submit', async (event) => {
     if (error) throw error;
     if (data.user?.app_metadata?.account_role !== 'candidate') {
       await window.savaAuth.auth.signOut();
-      throw new Error('That is an employer account. Use the employer sign-in from Post a Job.');
+      throw new Error('That is a hirer account. Use Employer Login instead.');
     }
     window.location.assign(await resolvedDestination());
   } catch (error) {
@@ -46,14 +46,22 @@ loginForm.addEventListener('submit', async (event) => {
       window.location.assign('./check-email.html');
       return;
     }
-    loginResult.textContent = error.message || 'Sign in failed. Check your email and password.';
+    loginResult.textContent = /invalid login credentials/i.test(error.message || '') ? 'That email and password don\'t match. Try again or reset your password.' : error.message || 'Log in failed. Check your email and password.';
     loginResult.className = 'portal-result error';
     loginResult.hidden = false;
     loginButton.disabled = false;
-    loginButton.innerHTML = 'Sign in <span>→</span>';
+    loginButton.innerHTML = 'Log in <span aria-hidden="true">→</span>';
   }
 });
 
 window.getVerifiedCandidate().then(async (user) => {
   if (user) window.location.replace(await resolvedDestination());
+});
+
+document.querySelector('[data-toggle-password]')?.addEventListener('click', (event) => {
+  const input = document.querySelector('#loginPassword');
+  const show = input.type === 'password';
+  input.type = show ? 'text' : 'password';
+  event.currentTarget.textContent = show ? 'Hide' : 'Show';
+  event.currentTarget.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
 });

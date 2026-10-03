@@ -78,3 +78,19 @@ body.es-page{margin:0;background:#f6f8fc;color:#142238;font-family:"DM Sans",san
   .es-size div{grid-template-columns:repeat(3,minmax(0,1fr))}
   .es-phone{grid-template-columns:104px minmax(0,1fr)}
 }
+/* Also used by the VA login (candidate-login.html). */
+.es-login{max-width:480px}
+.es-label-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.es-label-row a{color:#1f5fcf;font-size:13px;font-weight:700;text-decoration:none}
+.es-password{position:relative;display:block}
+.es-password input{padding-right:70px!important}
+.es-show{position:absolute;top:50%;right:8px;height:34px;padding:0 10px;transform:translateY(-50%);border:0;border-radius:8px;background:#f1f4f8;color:#33445e;font:700 13px "DM Sans",sans-serif;cursor:pointer}
+.portal-result{margin:16px 0 0;padding:11px 14px;border-radius:10px;font-size:14px;font-weight:600}
+.portal-result[hidden]{display:none}
+.portal-result.error{border:1px solid #efc9cd;background:#fff7f7;color:#a84e57}
+.portal-result.success{border:1px solid #cfe9dc;background:#f1faf6;color:#0b6b47}
+.es-divider{display:flex;align-items:center;gap:12px;margin:22px 0 12px;color:#7b889c;font-size:13px;font-weight:600}
+.es-divider::before,.es-divider::after{content:"";flex:1;height:1px;background:#e3e8ef}
+.es-secondary{display:flex;height:50px;align-items:center;justify-content:center;border:1px solid #c6d1df;border-radius:14px;background:#fff;color:#142238;font:800 16px "DM Sans",sans-serif;text-decoration:none}
+.es-secondary:hover{background:#f4f6f9}
+.es-side-card-top .es-new{background:#246fe5;color:#fff}
