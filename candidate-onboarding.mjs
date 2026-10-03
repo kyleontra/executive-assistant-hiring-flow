@@ -19,6 +19,17 @@ let loading = false;
 let currentStage = "";
 const CONTRACT_URL = 'https://sendlink.co/documents/doc-form/6a99dcb2ea613131e9ac83f3?locale=en';
 const manage = new URLSearchParams(location.search).get('manage') === '1';
+// Local preview only: ?demo=identity|platform|contract|waiting walks the sign-up stages without an account.
+const DEMO_STAGES = ['identity', 'platform', 'contract', 'waiting'];
+const demoParam = new URLSearchParams(location.search).get('demo');
+let demoStage = ['localhost', '127.0.0.1'].includes(location.hostname) && DEMO_STAGES.includes(demoParam) ? demoParam : '';
+const demoMode = Boolean(demoStage);
+async function demoRequest(action, body = {}) {
+  if (action === 'completeGuide') demoStage = body.guide === 'identity' ? 'platform' : 'contract';
+  if (action === 'completeContract') demoStage = 'waiting';
+  return { stage: demoStage, contractName: 'Thandi Jacobs' };
+}
+const request = demoMode ? demoRequest : onboardingRequest;
 const introScript = 'Hi, I’m [name], based in [city]. I have experience in [your field], especially [key skill]. Recently, I [brief achievement]. I’d love to help your team with [type of work].';
 const button = (id, label, secondary = false) => `<button id="${id}" type="button" class="journey-action${secondary ? ' secondary' : ''}">${label}</button>`;
 const heading = (kicker, title, description) => `<div class="journey-heading"><p class="journey-kicker">${kicker}</p><h1>${title}</h1><p>${description}</p></div>`;
@@ -27,6 +38,41 @@ function message(text, error = false) {
   const status = root.querySelector('#journeyStatus');
   if (status) { status.textContent = text; status.className = error ? 'journey-status-line journey-error' : 'journey-status-line'; }
 }
+const SIGNUP_STEPS = [['Create your account', 'Name, email and password'], ['Confirm your email', 'Enter the 6-digit code we send you'], ['Add your resume', 'Upload a file or paste a link'], ['Verify your ID', 'Photos of your ID and a short video'], ['Sign your contract', 'Watch a short video, then sign']];
+const SIGNING_PARTS = ['Watch video', 'Sign contract'];
+// Sign-up stages before approval use the same split layout as the other VA sign-up pages.
+function renderSignupLayout({ side, part, card, allDone = false }) {
+  document.body.className = 'es-page';
+  document.body.dataset.accountMenu = 'off';
+  document.querySelector('.journey-header')?.setAttribute('hidden', '');
+  root.className = 'es-shell';
+  const steps = SIGNUP_STEPS.map(([title, detail], index) => {
+    const done = allDone || index < 4;
+    return done
+      ? `<li class="done"><b>✓</b><span>${title}<small>Done</small></span></li>`
+      : `<li class="current"><b>${index + 1}</b><span>${title}<small>${detail}</small></span></li>`;
+  }).join('');
+  const parts = part ? `<ol class="es-substeps" aria-label="Signing your contract has two parts">${SIGNING_PARTS.map((label, index) => index + 1 < part ? `<li class="done"><b>✓</b>${label}</li>` : index + 1 === part ? `<li class="current"><b>${index + 1}</b>${label}</li>` : `<li><b>${index + 1}</b>${label}</li>`).join('')}</ol>` : '';
+  root.innerHTML = `<aside class="es-side"><a href="./home.html" class="es-logo" aria-label="Hire From SA home"><img src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a><div class="es-side-copy"><h2>${side.title}</h2><ul>${side.points.map(point => `<li>${point}</li>`).join('')}</ul></div><div class="es-side-card es-steps-card" aria-hidden="true"><strong>Your profile in 5 steps</strong><ol>${steps}</ol></div></aside><section class="es-main"><div class="es-top"><a href="./home.html" class="es-logo es-logo-mobile" aria-label="Hire From SA home"><img src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a></div>${card(parts)}</section>`;
+  root.querySelectorAll('.journey-action').forEach(item => item.classList.remove('journey-action', 'secondary'));
+}
+// A single required video with nothing else on the page.
+function renderFocusLayout(html) {
+  document.body.className = 'es-page';
+  document.body.dataset.accountMenu = 'off';
+  document.querySelector('.journey-header')?.setAttribute('hidden', '');
+  root.className = 'es-focus-shell';
+  root.innerHTML = html;
+  root.querySelectorAll('.journey-action').forEach(item => item.classList.remove('journey-action', 'secondary'));
+}
+function restoreJourneyLayout() {
+  if (!root.classList.contains('es-shell') && !root.classList.contains('es-focus-shell')) return;
+  document.body.className = 'journey-page onboarding-page';
+  delete document.body.dataset.accountMenu;
+  document.querySelector('.journey-header')?.removeAttribute('hidden');
+  root.className = 'journey-main';
+}
+const signupSide = { title: 'Almost done. Sign your contract.', points: ['Your ID is with our review team', 'One short video, then your contract', 'Then you can start applying to jobs'] };
 function cleanup() {
   player?.destroy(); player = null;
   document.body.classList.remove('identity-video-only');
@@ -39,9 +85,9 @@ function cleanup() {
   objectUrl = null;
 }
 function renderIdentityVideo() {
-  document.body.classList.add('identity-video-only');
-  root.innerHTML = `<section class="identity-thanks"><h1>Watch the video below to complete the next step</h1><div id="identityGuidePlayer" class="required-video-player"></div>${button('identityContinue', 'Watch video to continue')}<p id="journeyStatus" role="status" class="journey-status-line"></p></section>`;
+  renderFocusLayout(`<section class="es-focus"><h1>Watch this video to continue</h1><div id="identityGuidePlayer" class="es-player es-focus-player"></div>${button('identityContinue', 'Continue <span aria-hidden="true">→</span>')}<p id="journeyStatus" role="status" class="journey-status-line"></p></section>`);
   const next = root.querySelector('#identityContinue');
+  next.classList.add('es-submit');
   next.disabled = true;
   let finished = false;
   let advancing = false;
@@ -51,7 +97,7 @@ function renderIdentityVideo() {
     next.disabled = true;
     message('Saving your progress…');
     try {
-      await onboardingRequest('completeGuide', { guide: 'identity' });
+      await request('completeGuide', { guide: 'identity' });
       await load();
     } catch (error) {
       message(error.message || 'Could not save your progress. Retry without rewatching the video.', true);
@@ -61,8 +107,8 @@ function renderIdentityVideo() {
   };
   next.onclick = finish;
   player = mountRequiredVideo(root.querySelector('#identityGuidePlayer'), {
-    ...guides.identity, autoplay: true, unpausable: true,
-    onComplete() { finished = true; next.textContent = 'Continue →'; next.disabled = false; void finish(); },
+    ...guides.identity, autoplay: true, unpausable: true, minimal: true,
+    onComplete() { finished = true; next.disabled = false; next.focus(); },
   });
   player.video.poster = guides.identity.src.replace('.mp4', '.jpg');
 }
@@ -75,7 +121,29 @@ function bind(id, callback) {
     finally { if (el.isConnected) el.disabled = false; }
   };
 }
+function renderPlatformGuide() {
+  renderSignupLayout({ side: signupSide, part: 2, card: parts => `<section class="es-card es-login es-guide"><p class="es-kicker">STEP 5 OF 5</p><h1>How Hire From SA works</h1><p class="es-lead">This video covers how the platform works and what's in your contract. Watch it to the end, then you'll sign.</p>${parts}<div id="guidePlayer" class="es-player"></div>${button('guideContinue', 'Watch video to continue')}<p id="journeyStatus" role="status" class="journey-status-line"></p></section>` });
+  const next = root.querySelector('#guideContinue');
+  next.classList.add('es-submit');
+  next.disabled = true;
+  let finished = false;
+  player = mountRequiredVideo(root.querySelector('#guidePlayer'), { ...guides.platform, autoplay: true, unpausable: true, onComplete() { finished = true; next.disabled = false; next.innerHTML = 'Continue to contract <span aria-hidden="true">→</span>'; } });
+  player.video.poster = guides.platform.src.replace('.mp4', '.jpg');
+  bind('guideContinue', async () => {
+    if (!finished) return;
+    message('Saving your progress…');
+    const result = await request('completeGuide', { guide: 'platform' });
+    if (result.stage === 'contract') {
+      cleanup();
+      renderContract({ contractName: result.contractName || '' });
+      return;
+    }
+    await load();
+  });
+}
 function renderGuide(guide) {
+  if (guide === 'platform') { renderPlatformGuide(); return; }
+  restoreJourneyLayout();
   const copy = {
     platform: ['BEFORE YOUR CONTRACT', 'Last step: Watch the video below and review the contract', '', '<h2>Your contract is next.</h2><p>After this video, review and sign the Candidate Platform Contract. Your identity review becomes pending only after the contract is complete.</p>'],
     intro: ['IDENTITY APPROVED · NEXT STEPS', 'Congrats on getting approved! Watch the video below to increase your chance of getting hired by over 50%', '', `<h2>Your suggested intro script</h2><p class="journey-script">${introScript}</p><p>Use your own words, keep your camera on, and take a few tries if needed. Your public introduction is separate from the private ID recording.</p><p><b>Recording an intro is optional.</b> You can continue without one.</p>`],
@@ -89,7 +157,7 @@ function renderGuide(guide) {
   bind('guideContinue', async () => {
     if (!finished) return;
     message('Saving your progress…');
-    const result = await onboardingRequest('completeGuide', { guide });
+    const result = await request('completeGuide', { guide });
     if (guide === 'platform' && result.stage === 'contract') {
       cleanup();
       renderContract({ contractName: result.contractName || '' });
@@ -100,16 +168,16 @@ function renderGuide(guide) {
 }
 function renderContract(state) {
   const savedName = escapeHtml(state.contractName);
-  root.innerHTML = heading('CANDIDATE CONTRACT', 'Complete your contract.', 'Sign the Hire From SA contract in Sendlink before your identity verification is sent for review.') + `<form id="contractForm" class="journey-single journey-panel contract-form"><section class="contract-link-card"><p class="contract-label">HIRE FROM SA · CANDIDATE CONTRACT</p><h2>Review and sign your contract in Sendlink.</h2><p>The contract opens in a new tab. Complete all required fields and submit it there, then return to this page.</p><a id="openContract" class="journey-action" href="${CONTRACT_URL}" target="_blank" rel="noopener noreferrer">Open and sign contract ↗</a></section><label class="contract-field">Full legal name<input id="contractName" name="contractName" type="text" value="${savedName}" autocomplete="name" minlength="2" maxlength="160" required /></label><label class="contract-consent"><input id="contractAccepted" name="contractAccepted" type="checkbox" required /><span>I completed and submitted the Hire From SA contract in Sendlink.</span></label><button id="submitContract" class="journey-action" type="submit">Confirm contract and submit for review →</button><p id="journeyStatus" role="status" class="journey-status-line"></p></form>`;
+  renderSignupLayout({ side: signupSide, part: 2, card: parts => `<form id="contractForm" class="es-card es-login es-contract"><p class="es-kicker">STEP 5 OF 5</p><h1>Sign your contract</h1><p class="es-lead">Two quick parts: sign the contract in Sendlink, then confirm here.</p>${parts}<div class="es-contract-step"><span class="es-contract-num">1</span><div><b>Open and sign the contract</b><p>It opens in a new tab. Fill in every required field and submit it, then come back to this page.</p><a id="openContract" class="es-secondary es-contract-open" href="${CONTRACT_URL}" target="_blank" rel="noopener noreferrer">Open the contract ↗</a></div></div><div class="es-contract-step"><span class="es-contract-num">2</span><div><b>Confirm you signed it</b><label class="es-code-label">Full legal name<input id="contractName" name="contractName" type="text" value="${savedName}" autocomplete="name" minlength="2" maxlength="160" required /></label><label class="es-check"><input id="contractAccepted" name="contractAccepted" type="checkbox" required /><span>I completed and submitted the Hire From SA contract in Sendlink.</span></label></div></div><button id="submitContract" class="es-submit" type="submit">Submit for review <span aria-hidden="true">→</span></button><p id="journeyStatus" role="status" class="journey-status-line"></p></form>` });
   const form = root.querySelector('#contractForm');
   form.addEventListener('submit', async event => {
     event.preventDefault();
     if (!form.reportValidity()) return;
     const submit = root.querySelector('#submitContract');
     submit.disabled = true;
-    message('Confirming your contract and submitting your identity verification…');
+    message('Submitting your profile for review…');
     try {
-      await onboardingRequest('completeContract', { contractName: form.elements.contractName.value, accepted: form.elements.contractAccepted.checked });
+      await request('completeContract', { contractName: form.elements.contractName.value, accepted: form.elements.contractAccepted.checked });
       await load();
     } catch (error) {
       message(error.message, true);
@@ -118,10 +186,12 @@ function renderContract(state) {
   });
 }
 function renderWaiting() {
-  root.innerHTML = heading('VERIFICATION PENDING', 'Your contract is complete.', 'Your identity review has now been submitted.') + `<div class="journey-columns"><div><video src="${guides.waiting.src}" poster="${guides.waiting.src.replace('.mp4', '.jpg')}" controls playsinline preload="metadata" aria-label="${guides.waiting.title}" style="width:100%;aspect-ratio:16/9;border-radius:12px"></video><p class="journey-caption"><b>${guides.waiting.title}</b></p></div><section class="journey-panel verification-lock"><span class="verification-lock-icon" aria-hidden="true">✓</span><h2>You’re finished for now.</h2><p>Your account is paused here while the team verifies your identity. You cannot continue or apply until your identity is approved.</p><p>We’ll email you as soon as the review is complete. There is nothing else you need to do.</p>${button('checkApproval','Check approval status')}<p id="journeyStatus" role="status" class="journey-status-line"></p></section></div>`;
+  renderSignupLayout({ side: { title: "You're all set. We'll take it from here.", points: ['Our team is reviewing your ID', "We'll email you when you're approved", 'Then you can start applying to jobs'] }, allDone: true, card: () => `<section class="es-card es-login es-done"><span class="es-done-icon" aria-hidden="true">✓</span><p class="es-kicker">ALL 5 STEPS DONE</p><h1>You're all done!</h1><p class="es-lead">Our team is reviewing your profile. You can apply to jobs once you're approved, and we'll email you as soon as that happens. There's nothing else you need to do.</p><div class="es-player"><video src="${guides.waiting.src}" poster="${guides.waiting.src.replace('.mp4', '.jpg')}" controls playsinline preload="metadata" aria-label="${guides.waiting.title}"></video></div><p class="es-video-caption">Optional: watch what happens next</p>${button('checkApproval', 'Check approval status', true)}<p id="journeyStatus" role="status" class="journey-status-line"></p></section>` });
+  root.querySelector('#checkApproval').classList.add('es-secondary');
   bind('checkApproval', load);
 }
 function renderPreferences(state, step = state.surveyStep === 2 ? 2 : 1) {
+  restoreJourneyLayout();
   const saved = state.preferences || {};
   const start = saved.startAvailability || '';
   const options = [['full_time', 'Full-time'], ['part_time', 'Part-time'], ['contractor', 'Contractor'], ['open_to_all', 'I’m open to all']];
@@ -176,7 +246,7 @@ function renderPreferences(state, step = state.surveyStep === 2 ? 2 : 1) {
     if (root.querySelector('#backToCareerSurvey')) root.querySelector('#backToCareerSurvey').disabled = true;
     message('Saving your answers…');
     try {
-      await onboardingRequest(step === 1 ? 'saveCareerSurvey' : 'savePreferences', payload);
+      await request(step === 1 ? 'saveCareerSurvey' : 'savePreferences', payload);
       if (step === 1) {
         state.preferences = { ...saved, ...payload };
         state.surveyStep = 2;
@@ -223,6 +293,7 @@ async function chooseVideo(file) {
   message('Watch your recording, confirm sharing with employers, then save it.');
 }
 function renderRecorder(state) {
+  restoreJourneyLayout();
   selectedVideo = null;
   root.innerHTML = heading('OPTIONAL PUBLIC INTRODUCTION', 'Record your video to increase your chances of getting hired!', 'Introduce yourself and your experience. Keep your ID and private contact details out of this video.') + `<div class="journey-columns"><div><div class="intro-preview-frame"><video id="introScreen" class="intro-screen" playsinline controls preload="auto" aria-label="Your introduction recording"></video><p id="introPlaceholder" class="intro-placeholder">Record with your camera or upload a video to preview it here.</p></div><div class="intro-background-controls"><label for="introBackground">Video background</label><select id="introBackground"><option value="brand" selected>Hire From SA background</option></select><label id="introBackgroundFileLabel" class="intro-background-file" hidden>Choose background image<input id="introBackgroundFile" type="file" accept="image/jpeg,image/png,image/webp" /></label><p>The Hire From SA background is applied automatically to new camera recordings. The branded background is included in the saved recording. Uploaded videos keep their original background.</p></div><div class="intro-buttons">${button('startIntro','Record with camera')}${button('stopIntro','Stop recording',true)}${button('playIntro','Play recording',true)}</div><p id="recordTimer" class="intro-timer"></p></div><section class="journey-panel"><h2>Make it your own.</h2><p class="journey-script">${introScript}</p><label class="intro-upload-label">Or upload your video<input id="introFile" type="file" accept="video/mp4,video/webm" /></label><p>Up to 2 minutes · MP4 or WebM · 25 MB maximum</p><label class="intro-consent"><input id="introConsent" type="checkbox" /><span>I agree to show this introduction on my candidate profile to employers using Hire From SA.</span></label>${button('saveIntro','Save introduction →')}${button('skipIntro',state.introSaved ? 'Keep saved video and continue' : 'Continue without an intro',true)}${state.introSaved ? button('removeIntro','Remove saved video',true) : ''}<p id="journeyStatus" role="status" class="journey-status-line"></p></section></div>`;
   const screen = root.querySelector('#introScreen');
@@ -299,20 +370,20 @@ function renderRecorder(state) {
     lockRecorderActions(true);
     root.querySelector('#startIntro').disabled = true; root.querySelector('#introFile').disabled = true;
     message('Uploading your introduction…');
-    try { await onboardingRequest('saveIntro', form); cleanup(); location.assign('./candidate-dashboard.html'); }
+    try { await request('saveIntro', form); cleanup(); location.assign('./candidate-dashboard.html'); }
     finally { lockRecorderActions(false); root.querySelector('#startIntro').disabled = false; root.querySelector('#introFile').disabled = false; }
   });
-  bind('skipIntro', async () => { if (!state.introSaved) await onboardingRequest('skipIntro'); cleanup(); location.assign('./candidate-dashboard.html'); });
-  bind('removeIntro', async () => { await onboardingRequest('removeIntro'); await load(); });
+  bind('skipIntro', async () => { if (!state.introSaved) await request('skipIntro'); cleanup(); location.assign('./candidate-dashboard.html'); });
+  bind('removeIntro', async () => { await request('removeIntro'); await load(); });
   if (state.introPlaybackError) message(state.introPlaybackError, true);
 }
 async function load() {
   if (loading) return;
   loading = true;
   try {
-    const user = await window.getVerifiedCandidate();
+    const user = demoMode ? { id: 'demo' } : await window.getVerifiedCandidate();
     if (!user) { location.replace('./candidate-login.html?next=./candidate-onboarding.html'); return; }
-    const state = await onboardingRequest('status');
+    const state = await request('status');
     currentStage = state.stage;
     cleanup();
     if (state.stage === 'resume') { location.replace('./candidate-resume.html?next=./candidate-next-steps.html'); return; }
@@ -321,11 +392,18 @@ async function load() {
     if (state.stage === 'verification') { location.replace(/^SA-[A-Z0-9]{8}$/.test(state.reviewReference || '') ? `./verification.html?review=${encodeURIComponent(state.reviewReference)}` : './id-verification.html'); return; }
     if (state.stage === 'identity') renderIdentityVideo();
     else if (state.stage === 'contract') renderContract(state);
+    else if (state.stage === 'platform' && !state.approved) {
+      // Sign-up goes straight from the review video to the contract; the platform video is not shown.
+      const result = await request('completeGuide', { guide: 'platform' });
+      if (result.stage !== 'contract') throw new Error('Your progress could not be saved. Please try again.');
+      renderContract(state);
+    }
     else if (['platform','intro'].includes(state.stage)) renderGuide(state.stage);
     else if (state.stage === 'waiting') renderWaiting();
     else if (state.stage === 'recording' || manage) renderRecorder(state);
     else location.replace('./candidate-dashboard.html');
   } catch (error) {
+    restoreJourneyLayout();
     root.innerHTML = heading('YOUR ONBOARDING', 'We couldn’t load your progress.', 'Your saved account details are safe. Try again to continue.') + button('retry','Try again') + '<p id="journeyStatus" role="alert"></p>';
     message(error.message,true); bind('retry',load);
   } finally { loading = false; }

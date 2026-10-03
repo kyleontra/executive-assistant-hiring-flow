@@ -456,14 +456,14 @@ test('ID video upload waits for the contract before pending review', () => {
 test('identity guide keeps autoplay and exposes save retry after full playback', () => {
   const allSource = read('candidate-onboarding.mjs');
   const source = allSource.slice(allSource.indexOf('function renderIdentityVideo'), allSource.indexOf('function bind'));
-  assert.match(source, /Watch the video below to complete the next step/);
+  assert.match(source, /Watch this video to continue/);
   assert.doesNotMatch(source, /Thank you for verifying your identity/);
   assert.doesNotMatch(source, /Congrats on getting approved/);
   assert.match(source, /mountRequiredVideo/);
   assert.match(source, /autoplay: true, unpausable: true/);
   assert.match(source, /Retry saving and continue/);
   assert.match(source, /finished = true/);
-  assert.match(source, /onboardingRequest\('completeGuide', \{ guide: 'identity' \}\)/);
+  assert.match(source, /request\('completeGuide', \{ guide: 'identity' \}\)/);
 });
 
 test('identity review guide follows ID submission and uploads do not require watching it first', () => {
@@ -539,12 +539,12 @@ test('signing the contract leads to a verification cutoff with no continue actio
   const onboarding = read('candidate-onboarding.mjs');
   const previewStages = read('signup-preview-stages.mjs');
   const preview = read('signup-preview.mjs');
-  assert.match(onboarding, /VERIFICATION PENDING[\s\S]*Your contract is complete/);
+  assert.match(onboarding, /ALL 5 STEPS DONE[\s\S]*You're all done!/);
   assert.match(onboarding, /https:\/\/sendlink\.co\/documents\/doc-form\/6a99dcb2ea613131e9ac83f3\?locale=en/);
   assert.match(onboarding, /target="_blank" rel="noopener noreferrer"/);
   assert.match(onboarding, /I completed and submitted the Hire From SA contract in Sendlink/);
   assert.doesNotMatch(onboarding, /No guarantee of work/);
-  assert.match(onboarding, /You cannot continue or apply until your identity is approved/);
+  assert.match(onboarding, /You can apply to jobs once you're approved/);
   const waiting = onboarding.slice(onboarding.indexOf('function renderWaiting'), onboarding.indexOf('function renderPreferences'));
   assert.doesNotMatch(waiting, /refreshStatus|My account|journey-action/);
   assert.match(preview, /Verification cutoff/);
@@ -581,4 +581,13 @@ test('sign-up no longer requires a profile photo before ID verification', async 
   assert.equal(onboardingStage({ resume_path: 'test-user/resume.txt', profile_photo_path: '' }, {}), 'verification');
   assert.doesNotMatch(read('supabase/functions/submit-id-photos/index.ts'), /Add your professional profile photo before submitting ID photos/);
   assert.doesNotMatch(read('id-verification.js'), /candidate-profile\.html/);
+});
+
+test('sign-up review video is minimal and goes straight to the contract', () => {
+  const source = read('candidate-onboarding.mjs');
+  const identity = source.slice(source.indexOf('function renderIdentityVideo'), source.indexOf('function bind'));
+  assert.match(identity, /minimal: true/);
+  assert.doesNotMatch(identity, /void finish\(\)/);
+  assert.match(source, /state\.stage === 'platform' && !state\.approved[\s\S]*request\('completeGuide', \{ guide: 'platform' \}\)[\s\S]*renderContract\(state\)/);
+  assert.match(read('required-video.mjs'), /if \(minimal\) \{ play\.hidden = true; status\.hidden = true; \}/);
 });

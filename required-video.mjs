@@ -1,4 +1,4 @@
-export function mountRequiredVideo(root, { src, title, completed = false, unpausable = false, autoplay = false, onComplete = () => {} }) {
+export function mountRequiredVideo(root, { src, title, completed = false, unpausable = false, autoplay = false, minimal = false, onComplete = () => {} }) {
   const doc = root.ownerDocument;
   const video = doc.createElement('video');
   video.src = src;
@@ -24,6 +24,10 @@ export function mountRequiredVideo(root, { src, title, completed = false, unpaus
   status.setAttribute('role', 'status');
   status.textContent = completed ? 'Video complete. You can continue.' : unpausable ? 'Watch the full video to continue.' : 'Watch the full video to continue. You can pause at any time.';
   root.replaceChildren(video, play, progress, status);
+  // Minimal mode: no play button or status text, only the video and its progress line.
+  // If the browser blocks autoplay, tapping the video itself starts it.
+  if (minimal) { play.hidden = true; status.hidden = true; }
+  const needsTap = () => { if (minimal) root.classList?.add('needs-tap'); else play.hidden = false; };
 
   const watch = new WatchProgress();
   let lastTime = 0;
@@ -35,14 +39,14 @@ export function mountRequiredVideo(root, { src, title, completed = false, unpaus
   const startPlayback = async () => {
     if (!video.paused) { if (!unpausable) video.pause(); return; }
     try { if (video.error || failed) { failed = false; video.load(); } await video.play(); }
-    catch { play.hidden = false; play.textContent = 'Play video'; status.textContent = 'Tap Play video to start with sound.'; }
+    catch { needsTap(); play.textContent = 'Play video'; status.textContent = 'Tap Play video to start with sound.'; }
   };
   play.addEventListener('click', startPlayback);
   video.addEventListener('click', startPlayback);
-  video.addEventListener('play', () => { failed = false; if (!complete && video.currentTime > watch.frontier + 0.05) video.currentTime = watch.frontier; resetSample(); if (unpausable) play.hidden = true; else play.textContent = 'Pause video'; });
+  video.addEventListener('play', () => { root.classList?.remove('needs-tap'); failed = false; if (!complete && video.currentTime > watch.frontier + 0.05) video.currentTime = watch.frontier; resetSample(); if (unpausable) play.hidden = true; else play.textContent = 'Pause video'; });
   video.addEventListener('pause', () => {
     if (unpausable && !complete && !destroyed && !failed && !doc.hidden && !video.ended) {
-      video.play().catch(() => { play.hidden = false; status.textContent = 'The video could not resume. Please try again.'; });
+      video.play().catch(() => { needsTap(); status.textContent = 'The video could not resume. Please try again.'; });
       return;
     }
     play.textContent = complete ? 'Replay video' : 'Resume video';
@@ -72,6 +76,8 @@ export function mountRequiredVideo(root, { src, title, completed = false, unpaus
     update();
     if (!watch.finished(video.duration)) {
       video.currentTime = watch.frontier;
+      // Never auto-replay: wait for one tap to finish the part that was missed.
+      if (minimal) { needsTap(); return; }
       play.hidden = false;
       play.textContent = 'Finish video';
       status.textContent = 'Please finish watching the video to continue.';
@@ -93,11 +99,12 @@ export function mountRequiredVideo(root, { src, title, completed = false, unpaus
     video.pause();
     play.hidden = false;
     play.textContent = 'Retry video';
+    status.hidden = false;
     status.textContent = 'The video could not load. Check your connection, then select Retry video.';
   });
   const visibility = () => {
     if (doc.hidden) video.pause();
-    else if (unpausable && !complete && !failed && !destroyed && video.currentTime > 0) video.play().catch(() => { play.hidden = false; });
+    else if (unpausable && !complete && !failed && !destroyed && video.currentTime > 0) video.play().catch(needsTap);
     resetSample();
   };
   doc.addEventListener('visibilitychange', visibility);
