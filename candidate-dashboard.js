@@ -313,7 +313,7 @@ function reviewSteps(photo, onboarding) {
   return '<section class="vp-locked-banner"><span class="vp-locked-icon" aria-hidden="true">🔒</span><div><h2>You can\'t apply for jobs yet</h2><p>Our team is verifying your account. Once you\'re approved, you can apply to any job on Hire From SA. We\'ll email you as soon as that happens.</p></div></section>'
     + '<section class="vp-next"><h2>Next steps while you wait</h2><p class="vp-next-lead">Finish these now so you\'re ready to apply the moment you\'re approved.</p><ol>'
     + step(1, Boolean(photo), 'Create your Hire From SA profile picture with AI', 'Watch a short video to create it, then upload it. Regular photos and selfies aren\'t accepted.', '<a class="vp-btn" href="./candidate-profile.html' + (dashboardDemo ? '?demo=1' : '') + '">Create my picture</a>')
-    + step(2, questionsDone, 'Answer a few questions about the work you want', 'The jobs and industries you want, your pay goal, and when you can start.', '<a class="vp-btn" href="./candidate-onboarding.html?questions=1' + (dashboardDemo ? '&demo=questions' : '') + '">Answer questions</a>')
+    + step(2, questionsDone, 'Answer a few questions about the work you want', 'The jobs and industries you want, your pay goal, and when you can start.', '<a class="vp-btn" href="./candidate-questions.html' + (dashboardDemo ? '?demo=1' : '') + '">Answer questions</a>')
     + '</ol></section>';
 }
 function renderProfile(profile, intro, onboarding = {}) {

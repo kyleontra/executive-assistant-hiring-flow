@@ -593,3 +593,14 @@ test('sign-up review video is minimal and goes straight to the contract', () => 
   assert.match(source, /state\.stage === 'platform' && !state\.approved[\s\S]*request\('completeGuide', \{ guide: 'platform' \}\)[\s\S]*renderContract\(state\)/);
   assert.match(read('required-video.mjs'), /if \(minimal\) \{ play\.hidden = true; status\.hidden = true; \}/);
 });
+
+test('job questions are one page that saves both parts and returns to My Profile', () => {
+  const page = read('candidate-questions.html');
+  const source = read('candidate-questions.mjs');
+  for (const name of ['jobIndustryPreferences', 'desiredPositions', 'monthlyIncomeGoalZar', 'employmentPreference', 'startAvailability', 'portfolioLinks', 'preferredJobNote']) assert.match(page, new RegExp(`name="${name}"`));
+  assert.doesNotMatch(page, /Continue/);
+  assert.match(source, /saveCareerSurvey[\s\S]*savePreferences[\s\S]*location\.assign\(profileUrl\)/);
+  assert.match(source, /candidate-dashboard\.html\?tab=profile/);
+  assert.match(read('vite.config.js'), /candidate-questions\.html/);
+  assert.match(read('candidate-dashboard.js'), /candidate-questions\.html/);
+});

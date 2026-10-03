@@ -299,3 +299,56 @@ body.es-page{margin:0;background:#f6f8fc;color:#142238;font-family:"DM Sans",san
 .pp-note{margin:10px 0 0;color:#6b7890;font-size:13px;line-height:1.5;text-align:center}
 .pp-panel .es-submit{margin-top:16px}
 @media (max-width:860px){.pp-grid{grid-template-columns:1fr}}
+.pp-sticky{position:sticky;top:20px}
+.pq-form #questionsStatus{margin-bottom:4px}
+.pq-field{display:grid;gap:6px;margin:18px 0 0;padding:0;border:0;min-width:0}
+.pq-label{color:#142238;font-size:15px;font-weight:800;line-height:1.35}
+.pq-help{margin-top:-2px;color:#6b7890;font-size:13px;line-height:1.45}
+.pq-optional{margin-left:6px;padding:2px 8px;border-radius:999px;background:#eef2f8;color:#5b6b82;font-size:11.5px;font-weight:700}
+.pq-field textarea,.pq-field select,.pq-currency input{width:100%;padding:12px 14px;border:1px solid #c6d1df;border-radius:12px;background:#fff;color:#142238;font:500 15px/1.5 "DM Sans",sans-serif;resize:vertical}
+.pq-field select{height:48px}
+.pq-field textarea:focus,.pq-field select:focus,.pq-currency input:focus{border-color:#246fe5;outline:0;box-shadow:0 0 0 3px #246fe51f}
+.pq-currency{position:relative;display:block}
+.pq-currency b{position:absolute;top:50%;left:14px;color:#5b6b82;transform:translateY(-50%)}
+.pq-currency input{height:48px;padding-left:32px}
+.pq-choices{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pq-choices legend{margin-bottom:8px}
+.pq-choices label{position:relative;cursor:pointer}
+.pq-choices input{position:absolute;opacity:0}
+.pq-choices span{display:flex;height:46px;align-items:center;justify-content:center;border:1px solid #c6d1df;border-radius:12px;background:#fff;color:#33445e;font-size:14.5px;font-weight:700}
+.pq-choices input:checked+span{border-color:#246fe5;background:#eef4ff;color:#1f5fcf;box-shadow:0 0 0 2px #246fe533}
+.pq-choices input:focus-visible+span{outline:3px solid #80b0ff;outline-offset:2px}
+.pq-form .es-submit{margin-top:22px}
+@media (max-width:860px){.pp-sticky{position:static}}
+.pq-page .pp-top{padding-top:10px;padding-bottom:10px}
+.pq-page .pp-main{width:min(1180px,100% - 32px);padding:16px 0 24px}
+.pq-page .pp-heading{margin-bottom:14px}
+.pq-page .pp-heading h1{margin:6px 0 2px;font-size:clamp(24px,2.6vw,32px)}
+.pq-page .pp-grid{grid-template-columns:minmax(220px,280px) minmax(0,1fr);gap:16px}
+.pq-page .pp-panel{padding:16px 18px;border-radius:16px}
+.pq-page .pp-step{margin-bottom:10px;font-size:15px}
+.pq-page .pp-step b{width:24px;height:24px;font-size:12px}
+.pq-page .pp-video{border-radius:10px}
+.pq-page .pp-video-empty{gap:3px;padding:10px}
+.pq-page .pp-video-empty span{width:40px;height:40px;margin-bottom:2px;font-size:16px}
+.pq-page .pp-video-empty b{font-size:14px}
+.pq-page .pp-video-empty small{font-size:12px}
+.pq-page #questionsStatus{position:absolute;top:16px;right:18px;margin:0}
+.pq-form{position:relative}
+.pq-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}
+.pq-grid .pq-field{margin:0}
+.pq-wide{grid-column:1/-1}
+.pq-page .pq-choices{grid-template-columns:repeat(4,1fr)}
+.pq-page .pq-choices span{height:42px;font-size:14px}
+.pq-page .pq-field textarea,.pq-page .pq-field select,.pq-page .pq-currency input{padding:9px 12px;font-size:14.5px}
+.pq-page .pq-field select,.pq-page .pq-currency input{height:44px}
+.pq-page .pq-label{font-size:14.5px}
+.pq-page .pq-help{font-size:12.5px}
+.pq-page .pq-form .es-submit{height:52px;margin-top:16px}
+@media (max-width:900px){.pq-page .pp-grid{grid-template-columns:1fr}.pq-page .pp-video-panel{max-width:360px}.pq-page #questionsStatus{position:static;margin-bottom:10px}}
+@media (max-width:620px){.pq-grid{grid-template-columns:1fr}.pq-page .pq-choices{grid-template-columns:1fr 1fr}}
+.pq-page .pq-currency input{padding-left:30px}
+.pq-page .pp-heading h1{margin-top:0}
+.pq-page .pp-heading .es-lead{margin:0}
+@media (max-width:900px){.pq-page .pp-video-panel{display:flex;max-width:none;align-items:center;gap:14px}.pq-page .pp-video-panel .pp-step{flex:1;margin:0}.pq-page .pp-video{width:150px;flex:none}.pq-page .pp-video-empty small{display:none}.pq-page .pp-video-empty b{font-size:12px}.pq-page .pp-video-empty span{width:32px;height:32px;font-size:13px}}
+@media (max-width:620px){.pq-page .pq-field textarea{min-height:76px}}

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#1f5fcf" />
+    <title>The work you want - Hire From SA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./brand.css" />
+    <link rel="stylesheet" href="./employer-signup.css" />
+  </head>
+  <body class="es-page pp-page pq-page" data-account-menu="off">
+    <header class="pp-top"><a href="./home.html" class="es-logo" aria-label="Hire From SA home"><img src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a><a class="pp-back" href="./candidate-dashboard.html?tab=profile">← Back to My Profile</a></header>
+    <main class="pp-main">
+      <div class="pp-heading">
+        <h1>Tell us about the work you want</h1>
+        <p class="es-lead">A few quick questions so we can match you with the right jobs.</p>
+      </div>
+      <div class="pp-grid">
+        <section class="pp-panel pp-video-panel pp-sticky">
+          <p class="pp-step"><b>1</b>Watch this first</p>
+          <div id="questionsGuide" class="pp-video">
+            <div class="pp-video-empty"><span aria-hidden="true">▶</span><b>Video coming soon</b><small>How to answer these questions.</small></div>
+          </div>
+        </section>
+
+        <form id="questionsForm" class="pp-panel pq-form" novalidate>
+          <p class="pp-step"><b>2</b>Answer the questions</p>
+          <p id="questionsStatus" class="es-verified" aria-live="polite">Loading your answers…</p>
+          <div class="pq-grid">
+          <label class="pq-field"><span class="pq-label">What type of job and industries do you want?</span>
+            <textarea name="jobIndustryPreferences" maxlength="2000" rows="2" required placeholder="For example, supporting a healthcare team or helping an online store with customer service"></textarea></label>
+          <label class="pq-field"><span class="pq-label">What position would you like?</span>
+            <textarea name="desiredPositions" maxlength="2000" rows="2" required placeholder="For example, a medical virtual assistant managing appointments and patient questions"></textarea></label>
+          <label class="pq-field"><span class="pq-label">Monthly income goal (rand)</span>
+            <span class="pq-currency"><b aria-hidden="true">R</b><input name="monthlyIncomeGoalZar" type="number" min="0.01" max="10000000" step="0.01" inputmode="decimal" required placeholder="20000" aria-label="Monthly income goal in rand" /></span></label>
+          <label class="pq-field"><span class="pq-label">When can you start?</span>
+            <select name="startAvailability" required><option value="">Choose one</option><option value="immediately">Immediately</option><option value="two_weeks">Within two weeks</option><option value="one_month">Within a month</option><option value="flexible">Flexible</option></select></label>
+          <fieldset class="pq-field pq-choices pq-wide"><legend class="pq-label">What type of work are you looking for?</legend>
+            <label><input type="radio" name="employmentPreference" value="full_time" required /><span>Full-time</span></label>
+            <label><input type="radio" name="employmentPreference" value="part_time" /><span>Part-time</span></label>
+            <label><input type="radio" name="employmentPreference" value="contractor" /><span>Contractor</span></label>
+            <label><input type="radio" name="employmentPreference" value="open_to_all" /><span>I'm open to all</span></label>
+          </fieldset>
+          <label class="pq-field"><span class="pq-label">Portfolio or work samples <span class="pq-optional">Optional</span></span><span class="pq-help">Links starting with https://, one per line.</span>
+            <textarea name="portfolioLinks" maxlength="10244" rows="1" spellcheck="false" autocapitalize="none" placeholder="https://your-portfolio.com"></textarea></label>
+          <label class="pq-field"><span class="pq-label">Anything else we should know? <span class="pq-optional">Optional</span></span><span class="pq-help">Only our team sees this.</span>
+            <textarea name="preferredJobNote" maxlength="400" rows="1" placeholder="Anything else you'd like us to know"></textarea></label>
+          </div>
+          <p id="questionsResult" class="portal-result" aria-live="polite" hidden></p>
+          <button id="saveQuestions" class="es-submit" type="submit">Save my answers <span aria-hidden="true">→</span></button>
+        </form>
+      </div>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./auth-client.js"></script>
+    <script type="module" src="./candidate-questions.mjs"></script>
+  </body>
+</html>

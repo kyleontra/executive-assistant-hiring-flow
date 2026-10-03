@@ -38,6 +38,7 @@ const pages = {
   candidateExperience: 'candidate-experience.html',
   candidateResume: 'candidate-resume.html',
   candidateProfile: 'candidate-profile.html',
+  candidateQuestions: 'candidate-questions.html',
   applicationQuestions: 'application-questions.html',
   applied: 'applied.html',
   candidateLogin: 'candidate-login.html',
