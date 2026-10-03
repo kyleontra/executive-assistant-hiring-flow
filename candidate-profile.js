@@ -30,7 +30,7 @@ function showResult(message, type) {
   if (type === 'error' && /sign.in|expired/i.test(message)) document.querySelector('#signInAgain').hidden = false;
   result.textContent = message;
   result.hidden = false;
-  result.className = `status-box ${type}`;
+  result.className = `portal-result ${type}`;
 }
 
 function setUploading(uploading) {
@@ -65,7 +65,7 @@ function selectPhoto(file) {
   preview.hidden = false;
   placeholder.hidden = true;
   submitButton.disabled = false;
-  submitButton.innerHTML = 'Save photo and continue <span>→</span>';
+  submitButton.innerHTML = 'Upload my picture <span aria-hidden="true">→</span>';
   result.hidden = true;
   return true;
 }
@@ -75,18 +75,14 @@ async function initialize() {
   if (!candidate) {
     document.querySelector('#signInAgain').hidden = false;
     authStatus.textContent = 'Your verified session is missing or has expired. Verify your email again to continue.';
-    authStatus.className = 'status-box error';
+    authStatus.className = 'es-verified error';
     input.disabled = true;
     openCameraButton.disabled = true;
     return;
   }
 
-  authStatus.textContent = demoMode ? 'Demo mode — your photo stays in this browser and will not be uploaded.' : `Email confirmed for ${candidate.email}.`;
-  authStatus.className = 'status-box success';
-  if (demoMode) {
-    document.querySelector('.profile-aside h1').textContent = 'Test a profile photo.';
-    document.querySelector('.profile-aside > p:last-of-type').textContent = 'Preview an upload or webcam photo locally. Employers will not see demo photos.';
-  }
+  authStatus.textContent = demoMode ? 'Demo mode: your photo is never uploaded' : `Signed in: ${candidate.email}`;
+  authStatus.className = 'es-verified success';
   if (previewMode) return;
 
   try {
@@ -95,15 +91,11 @@ async function initialize() {
       window.location.replace('./candidate-resume.html?next=./candidate-profile.html');
       return;
     }
-    if (profile.verificationBypass) {
-      window.location.replace('./candidate-dashboard.html');
-      return;
-    }
     existingPhotoPath = profile?.photoPath || '';
     if (existingPhotoPath) {
       submitButton.disabled = false;
-      submitButton.innerHTML = 'Continue with saved photo <span>→</span>';
-      showResult('Your saved headshot is ready. Continue or choose a new photo.', 'success');
+      submitButton.innerHTML = 'Back to My Profile <span aria-hidden="true">→</span>';
+      showResult('Your saved picture is ready. Upload a new one to replace it.', 'success');
     }
   } catch (error) { accountLoadFailed(error); }
 }
@@ -201,12 +193,12 @@ form.addEventListener('submit', async (event) => {
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload.error || 'Your profile photo could not be saved.');
     }
-    showResult(demoMode ? 'Demo photo ready locally. Continuing…' : 'Profile photo saved. Continuing to the verification video…', 'success');
-    window.setTimeout(() => window.location.assign(demoMode ? './id-verification.html?demo=1' : './candidate-onboarding.html'), 500);
+    showResult(demoMode ? 'Demo picture ready locally. Returning to My Profile…' : 'Profile picture saved. Returning to My Profile…', 'success');
+    window.setTimeout(() => window.location.assign(demoMode ? './candidate-dashboard.html?demo=1&review=1&tab=profile' : './candidate-dashboard.html?tab=profile'), 500);
   } catch (error) {
     setUploading(false);
     submitButton.disabled = false;
-    submitButton.innerHTML = 'Save photo and continue <span>→</span>';
+    submitButton.innerHTML = 'Upload my picture <span aria-hidden="true">→</span>';
     showResult(error instanceof TypeError
       ? 'The photo service could not be reached. Check your connection and try again.'
       : (['TimeoutError', 'AbortError'].includes(error?.name) ? 'The request took too long. Check your connection and try again. Your saved progress is kept.' : error.message) || 'Your profile photo could not be saved. Please try again.', 'error');
@@ -223,7 +215,7 @@ initialize().catch(accountLoadFailed);
 function accountLoadFailed(error) {
   const status = document.querySelector('#authStatus');
   status.textContent = error.message || 'Your account could not be checked. Retry to continue.';
-  status.className = 'status-box error';
+  status.className = 'es-verified error';
   if (/sign.in|expired/i.test(error.message || '')) document.querySelector('#signInAgain').hidden = false;
   document.querySelector('#retryAccount').hidden = false;
 }

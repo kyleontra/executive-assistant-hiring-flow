@@ -553,7 +553,7 @@ test('signing the contract leads to a next-steps video, then Check status opens 
   assert.doesNotMatch(previewStages, /Preview approval/);
 });
 
-test('a saved headshot upload continues without a second profile save or browser cache', async () => {
+test('a saved profile picture returns to My Profile without a second profile save or browser cache', async () => {
   let uploads = 0;
   const h = browserHarness({ profile: { resumePath: 'test-user/resume.txt' }, fetchImpl: async () => { uploads++; return { ok: true, json: async () => ({ path: 'candidate-profiles/test-user/profile-123.jpg' }) }; } });
   h.run('candidate-profile.js'); await h.flush();
@@ -562,7 +562,7 @@ test('a saved headshot upload continues without a second profile save or browser
   await h.get('#profilePhotoForm').handlers.submit({ preventDefault() {} });
   assert.equal(uploads, 1);
   assert.equal(h.requests.filter(r => r.action === 'saveProfile').length, 0);
-  assert.deepEqual(h.navigations, ['./candidate-onboarding.html']);
+  assert.deepEqual(h.navigations, ['./candidate-dashboard.html?tab=profile']);
 });
 test('an outdated browser headshot cannot masquerade as a saved account photo', async () => {
   const h = browserHarness({ profile: { resumePath: 'test-user/resume.txt' } });

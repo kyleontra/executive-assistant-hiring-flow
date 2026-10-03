@@ -276,3 +276,26 @@ body.es-page{margin:0;background:#f6f8fc;color:#142238;font-family:"DM Sans",san
 .es-focus .es-submit{width:min(480px,100%);height:64px;margin-top:0;border-radius:16px;font-size:20px}
 .es-focus .es-submit:disabled{opacity:1;background:#dfe6f0;color:#8a96a8;box-shadow:none}
 .es-focus .journey-status-line{color:#a84e57}
+.pp-page{min-height:100svh;background:#f4f7fb}
+.pp-top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px clamp(16px,4vw,48px);background:#fff;border-bottom:1px solid #e3e9f2}
+.pp-top .es-logo img{height:40px}
+.pp-back{color:#1f5fcf;font-weight:700;text-decoration:none}
+.pp-main{width:min(1120px,100% - 32px);margin:0 auto;padding:28px 0 56px}
+.pp-heading{max-width:760px;margin-bottom:22px}
+.pp-heading h1{margin:8px 0 6px;color:#142238;font:800 clamp(26px,3.2vw,38px)/1.15 Manrope,sans-serif;letter-spacing:-1px}
+.pp-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:20px;align-items:start}
+.pp-panel{padding:22px;border:1px solid #dfe6f0;border-radius:20px;background:#fff;box-shadow:0 10px 30px rgba(20,34,56,.06)}
+.pp-step{display:flex;align-items:center;gap:10px;margin:0 0 14px;color:#142238;font:800 17px Manrope,sans-serif}
+.pp-step b{display:grid;width:28px;height:28px;place-items:center;border-radius:50%;background:#246fe5;color:#fff;font-size:14px}
+.pp-video{overflow:hidden;border-radius:14px;background:#0f1d30;aspect-ratio:16/9}
+.pp-video video{display:block;width:100%;height:100%;object-fit:contain}
+.pp-video-empty{display:grid;height:100%;place-content:center;justify-items:center;gap:6px;padding:20px;color:#eaf1fb;text-align:center}
+.pp-video-empty span{display:grid;width:60px;height:60px;margin-bottom:6px;place-items:center;border-radius:50%;background:#ffffff18;color:#8db7ff;font-size:24px}
+.pp-video-empty b{font-size:17px}
+.pp-video-empty small{max-width:280px;color:#b6c8e0;font-size:13.5px;line-height:1.5}
+.pp-panel.es-photo .es-photo-picker{margin-top:6px}
+.pp-panel #authStatus{margin-bottom:6px}
+.pp-choose{margin-top:16px;height:46px;cursor:pointer}
+.pp-note{margin:10px 0 0;color:#6b7890;font-size:13px;line-height:1.5;text-align:center}
+.pp-panel .es-submit{margin-top:16px}
+@media (max-width:860px){.pp-grid{grid-template-columns:1fr}}

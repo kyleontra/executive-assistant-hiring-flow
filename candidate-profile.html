@@ -3,59 +3,55 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#1d6be8" />
-    <title>Add your professional profile photo</title>
+    <meta name="theme-color" content="#1f5fcf" />
+    <title>Create your profile picture - Hire From SA</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./candidate-profile.css" />
-    <link rel="stylesheet" href="./candidate-profile-webcam.css" />
     <link rel="stylesheet" href="./brand.css" />
-    <link rel="stylesheet" href="./candidate-flow-layout.css" />
+    <link rel="stylesheet" href="./employer-signup.css" />
   </head>
-  <body class="onboarding-page">
-    <header class="profile-header"><a class="profile-brand site-logo-link" href="./jobs.html"><img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a><span>Candidate profile</span><a href="./jobs.html">Exit</a></header>
-    <main class="profile-shell">
-      <aside class="profile-aside">
-        <p class="eyebrow">YOUR CANDIDATE PROFILE</p>
-        <h1>Add a professional photo.</h1>
-        <p>Employers will see this photo beside your name and experience in their hiring inbox.</p>
-        <div class="flow-steps"><span class="active">1</span><b>Headshot</b><span>2</span><b>ID photos</b><span>3</span><b>Short video</b></div>
-      </aside>
-      <section class="profile-main">
-        <div class="profile-card">
-          <p class="eyebrow blue">APPLICATION READINESS · STEP 1 OF 3</p>
-          <h2>Choose a clear headshot.</h2>
-          <p class="lead">Use a recent photo with your face clearly visible, neutral lighting, and a simple background.</p>
-          <p id="authStatus" class="status-box" aria-live="polite">Checking your verified account…</p><button id="retryAccount" type="button" hidden>Retry loading account</button><a id="signInAgain" href="./candidate-login.html?next=./candidate-profile.html" hidden>Sign in again to continue</a>
-          <form id="profilePhotoForm" novalidate>
-            <div class="photo-source-actions" aria-label="Choose how to add your headshot">
-              <label class="source-button" for="profilePhotoInput">Upload a headshot</label>
-              <button id="openCamera" class="source-button" type="button">Use webcam</button>
-            </div>
-            <label class="photo-picker" for="profilePhotoInput">
-              <input id="profilePhotoInput" type="file" accept="image/jpeg,image/png,image/webp" />
-              <span id="photoPlaceholder" class="photo-placeholder"><b>+</b><strong>Add profile photo</strong><small>Upload a file or take one with your webcam</small></span>
-              <img id="profilePhotoPreview" alt="Your professional profile preview" hidden />
-            </label>
-            <div id="headshotUploadProgress" class="headshot-upload-progress" role="status" aria-live="assertive" hidden>
-              <span class="headshot-spinner" aria-hidden="true"></span>
-              <span><strong>Uploading your headshot…</strong><small>Please keep this page open.</small></span>
-            </div>
-            <section id="cameraPanel" class="camera-panel" hidden>
-              <video id="cameraPreview" autoplay playsinline muted></video>
-              <canvas id="cameraCanvas" width="720" height="720" hidden></canvas>
-              <div class="camera-actions">
-                <button id="capturePhoto" type="button">Take photo</button>
-                <button id="closeCamera" class="secondary-camera-button" type="button">Cancel</button>
-              </div>
-            </section>
-            <ul class="photo-tips"><li>Face the camera directly</li><li>Use good, even lighting</li><li>Only you should appear in the photo</li></ul>
-            <div id="photoResult" class="status-box" aria-live="polite" hidden></div>
-            <button id="saveProfilePhoto" type="submit" disabled>Save photo and continue <span>→</span></button>
-          </form>
-        </div>
-      </section>
+  <body class="es-page pp-page" data-account-menu="off">
+    <header class="pp-top"><a href="./home.html" class="es-logo" aria-label="Hire From SA home"><img src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a><a class="pp-back" href="./candidate-dashboard.html?tab=profile">← Back to My Profile</a></header>
+    <main class="pp-main">
+      <div class="pp-heading">
+        <p class="es-kicker">YOUR PROFILE PICTURE</p>
+        <h1>Create your Hire From SA profile picture with AI</h1>
+        <p class="es-lead">Every VA uses the same Hire From SA style picture. Watch the video to create yours, then upload it. Regular photos and selfies aren't accepted.</p>
+      </div>
+      <div class="pp-grid">
+        <section class="pp-panel pp-video-panel">
+          <p class="pp-step"><b>1</b>Watch how to create it</p>
+          <div id="photoGuide" class="pp-video">
+            <div class="pp-video-empty"><span aria-hidden="true">▶</span><b>Video coming soon</b><small>Step-by-step directions for creating your picture with AI.</small></div>
+          </div>
+        </section>
+
+        <form id="profilePhotoForm" class="pp-panel es-photo" novalidate>
+          <p class="pp-step"><b>2</b>Upload your picture</p>
+          <p id="authStatus" class="es-verified" aria-live="polite">Checking your account…</p>
+          <button id="retryAccount" class="es-secondary" type="button" hidden>Retry loading account</button><a id="signInAgain" class="es-inline-link" href="./candidate-login.html?next=./candidate-profile.html" hidden>Sign in again to continue</a>
+          <label class="es-photo-picker" for="profilePhotoInput">
+            <input id="profilePhotoInput" type="file" accept="image/jpeg,image/png,image/webp" />
+            <span id="photoPlaceholder" class="es-photo-empty"><b aria-hidden="true">+</b><small>Choose picture</small></span>
+            <img id="profilePhotoPreview" alt="Your profile picture preview" hidden />
+          </label>
+          <label class="es-secondary pp-choose" for="profilePhotoInput">Choose your AI picture</label>
+          <p class="pp-note">Only upload the picture you created by following the video. JPG, PNG or WebP.</p>
+          <button id="openCamera" type="button" hidden>Use webcam</button>
+          <section id="cameraPanel" class="es-camera" hidden>
+            <video id="cameraPreview" autoplay playsinline muted></video>
+            <canvas id="cameraCanvas" width="720" height="720" hidden></canvas>
+            <div class="es-camera-actions"><button id="capturePhoto" type="button">Take photo</button><button id="closeCamera" type="button">Cancel</button></div>
+          </section>
+          <div id="headshotUploadProgress" class="es-uploading" role="status" aria-live="assertive" hidden>
+            <span class="es-spinner" aria-hidden="true"></span>
+            <span><strong>Uploading your picture…</strong><small>Please keep this page open.</small></span>
+          </div>
+          <div id="photoResult" class="portal-result" aria-live="polite" hidden></div>
+          <button id="saveProfilePhoto" class="es-submit" type="submit" disabled>Upload my picture <span aria-hidden="true">→</span></button>
+        </form>
+      </div>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./auth-client.js"></script>
