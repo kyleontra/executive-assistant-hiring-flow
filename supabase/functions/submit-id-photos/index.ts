@@ -56,13 +56,8 @@ Deno.serve(async (request) => {
       .select('profile_photo_path, verification_status, verification_bypass').eq('user_id', user.id).maybeSingle();
     if (profileError) throw profileError;
     if (profile?.verification_status === 'verified' || profile?.verification_bypass) return reply(request, { error: 'Your identity is already approved. Return to your account to continue.' }, 409);
+    // A profile photo is no longer part of sign-up; include it for reviewers only when one exists.
     const profilePhotoPath = String(profile?.profile_photo_path || '');
-    const photoFolder = `candidate-profiles/${user.id}`;
-    const photoName = profilePhotoPath.startsWith(`${photoFolder}/`) ? profilePhotoPath.slice(photoFolder.length + 1) : '';
-    if (!/^profile(?:-[0-9a-f-]+\.(?:jpg|png|webp))?$/.test(photoName)) return reply(request, { error: 'Add your professional profile photo before submitting ID photos.' }, 400);
-    const { data: photos, error: photosError } = await admin.storage.from(BUCKET).list(photoFolder, { limit: 10, search: photoName });
-    if (photosError) throw photosError;
-    if (!photos?.some((file) => file.name === photoName)) return reply(request, { error: 'Your saved headshot could not be found. Upload it again before submitting ID photos.' }, 400);
     const reference = `SA-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
     const folder = `pending/${reference}`;
     const uploads = [

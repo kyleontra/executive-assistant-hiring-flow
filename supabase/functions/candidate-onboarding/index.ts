@@ -88,7 +88,7 @@ Deno.serve(async (req: Request) => {
       const identitySubmitted = Boolean(progress.identity_video_uploaded_at)
         && (profile?.verification_status !== 'rejected' || !progress.contract_accepted_at);
       if (guide === 'identity') {
-        if (!profile?.resume_path || !profile?.profile_photo_path || !identitySubmitted) return reply(req, { error: 'Submit your ID photos and private ID video before watching the review guide.' }, 403);
+        if (!profile?.resume_path || !identitySubmitted) return reply(req, { error: 'Submit your ID photos and private ID video before watching the review guide.' }, 403);
       } else if (guide === 'platform') {
         if (!profile?.resume_path || (!identityApproved(profile) && (!progress.identity_completed_at || !identitySubmitted))) return reply(req, { error: 'Watch the identity verification video and submit your ID first.' }, 403);
       } else if (!identityApproved(profile) || !profile?.resume_path || !platformReady) {

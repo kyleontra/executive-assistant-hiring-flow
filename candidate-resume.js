@@ -48,7 +48,8 @@ function refreshSaveButton() {
 function nextDestination() {
   const requested = params.get('next');
   if (/^\.\/(?:candidate-dashboard|application-questions|candidate-next-steps|candidate-profile|id-verification|jobs)\.html(?:\?|$)/.test(requested || '')) return requested;
-  return `./candidate-dashboard.html${demoMode ? '?demo=1' : ''}`;
+  // New VAs go straight to their next onboarding step; finished VAs pass ?next=.
+  return demoMode ? './id-verification.html?demo=1' : './candidate-onboarding.html';
 }
 
 function showResult(message, type) {

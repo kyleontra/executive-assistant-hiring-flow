@@ -4,7 +4,6 @@ export function identityApproved(profile) {
 export function onboardingStage(profile, progress = {}) {
   if (!profile?.resume_path) return 'resume';
   if (!identityApproved(profile)) {
-    if (!profile?.profile_photo_path) return 'profile';
     const identitySubmitted = Boolean(progress.identity_video_uploaded_at)
       && (profile?.verification_status !== 'rejected' || !progress.contract_accepted_at);
     if (!identitySubmitted) return 'verification';

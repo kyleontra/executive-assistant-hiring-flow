@@ -3,33 +3,64 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#1d6be8" />
-    <title>Upload South African ID photos</title>
+    <meta name="theme-color" content="#1f5fcf" />
+    <title>Verify your ID - Hire From SA</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./id-upload.css" />
     <link rel="stylesheet" href="./brand.css" />
-    <link rel="stylesheet" href="./candidate-flow-layout.css" />
+    <link rel="stylesheet" href="./employer-signup.css" />
   </head>
-  <body class="onboarding-page">
-    <header class="upload-header"><a class="upload-brand site-logo-link" href="./jobs.html"><img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a><span>Private ID review</span><a href="./jobs.html">Exit</a></header>
-    <main class="upload-shell">
-      <aside class="upload-aside"><p class="eyebrow">BEFORE YOU APPLY</p><h1>Add clear ID photos.</h1><p>These photos are stored privately for the review team. Next, record a short ID video and complete your contract before review begins.</p><div class="flow-steps"><span>✓</span><b>Headshot</b><span class="active">2</span><b>ID photos</b><span>3</span><b>Short video</b></div></aside>
-      <section class="upload-main">
-        <div class="upload-card">
-          <p class="eyebrow blue">APPLICATION READINESS · STEP 2 OF 3</p><h2>Photograph both sides of your ID.</h2><p class="lead">Use clear, well-lit photos. Keep all four edges and printed text visible. JPG, PNG, WebP, HEIC, or HEIF; maximum 8 MB per photo.</p>
-          <p id="authStatus" class="status-box" aria-live="polite">Checking your verified account…</p><button id="retryAccount" type="button" hidden>Retry loading account</button><a id="signInAgain" href="./candidate-login.html?next=./id-verification.html" hidden>Sign in again to continue</a>
-          <form id="photoForm" novalidate>
-            <div class="photo-grid">
-              <label class="photo-drop" for="frontPhoto"><input id="frontPhoto" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif" capture="environment" required /><img id="frontPreview" alt="Front of ID preview" hidden /><span class="photo-icon">↑</span><b>Front of ID</b><small>Choose or take a photo</small></label>
-              <label class="photo-drop" for="backPhoto"><input id="backPhoto" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif" capture="environment" required /><img id="backPreview" alt="Back of ID preview" hidden /><span class="photo-icon">↑</span><b>Back of ID</b><small>Choose or take a photo</small></label>
-            </div>
-            <label class="consent"><input id="photoConsent" type="checkbox" required /><span></span><p>I have permission to submit these ID images for a private manual eligibility review.</p></label>
-            <p id="photoResult" class="status-box" aria-live="polite" hidden></p>
-            <button id="submitPhotos" type="submit" disabled>Save ID photos and continue <span>→</span></button>
-          </form>
+  <body class="es-page" data-account-menu="off">
+    <main class="es-shell">
+      <aside class="es-side">
+        <a href="./home.html" class="es-logo" aria-label="Hire From SA home"><img src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a>
+        <div class="es-side-copy">
+          <h2>Verify your ID so hirers can trust you.</h2>
+          <ul>
+            <li>Only our review team sees your ID</li>
+            <li>Hirers never see your ID photos</li>
+            <li>Takes just a few minutes</li>
+          </ul>
         </div>
+        <div class="es-side-card es-steps-card" aria-hidden="true">
+          <strong>Your profile in 5 steps</strong>
+          <ol>
+            <li class="done"><b>✓</b><span>Create your account<small>Done</small></span></li>
+            <li class="done"><b>✓</b><span>Confirm your email<small>Done</small></span></li>
+            <li class="done"><b>✓</b><span>Add your resume<small>Done</small></span></li>
+            <li class="current"><b>4</b><span>Verify your ID<small>Photos of your ID and a short video</small></span></li>
+            <li><b>5</b><span>Sign your contract<small>Watch a short video, then sign</small></span></li>
+          </ol>
+        </div>
+      </aside>
+
+      <section class="es-main">
+        <div class="es-top"><a href="./home.html" class="es-logo es-logo-mobile" aria-label="Hire From SA home"><img src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a></div>
+
+        <form id="photoForm" class="es-card es-login es-id" novalidate>
+          <p id="authStatus" class="es-verified" aria-live="polite">Checking your account…</p>
+          <p class="es-kicker">STEP 4 OF 5</p>
+          <h1>Verify your ID</h1>
+          <p class="es-lead">Take a clear photo of the front and back of your South African ID.</p>
+          <ol class="es-substeps" aria-label="This step has two parts">
+            <li class="current"><b>1</b>ID photos</li>
+            <li><b>2</b>Short ID video</li>
+          </ol>
+          <button id="retryAccount" class="es-secondary" type="button" hidden>Retry loading account</button><a id="signInAgain" class="es-inline-link" href="./candidate-login.html?next=./id-verification.html" hidden>Sign in again to continue</a>
+
+          <div class="es-id-grid">
+            <label class="es-id-drop" for="frontPhoto"><input id="frontPhoto" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif" capture="environment" required /><img id="frontPreview" alt="Front of ID preview" hidden /><span class="es-id-icon" aria-hidden="true">🪪</span><b>Front of ID</b><small>Tap to take or choose a photo</small></label>
+            <label class="es-id-drop" for="backPhoto"><input id="backPhoto" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif" capture="environment" required /><img id="backPreview" alt="Back of ID preview" hidden /><span class="es-id-icon" aria-hidden="true">↺</span><b>Back of ID</b><small>Tap to take or choose a photo</small></label>
+          </div>
+          <ul class="es-photo-tips"><li>All four corners showing</li><li>Text easy to read</li><li>No glare</li></ul>
+          <p class="es-id-formats">JPG, PNG, WebP, HEIC or HEIF · up to 8 MB each</p>
+
+          <label class="es-check"><input id="photoConsent" type="checkbox" required /><span>I give permission for Hire From SA's team to privately review these ID photos.</span></label>
+          <p id="photoResult" class="portal-result" aria-live="polite" hidden></p>
+          <button id="submitPhotos" class="es-submit" type="submit" disabled>Save ID photos and continue <span aria-hidden="true">→</span></button>
+          <p class="es-privacy">🔒 Your ID is stored privately and never shown to hirers.</p>
+        </form>
       </section>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

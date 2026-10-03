@@ -14,7 +14,7 @@ function showResult(message, type) {
   if (type === 'error' && /sign.in|expired/i.test(message)) document.querySelector('#signInAgain').hidden = false;
   result.textContent = message;
   result.hidden = false;
-  result.className = `status-box ${type}`;
+  result.className = `portal-result ${type}`;
 }
 
 function validPhoto(input) {
@@ -37,16 +37,15 @@ function setPreview(input, preview) {
   };
   preview.src = URL.createObjectURL(file);
   preview.hidden = false;
+  input.closest('label')?.classList.add('has-file');
   updateSubmit();
 }
 
 async function requireVerifiedAccount() {
   if (demoMode) {
     verified = true;
-    document.querySelector('.upload-aside h1').textContent = 'Test ID photo previews.';
-    document.querySelector('.upload-aside > p').textContent = 'Choose test images to check this step. Demo images remain in your browser.';
-    authStatus.textContent = 'Demo mode — these ID previews stay in your browser and are never uploaded.';
-    authStatus.className = 'status-box success';
+    authStatus.textContent = 'Demo mode: your ID photos are never uploaded';
+    authStatus.className = 'es-verified success';
     updateSubmit();
     return;
   }
@@ -54,8 +53,8 @@ async function requireVerifiedAccount() {
   if (!user) {
     document.querySelector('#signInAgain').hidden = false;
     verified = false;
-    authStatus.textContent = 'Confirm your email first. Open the Supabase confirmation email, then return to this page.';
-    authStatus.className = 'status-box error';
+    authStatus.textContent = 'Sign in to continue verifying your ID.';
+    authStatus.className = 'es-verified error';
     updateSubmit();
     return;
   }
@@ -72,18 +71,13 @@ async function requireVerifiedAccount() {
     }
   } catch (error) {
     authStatus.textContent = (['TimeoutError', 'AbortError'].includes(error?.name) ? 'The request took too long. Check your connection and try again. Your saved progress is kept.' : error.message) || 'Your profile could not be checked. Please refresh and try again.';
-    authStatus.className = 'status-box error';
+    authStatus.className = 'es-verified error';
     document.querySelector('#retryAccount').hidden = false;
     return;
   }
-  const profilePhotoPath = savedProfile?.photoPath;
-  if (!profilePhotoPath) {
-    window.location.replace('./candidate-profile.html');
-    return;
-  }
   verified = true;
-  authStatus.textContent = `Email confirmed for ${user.email}. You can now add your ID photos.`;
-  authStatus.className = 'status-box success';
+  authStatus.textContent = `Signed in: ${user.email}`;
+  authStatus.className = 'es-verified success';
   updateSubmit();
 }
 
@@ -117,7 +111,7 @@ form.addEventListener('submit', async (event) => {
     showResult('ID photos saved privately. Continuing to the video check…', 'success');
     window.location.assign(`./verification.html?review=${encodeURIComponent(payload.reference)}`);
   } catch (error) {
-    submitButton.innerHTML = 'Save ID photos and continue <span>→</span>';
+    submitButton.innerHTML = 'Save ID photos and continue <span aria-hidden="true">→</span>';
     showResult(['TimeoutError', 'AbortError'].includes(error?.name) ? 'The request took too long. Check your connection and retry.' : error.message || 'The ID photos could not be saved. Please try again.', 'error');
   } finally {
     uploading = false;
@@ -132,7 +126,7 @@ requireVerifiedAccount().catch(accountLoadFailed);
 function accountLoadFailed(error) {
   const status = document.querySelector('#authStatus');
   status.textContent = error.message || 'Your account could not be checked. Retry to continue.';
-  status.className = 'status-box error';
+  status.className = 'es-verified error';
   if (/sign.in|expired/i.test(error.message || '')) document.querySelector('#signInAgain').hidden = false;
   document.querySelector('#retryAccount').hidden = false;
 }

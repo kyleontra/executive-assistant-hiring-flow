@@ -183,3 +183,24 @@ body.es-page{margin:0;background:#f6f8fc;color:#142238;font-family:"DM Sans",san
 .es-uploading small{color:#4a5a73;font-size:13px}
 .es-spinner{width:22px;height:22px;flex:none;border:3px solid #c9dafc;border-top-color:#246fe5;border-radius:50%;animation:es-spin .8s linear infinite}
 @keyframes es-spin{to{transform:rotate(360deg)}}
+.es-substeps{display:flex;gap:6px;margin:18px 0 0;padding:0;list-style:none}
+.es-substeps li{display:flex;flex:1;align-items:center;justify-content:center;gap:7px;padding:8px 6px;border-radius:10px;background:#f1f4f8;color:#6b7890;font-size:13px;font-weight:700;white-space:nowrap}
+.es-substeps li b{display:grid;width:20px;height:20px;place-items:center;border-radius:50%;background:#dfe6f0;color:#4a5a73;font-size:11px}
+.es-substeps li.current{background:#eef4ff;color:#1f5fcf}
+.es-substeps li.current b{background:#246fe5;color:#fff}
+.es-id-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.es-id-drop{position:relative;display:grid;align-content:center;justify-items:center;gap:4px;min-height:150px;padding:16px 10px;overflow:hidden;border:2px dashed #c6d1df;border-radius:16px;background:#f8faff;text-align:center;cursor:pointer;transition:border-color .15s,background .15s}
+.es-id-drop:hover{border-color:#246fe5;background:#eef4ff}
+.es-id-drop input{position:absolute;width:1px;height:1px;opacity:0}
+.es-id-drop b{color:#142238;font-size:15px}
+.es-id-drop small{color:#6b7890;font-size:12.5px}
+.es-id-icon{display:grid;width:44px;height:44px;margin-bottom:4px;place-items:center;border-radius:14px;background:#e8f0ff;color:#1f5fcf;font-size:22px;font-weight:800}
+.es-id-drop img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.es-id-drop img[hidden]{display:none}
+.es-id-drop.has-file{border-style:solid;border-color:#7fc4a4}
+.es-id-drop.has-file::after{content:"✓ Change";position:absolute;right:8px;bottom:8px;padding:4px 9px;border-radius:999px;background:rgba(15,29,48,.78);color:#fff;font-size:12px;font-weight:700}
+.es-id .es-photo-tips{margin-top:12px}
+.es-id-formats{margin:8px 0 0;color:#8a96a8;font-size:12.5px;text-align:center}
+.es-check{display:flex;align-items:flex-start;gap:10px;margin-top:16px;color:#33445e;font-size:14px;font-weight:600;line-height:1.45;cursor:pointer}
+.es-check input{width:18px;height:18px;flex:none;margin:1px 0 0;accent-color:#246fe5}
+@media (max-width:420px){.es-substeps li{font-size:12px}.es-id-drop{min-height:130px}}

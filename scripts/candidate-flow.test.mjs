@@ -146,12 +146,12 @@ test('email code verification keeps existing OTP method and routes to resume', a
   assert.deepEqual(h.navigations, ['./candidate-resume.html']);
 });
 
-test('saved resume continues to account, not headshot or old experience step', async () => {
+test('saved resume continues to the onboarding router, not the old experience step', async () => {
   const h = browserHarness({ profile: { resumePath: 'test-user/resume.txt' } });
   h.storage.set('sava-applying-job', 'test-job');
   h.run('candidate-resume.js'); await h.flush();
   await h.get('#resumeForm').handlers.submit({ preventDefault() {} });
-  assert.deepEqual(h.navigations, ['./candidate-dashboard.html']);
+  assert.deepEqual(h.navigations, ['./candidate-onboarding.html']);
   assert.doesNotMatch(read('candidate-resume.html'), /skipResume/);
 });
 
@@ -165,7 +165,7 @@ test('verified email plus resume opens dashboard without exposing the paused job
   assert.doesNotMatch(read('candidate-dashboard.html'), /Your connected resume|Replace resume|YOUR PROFILE/);
 });
 
-test('new resume uploads separately, connects to profile, and opens account', async () => {
+test('new resume uploads separately, connects to profile, and opens the next onboarding step', async () => {
   const h = browserHarness({ profile: null, fetchImpl: async (_url, request) => {
     assert.equal(request.body.get('resume').name, 'resume.txt');
     return { ok: true, json: async () => ({ path: 'test-user/resume.txt', fileName: 'resume.txt' }) };
@@ -176,7 +176,7 @@ test('new resume uploads separately, connects to profile, and opens account', as
   await h.get('#resumeForm').handlers.submit({ preventDefault() {} });
   const saves = h.requests.filter((request) => request.action === 'saveProfile');
   assert.equal(saves.length, 0); // The upload endpoint saves the account atomically.
-  assert.deepEqual(h.navigations, ['./candidate-dashboard.html']);
+  assert.deepEqual(h.navigations, ['./candidate-onboarding.html']);
 });
 
 test('failed resume upload allows retry without advancing to the account', async () => {
@@ -574,4 +574,11 @@ test('a cached ID reference never skips account onboarding progress', async () =
   h.storage.set('sava:id-review:test-user', 'SA-ABCDEF12');
   h.run('candidate-next-steps.js'); await h.flush();
   assert.equal(h.get('#continueVerification').href, './candidate-onboarding.html');
+});
+
+test('sign-up no longer requires a profile photo before ID verification', async () => {
+  const { onboardingStage } = await import('../supabase/functions/_shared/onboarding-state.mjs');
+  assert.equal(onboardingStage({ resume_path: 'test-user/resume.txt', profile_photo_path: '' }, {}), 'verification');
+  assert.doesNotMatch(read('supabase/functions/submit-id-photos/index.ts'), /Add your professional profile photo before submitting ID photos/);
+  assert.doesNotMatch(read('id-verification.js'), /candidate-profile\.html/);
 });
