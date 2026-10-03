@@ -58,6 +58,14 @@ button, input { font: inherit; }
 }
 .desktop-nav a:hover,
 .text-link:hover { color: var(--blue); }
+.header-green-dot {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+  margin-left: auto;
+  border-radius: 50%;
+  background: #22c55e;
+}
 .header-actions {
   display: flex;
   align-items: center;
@@ -445,7 +453,7 @@ button, input { font: inherit; }
 .home-footer nav a { color: #48586d; font-size: 11px; font-weight: 700; text-decoration: none; }
 
 @media (max-width: 1050px) {
-  .desktop-nav { display: none; }
+  .desktop-nav, .header-green-dot { display: none; }
   .activity-one { left: 30px; }
   .activity-two { right: 30px; }
   .why-section { gap: 42px; }
