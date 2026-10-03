@@ -140,3 +140,25 @@ body.vp-dialog-open{overflow:hidden}
   .vp-dialog{align-items:end;padding:0}
   .vp-dialog-panel{width:100%;max-height:92svh;border-radius:16px 16px 0 0}
 }
+.vp-locked-banner{display:flex;align-items:center;gap:18px;margin:0 0 18px;padding:22px 24px;border-radius:18px;background:linear-gradient(135deg,#1f5fcf,#3d86f5);color:#fff;box-shadow:0 14px 34px rgba(31,95,207,.25)}
+.vp-locked-icon{display:grid;width:56px;height:56px;flex:none;place-items:center;border-radius:16px;background:rgba(255,255,255,.18);font-size:26px}
+.vp-locked-banner h2{margin:0 0 4px;color:#fff;font:800 24px/1.2 Manrope,sans-serif;letter-spacing:-.5px}
+.vp-locked-banner p{margin:0;color:rgba(255,255,255,.92);font-size:15px;line-height:1.5}
+.vp-next{margin:0 0 18px;padding:22px 24px;border:1px solid #dfe6f0;border-radius:18px;background:#fff}
+.vp-next h2{margin:0;color:#142238;font:800 20px Manrope,sans-serif}
+.vp-next-lead{margin:4px 0 14px;color:#5b6b82;font-size:14.5px}
+.vp-next ol{display:grid;gap:12px;margin:0;padding:0;list-style:none}
+.vp-next-step{display:flex;align-items:center;gap:16px;padding:16px;border:1px solid #e3e9f2;border-radius:14px;background:#fbfcfe}
+.vp-next-step.done{background:#f3fbf7;border-color:#cfe9dc}
+.vp-next-num{display:grid;width:34px;height:34px;flex:none;place-items:center;border-radius:50%;background:#246fe5;color:#fff;font:800 15px Manrope,sans-serif}
+.vp-next-step.done .vp-next-num{background:#0b7a50}
+.vp-next-body{flex:1;min-width:0}
+.vp-next-body h3{margin:0;color:#142238;font-size:16.5px}
+.vp-next-body p{margin:3px 0 0;color:#5b6b82;font-size:14px;line-height:1.45}
+.vp-photo-tips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 0;padding:0;list-style:none}
+.vp-photo-tips li{padding:5px 10px;border-radius:999px;background:#eef2f8;color:#4a5a73;font-size:12.5px;font-weight:600}
+.vp-photo-tips li::before{content:"✓ ";color:#0b7a50;font-weight:800}
+.vp-next-action{flex:none}
+.vp-next-action .vp-btn{white-space:nowrap}
+.vp-next-done{color:#0b7a50;font-weight:800}
+@media (max-width:640px){.vp-locked-banner{align-items:flex-start;padding:18px}.vp-locked-icon{width:44px;height:44px;font-size:20px}.vp-locked-banner h2{font-size:20px}.vp-next{padding:18px}.vp-next-step{flex-wrap:wrap}.vp-next-action{width:100%;padding-left:50px}.vp-next-action .vp-btn{display:inline-flex}}

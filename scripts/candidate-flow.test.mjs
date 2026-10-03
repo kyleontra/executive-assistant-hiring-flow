@@ -535,16 +535,18 @@ test('platform agreement video is completed before the candidate contract', () =
   assert.ok(preview.indexOf("['Platform + agreement'") < preview.indexOf("['Candidate contract'"));
 });
 
-test('signing the contract leads to a verification cutoff with no continue action', () => {
+test('signing the contract leads to a next-steps video, then Check status opens the account', () => {
   const onboarding = read('candidate-onboarding.mjs');
   const previewStages = read('signup-preview-stages.mjs');
   const preview = read('signup-preview.mjs');
-  assert.match(onboarding, /ALL 5 STEPS DONE[\s\S]*You're all done!/);
+  assert.match(onboarding, /Watch this video for next steps/);
   assert.match(onboarding, /https:\/\/sendlink\.co\/documents\/doc-form\/6a99dcb2ea613131e9ac83f3\?locale=en/);
   assert.match(onboarding, /target="_blank" rel="noopener noreferrer"/);
   assert.match(onboarding, /I completed and submitted the Hire From SA contract in Sendlink/);
   assert.doesNotMatch(onboarding, /No guarantee of work/);
-  assert.match(onboarding, /You can apply to jobs once you're approved/);
+  assert.match(onboarding, /candidate-dashboard\.html\?tab=profile/);
+  assert.match(read('candidate-dashboard.js'), /underReview = profile\.verificationStatus === 'pending'/);
+  assert.match(read('candidate-dashboard.js'), /You can apply once you\\'re approved/);
   const waiting = onboarding.slice(onboarding.indexOf('function renderWaiting'), onboarding.indexOf('function renderPreferences'));
   assert.doesNotMatch(waiting, /refreshStatus|My account|journey-action/);
   assert.match(preview, /Verification cutoff/);

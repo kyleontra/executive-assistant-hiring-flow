@@ -133,3 +133,6 @@
 .va-acct-faq summary::after{content:"";width:8px;height:8px;flex:none;margin-right:4px;border-right:2px solid #7b889c;border-bottom:2px solid #7b889c;transform:rotate(45deg) translateY(-2px);transition:transform .15s}
 .va-acct-faq details[open] summary::after{transform:rotate(-135deg) translateY(-2px)}
 .va-acct-faq details[open]{background:#fff;border-color:#cddcf5}
+.va-review-banner{margin:0 0 16px;padding:12px 16px;border:1px solid #c9dafc;border-radius:12px;background:#eef4ff;color:#1f3f78;font-size:14.5px;line-height:1.5}
+.va-review-banner[hidden]{display:none}
+.va-review-banner b{color:#1f5fcf}

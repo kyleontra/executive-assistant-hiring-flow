@@ -70,3 +70,6 @@
   .vj-back{display:inline-flex;margin:0 0 14px;padding:0;border:0;background:none;color:#33445e;font:700 14px "DM Sans",sans-serif;cursor:pointer}
   .vj-card[aria-pressed=true]{border-color:#dce2ea;box-shadow:0 8px 24px rgba(20,34,56,.04)}
 }
+.vj-locked{display:grid;gap:4px;padding:14px 16px;border:1px solid #dfe6f0;border-radius:12px;background:#f5f7fb;text-align:center}
+.vj-locked b{color:#142238;font-size:16px}
+.vj-locked span{color:#5b6b82;font-size:13.5px;line-height:1.45}

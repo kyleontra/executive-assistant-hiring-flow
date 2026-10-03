@@ -6,6 +6,7 @@ const applicationsRoot = document.querySelector('#candidateApplications');
 const portalStatus = document.querySelector('#portalStatus');
 const tabs = ['jobs', 'messages', 'applications', 'profile', 'payments', 'settings', 'help'];
 const navTabs = ['jobs', 'messages', 'applications'];
+let underReview = false;
 let activeTab = new URLSearchParams(window.location.search).get('tab') || 'applications';
 if (!tabs.includes(activeTab)) activeTab = 'applications';
 // Localhost-only preview (?demo): a signed-in VA with sample applications, messages and jobs. Nothing is sent.
@@ -117,6 +118,8 @@ function switchTab(tab, updateUrl = true) {
   if (!tabs.includes(tab)) return;
   if (activeTab === 'profile' && tab !== 'profile') document.querySelector('#candidateProfile video')?.pause?.();
   activeTab = tab;
+  // My Profile has its own, bigger under-review banner.
+  document.querySelector('#reviewBanner').hidden = !underReview || tab === 'profile';
   tabs.forEach(name => {
     const button = document.querySelector('#tab-' + name);
     if (button) {
@@ -258,7 +261,7 @@ async function refreshInbox() {
   const status = document.querySelector('#inboxStatus');
   try {
     const data = await window.savaPlatform.candidateRequest('candidateDashboard');
-    if (!data.profile?.applicationReady) { window.location.replace('./candidate-onboarding.html'); return; }
+    if (!data.profile?.applicationReady && !underReview) { window.location.replace('./candidate-onboarding.html'); return; }
     if (messageSending) { status.hidden = true; return; }
     saveDraft();
     dashboardData = data;
@@ -302,7 +305,18 @@ function profileFact(label, value, color, note = '') {
 function profileSelect(name, value, options) {
   return '<select name="' + name + '">' + options.map(([key, label]) => '<option value="' + key + '"' + (value === key ? ' selected' : '') + '>' + label + '</option>').join('') + '</select>';
 }
-function renderProfile(profile, intro) {
+// Before approval: a clear "can't apply yet" banner plus the next steps they can finish while they wait.
+function reviewSteps(photo, onboarding) {
+  const preferences = onboarding?.preferences || {};
+  const questionsDone = Boolean(preferences.employmentPreference && preferences.startAvailability && preferences.monthlyIncomeGoalZar);
+  const step = (number, done, title, copy, action, extra = '') => '<li class="vp-next-step' + (done ? ' done' : '') + '"><span class="vp-next-num" aria-hidden="true">' + (done ? '✓' : number) + '</span><div class="vp-next-body"><h3>' + title + '</h3><p>' + copy + '</p>' + extra + '</div><div class="vp-next-action">' + (done ? '<span class="vp-next-done">Done</span>' : action) + '</div></li>';
+  return '<section class="vp-locked-banner"><span class="vp-locked-icon" aria-hidden="true">🔒</span><div><h2>You can\'t apply for jobs yet</h2><p>Our team is verifying your account. Once you\'re approved, you can apply to any job on Hire From SA. We\'ll email you as soon as that happens.</p></div></section>'
+    + '<section class="vp-next"><h2>Next steps while you wait</h2><p class="vp-next-lead">Finish these now so you\'re ready to apply the moment you\'re approved.</p><ol>'
+    + step(1, Boolean(photo), 'Add a profile picture', 'Hirers see it next to your name on every application.', '<button type="button" class="vp-btn" data-pick-photo>Add a photo</button>', '<ul class="vp-photo-tips"><li>Face the camera</li><li>Good, even lighting</li><li>Just you, plain background</li></ul>')
+    + step(2, questionsDone, 'Answer a few questions about the work you want', 'The jobs and industries you want, your pay goal, and when you can start.', '<a class="vp-btn" href="./candidate-onboarding.html?questions=1' + (dashboardDemo ? '&demo=questions' : '') + '">Answer questions</a>')
+    + '</ol></section>';
+}
+function renderProfile(profile, intro, onboarding = {}) {
   const root = document.querySelector('#candidateProfile');
   const name = profile.fullName || [candidate?.user_metadata?.first_name, candidate?.user_metadata?.last_name].filter(Boolean).join(' ') || 'Your profile';
   const firstName = name.split(/\s+/)[0];
@@ -320,7 +334,8 @@ function renderProfile(profile, intro) {
   const software = (profile.software || []).slice(0, 20);
   const links = (profile.portfolioLinks || []).map(safeAssetUrl).filter(Boolean).slice(0, 5);
   const shareSlug = /^[0-9a-f]{32}$/.test(profile.shareSlug || '') ? profile.shareSlug : '';
-  const shareUrl = shareSlug ? new URL('/candidate-public-profile.html?profile=' + encodeURIComponent(shareSlug), window.location.origin || 'https://www.hirefromsa.com').href : '';
+  // Profiles are not public until approved, so there is nothing to share yet.
+  const shareUrl = shareSlug && approved ? new URL('/candidate-public-profile.html?profile=' + encodeURIComponent(shareSlug), window.location.origin || 'https://www.hirefromsa.com').href : '';
   const checklist = [
     [photo, 'Add a photo', 'photo'], [intro, 'Record your intro video', 'video'], [rate, 'Add your rate', 'edit'], [hours, 'Add your weekly hours', 'edit'],
     [ideal.length, 'Add the jobs you want', 'edit'], [profile.location, 'Add your location', 'edit'], [profile.resumeFileName, 'Upload your resume', 'resume'],
@@ -333,10 +348,11 @@ function renderProfile(profile, intro) {
   const resumeLink = '<a class="vp-link" href="./candidate-resume.html?next=.%2Fcandidate-dashboard.html%3Ftab%3Dprofile">' + (profile.resumeFileName ? 'Replace resume' : 'Upload resume') + '</a>';
   const tags = list => '<div class="vp-tags">' + list.map(item => '<span>' + portalEscape(item) + '</span>').join('') + '</div>';
   root.innerHTML = `
-    <div class="vp-top"><div><h1>My Profile</h1><p>This is what hirers see when they open your profile.</p></div>
+    <div class="vp-top"><div><h1>My Profile</h1><p>${approved ? 'This is what hirers see when they open your profile.' : 'Hirers can see your profile once you\'re approved.'}</p></div>
       ${shareUrl ? `<div class="vp-top-actions"><a class="vp-btn secondary" href="${portalEscape(shareUrl)}" target="_blank" rel="noopener noreferrer">View as a hirer ↗</a><button type="button" class="vp-btn" data-share-profile="${portalEscape(shareUrl)}">Copy profile link</button><input id="candidateShareUrl" class="vp-share-input" type="text" readonly value="${portalEscape(shareUrl)}" aria-label="Your shareable profile link" tabindex="-1" /></div>` : ''}
     </div>
     <span id="candidateShareStatus" class="vp-share-status" role="status" aria-live="polite"></span>
+    ${approved ? '' : reviewSteps(photo, onboarding)}
     ${strength}
     <article class="vp-card">
       <header class="vp-hero">
@@ -409,7 +425,7 @@ async function loadProfile() {
   try {
     const [{ profile }, onboarding] = dashboardDemo ? [{ profile: demoProfile }, {}] : await Promise.all([window.savaPlatform.candidateRequest('getProfile'), onboardingRequest('status')]);
     if (!profile) throw new Error('Your profile could not be found.');
-    renderProfile(profile, safeAssetUrl(onboarding.introUrl));
+    renderProfile(profile, safeAssetUrl(onboarding.introUrl), onboarding);
     profileLoaded = true;
     profileLoadedAt = Date.now();
     return true;
@@ -463,7 +479,9 @@ function renderJobDetail(job, applied) {
   const questions = jobQuestions(job);
   const action = application
     ? '<div class="vj-applied-box"><b>✓ You applied ' + portalEscape(dateLabel(application.submittedAt)) + '</b><button type="button" class="vj-secondary" data-application-conversation="' + portalEscape(application.id) + '">View conversation</button></div>'
-    : '<a class="vj-apply" href="./application-questions.html?job=' + encodeURIComponent(job.id) + '">Apply now <span aria-hidden="true">→</span></a><p class="vj-free">Free for candidates. You never pay to apply or get hired.</p>';
+    : underReview
+      ? '<div class="vj-locked"><b>🔒 You can apply once you\'re approved</b><span>Our team is reviewing your profile. We\'ll email you as soon as you\'re approved.</span></div>'
+      : '<a class="vj-apply" href="./application-questions.html?job=' + encodeURIComponent(job.id) + '">Apply now <span aria-hidden="true">→</span></a><p class="vj-free">Free for candidates. You never pay to apply or get hired.</p>';
   detail.innerHTML = '<button type="button" class="vj-back" data-job-back>← All jobs</button>'
     + '<p class="vj-posted">' + portalEscape(postedLabel(job.createdAt)) + '</p><h2>' + portalEscape(job.title || 'Open job') + '</h2>'
     + '<dl class="vj-facts"><div class="green"><dt>Pay</dt><dd>' + portalEscape(job.pay || 'Not listed') + '</dd></div><div class="violet"><dt>Job type</dt><dd>' + portalEscape(JOB_TYPE_HOURS[job.type] || job.type || 'Not listed') + '</dd></div><div class="blue"><dt>Where</dt><dd>' + portalEscape(job.arrangement || 'Remote') + '</dd></div><div class="rose"><dt>Hiring</dt><dd>' + portalEscape(JOB_TIMELINES[job.hiringTimeline] || job.hiringTimeline || 'Open') + '</dd></div></dl>'
@@ -494,6 +512,10 @@ async function loadCandidateDashboard() {
   document.querySelector('#dashboardRetry').hidden = true;
   if (dashboardDemo) {
     dashboardData = demoData;
+    // ?demo=1&review=1 previews the account of a VA whose profile is under review.
+    underReview = new URLSearchParams(window.location.search).has('review');
+    if (underReview) Object.assign(demoProfile, { verificationStatus: 'pending' });
+    document.querySelector('#reviewBanner').hidden = !underReview;
     document.querySelector('#candidateReady').hidden = false;
     prepareConversations(demoData);
     renderApplications(demoData.applications);
@@ -508,13 +530,14 @@ async function loadCandidateDashboard() {
     const data = await window.savaPlatform.candidateRequest('candidateDashboard');
     const profile = data.profile || {};
     if (profile.resumeRequired) { window.location.replace('./candidate-resume.html?required=1&next=' + encodeURIComponent('./candidate-dashboard.html')); return; }
-    if (profile.verificationStatus === 'pending' && !profile.verificationBypass) { window.location.replace('./candidate-onboarding.html'); return; }
+    // VAs under review can use their account and browse jobs; applying stays locked until approval.
+    underReview = profile.verificationStatus === 'pending' && !profile.verificationBypass;
     const approved = profile.verificationStatus === 'verified' || Boolean(profile.verificationBypass);
     if (approved) {
       const onboarding = await onboardingRequest('status');
       if (onboarding.stage !== 'complete') { window.location.replace('./candidate-onboarding.html'); return; }
     }
-    if (!profile.applicationReady) {
+    if (!profile.applicationReady && !underReview) {
       document.body.classList.add('applications-gated');
       document.querySelector('#candidateGate').hidden = false;
       document.querySelector('#candidateReady').hidden = true;
@@ -528,6 +551,7 @@ async function loadCandidateDashboard() {
     document.body.classList.remove('applications-gated');
     document.querySelector('#candidateGate').hidden = true;
     document.querySelector('#candidateReady').hidden = false;
+    document.querySelector('#reviewBanner').hidden = !underReview;
     prepareConversations(data);
     renderApplications(data.applications || []);
     portalStatus.hidden = true;

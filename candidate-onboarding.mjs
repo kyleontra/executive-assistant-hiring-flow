@@ -1,6 +1,6 @@
 import { requestCameraStream } from './camera-request.mjs';
 import { mountRequiredVideo } from './required-video.mjs';
-import { guides } from './onboarding-videos.mjs';
+import { completionKey, guides, hasWatched } from './onboarding-videos.mjs';
 import { onboardingRequest } from './onboarding-client.mjs';
 import { backgroundOptions } from './virtual-background.mjs';
 import { prepareVideoBackground } from './video-background-setup.mjs';
@@ -19,14 +19,17 @@ let loading = false;
 let currentStage = "";
 const CONTRACT_URL = 'https://sendlink.co/documents/doc-form/6a99dcb2ea613131e9ac83f3?locale=en';
 const manage = new URLSearchParams(location.search).get('manage') === '1';
+// From My Profile: VAs under review can answer the job questions before approval.
+const questionsMode = new URLSearchParams(location.search).get('questions') === '1' || new URLSearchParams(location.search).get('demo') === 'questions';
 // Local preview only: ?demo=identity|platform|contract|waiting walks the sign-up stages without an account.
-const DEMO_STAGES = ['identity', 'platform', 'contract', 'waiting'];
+const DEMO_STAGES = ['identity', 'platform', 'contract', 'waiting', 'questions'];
 const demoParam = new URLSearchParams(location.search).get('demo');
 let demoStage = ['localhost', '127.0.0.1'].includes(location.hostname) && DEMO_STAGES.includes(demoParam) ? demoParam : '';
 const demoMode = Boolean(demoStage);
 async function demoRequest(action, body = {}) {
   if (action === 'completeGuide') demoStage = body.guide === 'identity' ? 'platform' : 'contract';
   if (action === 'completeContract') demoStage = 'waiting';
+  if (action === 'status' && demoStage === 'questions') return { stage: 'waiting', approved: false, preferences: {}, surveyStep: 1 };
   return { stage: demoStage, contractName: 'Thandi Jacobs' };
 }
 const request = demoMode ? demoRequest : onboardingRequest;
@@ -185,10 +188,23 @@ function renderContract(state) {
     }
   });
 }
-function renderWaiting() {
-  renderSignupLayout({ side: { title: "You're all set. We'll take it from here.", points: ['Our team is reviewing your ID', "We'll email you when you're approved", 'Then you can start applying to jobs'] }, allDone: true, card: () => `<section class="es-card es-login es-done"><span class="es-done-icon" aria-hidden="true">✓</span><p class="es-kicker">ALL 5 STEPS DONE</p><h1>You're all done!</h1><p class="es-lead">Our team is reviewing your profile. You can apply to jobs once you're approved, and we'll email you as soon as that happens. There's nothing else you need to do.</p><div class="es-player"><video src="${guides.waiting.src}" poster="${guides.waiting.src.replace('.mp4', '.jpg')}" controls playsinline preload="metadata" aria-label="${guides.waiting.title}"></video></div><p class="es-video-caption">Optional: watch what happens next</p>${button('checkApproval', 'Check approval status', true)}<p id="journeyStatus" role="status" class="journey-status-line"></p></section>` });
-  root.querySelector('#checkApproval').classList.add('es-secondary');
-  bind('checkApproval', load);
+// After the contract: one video, then Check status opens their account (they can browse jobs while under review).
+function renderWaiting(user) {
+  const watched = hasWatched(user?.id || 'demo', 'waiting');
+  renderFocusLayout(`<section class="es-focus"><h1>Watch this video for next steps</h1><div id="waitingGuidePlayer" class="es-player es-focus-player"></div>${button('checkStatus', 'View My Profile <span aria-hidden="true">→</span>')}<p id="journeyStatus" role="status" class="journey-status-line"></p></section>`);
+  const next = root.querySelector('#checkStatus');
+  next.classList.add('es-submit');
+  next.disabled = !watched;
+  player = mountRequiredVideo(root.querySelector('#waitingGuidePlayer'), {
+    ...guides.waiting, autoplay: !watched, unpausable: true, minimal: true, completed: watched,
+    onComplete() {
+      try { localStorage.setItem(completionKey(user?.id || 'demo', 'waiting'), 'complete'); } catch { /* The button still unlocks. */ }
+      next.disabled = false;
+      next.focus();
+    },
+  });
+  player.video.poster = guides.waiting.src.replace('.mp4', '.jpg');
+  next.onclick = () => { if (next.disabled) return; cleanup(); location.assign(demoMode ? './candidate-dashboard.html?demo=1&review=1&tab=profile' : './candidate-dashboard.html?tab=profile'); };
 }
 function renderPreferences(state, step = state.surveyStep === 2 ? 2 : 1) {
   restoreJourneyLayout();
@@ -212,19 +228,22 @@ function renderPreferences(state, step = state.surveyStep === 2 ? 2 : 1) {
       <p class="journey-kicker">YOUR CANDIDATE PROFILE</p>
       <h2>Find work that fits you.</h2>
       <p>Tell us what you’re looking for so we can help you find the right opportunity.</p>
-      <ol class="preferences-onboarding-steps" aria-label="Onboarding progress">
+      ${state.approved === false ? `<ol class="preferences-onboarding-steps" aria-label="Next steps">
+        <li${step === 1 ? ' aria-current="step"' : ' class="completed"'}><span>${step === 1 ? '1' : '✓'}</span><b>The work you want</b></li>
+        <li${step === 2 ? ' aria-current="step"' : ''}><span>2</span><b>Goals and availability</b></li>
+      </ol><p style="margin-top:28px"><a href="./candidate-dashboard.html?tab=profile" style="color:#fff;font-weight:700">← Back to My Profile</a></p>` : `<ol class="preferences-onboarding-steps" aria-label="Onboarding progress">
         <li class="completed"><span aria-label="Completed">✓</span><b>Identity approved</b></li>
         <li aria-current="step"><span>1</span><b>Job preferences</b></li>
         <li><span>2</span><b>Intro guide</b></li>
         <li><span>3</span><b>Your introduction</b></li>
-      </ol>
+      </ol>`}
     </aside>
     <section class="preferences-onboarding-main">
       <div class="preferences-onboarding-content">
-        ${heading('IDENTITY APPROVED · YOUR JOB PREFERENCES', step === 1 ? 'Tell us about your ideal job.' : 'Your goals and availability.', step === 1 ? 'Your identity is approved. Start with the industries and roles you’d like to work in.' : 'A few more details to complete your job preferences.')}
+        ${heading(state.approved === false ? 'BEFORE YOU APPLY · ' + step + ' OF 2' : 'IDENTITY APPROVED · YOUR JOB PREFERENCES', step === 1 ? 'Tell us about your ideal job.' : 'Your goals and availability.', step === 1 ? (state.approved === false ? 'Start with the industries and roles you’d like to work in.' : 'Your identity is approved. Start with the industries and roles you’d like to work in.') : 'A few more details to complete your job preferences.')}
         <form id="preferencesForm" class="preferences-form">
           ${questions}
-          <div class="preferences-footer">${step === 2 ? '<button id="backToCareerSurvey" type="button" class="preferences-back secondary">← Back</button>' : ''}<button id="savePreferences" type="submit" class="journey-action">Continue →</button><p class="preferences-next">${step === 1 ? 'Next: your goals and availability' : 'Next: your introduction guide'}</p><p id="journeyStatus" role="status" class="journey-status-line"></p></div>
+          <div class="preferences-footer">${step === 2 ? '<button id="backToCareerSurvey" type="button" class="preferences-back secondary">← Back</button>' : ''}<button id="savePreferences" type="submit" class="journey-action">Continue →</button><p class="preferences-next">${step === 1 ? 'Next: your goals and availability' : state.approved === false ? 'Next: back to My Profile' : 'Next: your introduction guide'}</p><p id="journeyStatus" role="status" class="journey-status-line"></p></div>
         </form>
       </div>
     </section>
@@ -252,7 +271,8 @@ function renderPreferences(state, step = state.surveyStep === 2 ? 2 : 1) {
         state.surveyStep = 2;
         renderPreferences(state, 2);
         root.querySelector('h1')?.scrollIntoView({ block: 'start' });
-      } else await load();
+      } else if (state.approved === false) location.assign(demoMode ? './candidate-dashboard.html?demo=1&review=1&tab=profile' : './candidate-dashboard.html?tab=profile');
+      else await load();
     } catch (error) {
       message(error.message || 'Could not save your answers. Try again.', true);
       submit.disabled = false;
@@ -399,7 +419,8 @@ async function load() {
       renderContract(state);
     }
     else if (['platform','intro'].includes(state.stage)) renderGuide(state.stage);
-    else if (state.stage === 'waiting') renderWaiting();
+    else if (state.stage === 'waiting' && questionsMode) renderPreferences(state);
+    else if (state.stage === 'waiting') renderWaiting(user);
     else if (state.stage === 'recording' || manage) renderRecorder(state);
     else location.replace('./candidate-dashboard.html');
   } catch (error) {
@@ -408,6 +429,5 @@ async function load() {
     message(error.message,true); bind('retry',load);
   } finally { loading = false; }
 }
-document.addEventListener('visibilitychange', () => { if (!document.hidden && currentStage === 'waiting') void load(); });
 window.addEventListener('pagehide', cleanup);
 load();

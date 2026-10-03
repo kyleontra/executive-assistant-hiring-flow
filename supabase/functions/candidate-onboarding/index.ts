@@ -48,7 +48,8 @@ Deno.serve(async (req: Request) => {
     }
     if (action === 'saveCareerSurvey' || action === 'savePreferences') {
       if (!profile?.resume_path) return reply(req, { error: 'Connect your resume before completing the surveys.' }, 403);
-      if (!identityApproved(profile)) return reply(req, { error: 'Your job preferences open after your identity is approved.' }, 403);
+      // VAs under review may answer these early from My Profile.
+      if (!identityApproved(profile) && profile.verification_status !== 'pending') return reply(req, { error: 'Your job preferences open after your contract is submitted.' }, 403);
       const text = (value: unknown) => typeof value === 'string' ? value.trim() : '';
       const now = new Date().toISOString();
       let values: Record<string, unknown>;
