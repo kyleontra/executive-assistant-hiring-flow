@@ -36,10 +36,30 @@ export function mountRequiredVideo(root, { src, title, completed = false, unpaus
   let destroyed = false;
   let failed = false;
   const resetSample = () => { lastTime = video.currentTime; lastClock = performance.now(); };
+  // Browsers block autoplay with sound until the person clicks something. Minimal videos
+  // then start muted, and the first tap or key press anywhere turns the sound on.
+  const unmute = () => {
+    video.muted = false;
+    root.classList?.remove('needs-sound');
+    doc.removeEventListener('pointerdown', unmute, true);
+    doc.removeEventListener('keydown', unmute, true);
+  };
   const startPlayback = async () => {
-    if (!video.paused) { if (!unpausable) video.pause(); return; }
+    if (!video.paused) { if (video.muted) unmute(); else if (!unpausable) video.pause(); return; }
     try { if (video.error || failed) { failed = false; video.load(); } await video.play(); }
-    catch { needsTap(); play.textContent = 'Play video'; status.textContent = 'Tap Play video to start with sound.'; }
+    catch {
+      if (minimal && !video.muted) {
+        try {
+          video.muted = true;
+          await video.play();
+          root.classList?.add('needs-sound');
+          doc.addEventListener('pointerdown', unmute, true);
+          doc.addEventListener('keydown', unmute, true);
+          return;
+        } catch { video.muted = false; }
+      }
+      needsTap(); play.textContent = 'Play video'; status.textContent = 'Tap Play video to start with sound.';
+    }
   };
   play.addEventListener('click', startPlayback);
   video.addEventListener('click', startPlayback);
@@ -109,7 +129,7 @@ export function mountRequiredVideo(root, { src, title, completed = false, unpaus
   };
   doc.addEventListener('visibilitychange', visibility);
   if (autoplay) startPlayback();
-  return { video, destroy() { destroyed = true; video.pause(); doc.removeEventListener('visibilitychange', visibility); video.removeAttribute('src'); video.load(); root.replaceChildren(); } };
+  return { video, destroy() { destroyed = true; video.pause(); unmute(); doc.removeEventListener('visibilitychange', visibility); video.removeAttribute('src'); video.load(); root.replaceChildren(); } };
 }
 
 export class WatchProgress {
