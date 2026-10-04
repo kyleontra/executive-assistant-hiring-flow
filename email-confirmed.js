@@ -55,9 +55,9 @@ form.addEventListener('submit', async (event) => {
     const { error } = await window.savaAuth.auth.verifyOtp({ email, token, type: 'email' });
     if (error) throw error;
     sessionStorage.removeItem('sava-verification-email');
-    showResult(requestedAccount === 'employer' ? 'Email verified. Opening your hirer workspace…' : 'Email verified. Add your resume to finish setting up your account…', 'success');
+    showResult(requestedAccount === 'employer' ? 'Email verified. Opening your hirer workspace…' : 'Email verified. Opening your welcome video…', 'success');
     sessionStorage.removeItem('sava-account-role');
-    window.location.assign(requestedAccount === 'employer' ? (sessionStorage.getItem('sava-employer-next') || './talent.html') : './candidate-resume.html');
+    window.location.assign(requestedAccount === 'employer' ? (sessionStorage.getItem('sava-employer-next') || './talent.html') : './welcome.html');
   } catch (error) {
     showResult(/expired|invalid/i.test(error.message || '') ? 'That code is wrong or has expired. Check your latest email, or tap Resend code for a new one.' : error.message || 'That code could not be verified. Request a new code and try again.', 'error');
     verifyButton.disabled = false;

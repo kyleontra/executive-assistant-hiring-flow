@@ -136,14 +136,14 @@ test('every successful employer message requires a candidate email notification'
   assert.doesNotMatch(read('script.js'), /Sent, but the email notification failed/);
 });
 
-test('email code verification keeps existing OTP method and routes to resume', async () => {
+test('email code verification keeps existing OTP method and routes to the welcome video', async () => {
   const h = browserHarness({ user: null });
   h.run('email-confirmed.js');
   h.get('#verificationEmail').value = 'candidate@example.invalid'; h.get('#verificationCode').value = '123456';
   await h.get('#verificationForm').handlers.submit({ preventDefault() {} });
   assert.equal(h.requests[0].type, 'email');
   assert.equal(h.requests[0].token, '123456');
-  assert.deepEqual(h.navigations, ['./candidate-resume.html']);
+  assert.deepEqual(h.navigations, ['./welcome.html']);
 });
 
 test('saved resume continues to the onboarding router, not the old experience step', async () => {
