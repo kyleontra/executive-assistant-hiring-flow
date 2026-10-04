@@ -1,7 +1,7 @@
 import { mountRequiredVideo } from './required-video.mjs';
 
 // Shown once, right after a VA confirms their email. The resume page does the account checks.
-const VIDEO = { src: '/videos/welcome-v1.mp4', title: 'Welcome to Hire From SA' };
+const VIDEO = { src: '/videos/welcome-founder.mp4', title: 'Welcome to Hire From SA' };
 const KEY = `hirefromsa:watched:welcome:${VIDEO.src}`;
 const demoMode = ['localhost', '127.0.0.1'].includes(window.location.hostname) && new URLSearchParams(window.location.search).has('demo');
 const next = document.querySelector('#welcomeContinue');
