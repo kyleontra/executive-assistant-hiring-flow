@@ -3,7 +3,7 @@ import { mountRequiredVideo } from './required-video.mjs';
 export const guides = {
   identity: { src: '/videos/contract-terms.mp4', title: 'Agree to Hire From SA terms and payments' },
   platform: { src: '/videos/platform-overview-v2.mp4', title: 'How Our Platform Works and Your Agreement' },
-  waiting: { src: '/videos/video-intro-v2.mp4', title: 'Your application is submitted — what happens next' },
+  waiting: { src: '/videos/next-steps.mp4', title: 'Complete your profile for faster hiring' },
   intro: { src: '/videos/intro-recording-guide-v3.mp4', title: 'How to record your profile introduction' },
 };
 
