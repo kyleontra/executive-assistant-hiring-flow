@@ -147,3 +147,9 @@
   .bl-help{flex-direction:column;align-items:stretch}
   .bl-card>footer .post-continue{width:100%}
 }
+/* Hours saved this week (sum of the VA hours being paid for). */
+.bl-saved{display:flex;align-items:center;gap:16px;margin-bottom:18px;padding:20px 24px;border:1px solid #bfe3d1;border-radius:16px;background:linear-gradient(135deg,#ecf8f2,#f4fbf8)}
+.bl-saved-icon{display:grid;width:48px;height:48px;flex:none;place-items:center;border-radius:14px;background:#fff;font-size:24px;box-shadow:0 6px 16px rgba(11,122,80,.12)}
+.bl-saved p{margin:0;color:#142238;font:800 22px/1.25 Manrope,sans-serif;letter-spacing:-.4px}
+.bl-saved b{color:#0b7a50}
+.bl-saved small{display:block;margin-top:4px;color:#4f6a5e;font:500 14px/1.4 "DM Sans",sans-serif;letter-spacing:0}

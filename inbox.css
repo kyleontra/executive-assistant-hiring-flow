@@ -94,3 +94,9 @@
 .ibx-bid{padding:3px 10px;border-radius:999px;background:#e8f0ff;color:#33445e;font-size:13px}
 .ibx-bid b{color:#1f5fcf}
 .ibx-bid span{color:#5e6c82}
+/* Match % explainer: hover or focus the pill in the conversation header. */
+.ibx-tip{position:relative;display:inline-flex;align-items:center;gap:5px;outline:none;cursor:help}
+.ibx-tip-icon{display:grid;width:16px;height:16px;place-items:center;border-radius:50%;background:#e3e9f2;color:#5e6c82;font:800 11px/1 "DM Sans",sans-serif;font-style:normal}
+.ibx-tip-box{position:absolute;top:calc(100% + 8px);left:0;z-index:20;display:none;width:280px;padding:12px 14px;border-radius:12px;background:#142238;color:#e9eef6;font:500 13px/1.5 "DM Sans",sans-serif;box-shadow:0 14px 34px rgba(10,24,48,.28)}
+.ibx-tip-box b{display:block;margin-bottom:4px;color:#fff;font-weight:800}
+.ibx-tip:hover .ibx-tip-box,.ibx-tip:focus .ibx-tip-box{display:block}

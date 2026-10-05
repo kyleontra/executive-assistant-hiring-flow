@@ -102,7 +102,7 @@ function ibxRenderList() {
     return `<button class="ibx-item${applicant.id === ibxState.activeId ? ' active' : ''}${applicant.unread ? ' unread' : ''}" type="button" role="listitem" data-id="${ibxEscape(applicant.id)}">
       <span class="ibx-avatar" aria-hidden="true">${ibxEscape(ibxInitials(applicant.name))}</span>
       <b>${ibxEscape(applicant.name)}</b><time>${ibxEscape(last.time || applicant.time)}</time>
-      <p><strong class="ibx-pill ${ibxPillClass(applicant.match)}">${applicant.match}% match</strong>${applicant.unread ? '<i class="ibx-dot" aria-label="Unread"></i>' : ''}<span>${ibxEscape(preview)}</span></p>
+      <p><strong class="ibx-pill ${ibxPillClass(applicant.match)}" title="What's the match %? We compare this VA&#39;s work experience to the job you posted. The higher the number, the more experience they have doing this kind of work.">${applicant.match}% match</strong>${applicant.unread ? '<i class="ibx-dot" aria-label="Unread"></i>' : ''}<span>${ibxEscape(preview)}</span></p>
     </button>`;
   }).join('');
 }

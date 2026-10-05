@@ -5,8 +5,8 @@ const BL_KEY = 'hirefromsa:billing-details';
 const BL_TODAY = new Date('2026-10-03T12:00:00');
 
 const blNext = [
-  { name: 'Thandi Mokoena', detail: '40 hrs × $8/hr', amount: 320 },
-  { name: 'Jaco van der Merwe', detail: '19 hrs × $7/hr', amount: 133 },
+  { name: 'Thandi Mokoena', detail: '40 hrs × $8/hr', hours: 40, amount: 320 },
+  { name: 'Jaco van der Merwe', detail: '19 hrs × $7/hr', hours: 19, amount: 133 },
 ];
 
 const blCards = [
@@ -41,6 +41,10 @@ function blToast(message) {
 }
 
 function blRenderNext() {
+  // Every hour a VA works is an hour the hirer did not have to spend themselves.
+  const hours = blNext.reduce((sum, row) => sum + row.hours, 0);
+  $('#blSavedHours').textContent = `${hours.toLocaleString('en-US')} hour${hours === 1 ? '' : 's'}`;
+  $('#blSavedPeople').textContent = blNext.length === 1 ? 'Your VA' : `Your ${blNext.length} VAs`;
   $('#blNextAmount').textContent = blMoney(blNext.reduce((sum, row) => sum + row.amount, 0));
   $('#blNextRows').innerHTML = blNext.map((row) => `<li><span>${row.name} <small>${row.detail}</small></span><b>${blMoney(row.amount)}</b></li>`).join('');
   const on = $('#blAutopay').checked;
