@@ -8,8 +8,9 @@
   let email = '';
   // Where to go after sign-up. Same allowlist idea as employer login; contacting a VA returns to their profile.
   const requestedNext = new URLSearchParams(location.search).get('next') || '';
-  const next = ['./talent.html', './index.html', './posted-jobs.html', './inbox.html', './candidate-public-profile.html'].some((path) => requestedNext === path || requestedNext.startsWith(`${path}?`)) ? requestedNext : './talent.html';
-  if (next !== './talent.html') document.querySelector('#employerLoginLink').href = `./employer-login.html?next=${encodeURIComponent(next)}`;
+  const next = ['./talent.html', './index.html', './posted-jobs.html', './inbox.html', './candidate-public-profile.html'].some((path) => requestedNext === path || requestedNext.startsWith(`${path}?`)) ? requestedNext : './index.html';
+  // New hirers start by posting a job.
+  if (next !== './index.html') document.querySelector('#employerLoginLink').href = `./employer-login.html?next=${encodeURIComponent(next)}`;
   let contactName = '';
   try { contactName = JSON.parse(sessionStorage.getItem('sava-contact-return') || 'null')?.name || ''; } catch { contactName = ''; }
   const fromContact = next.startsWith('./candidate-public-profile.html') && contactName;
