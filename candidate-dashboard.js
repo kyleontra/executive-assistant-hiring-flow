@@ -454,7 +454,7 @@ async function loadJobs() {
   } finally { jobsLoading = false; }
 }
 const JOB_TYPE_HOURS = { 'Full-time': 'Full-time · 40 hrs/week', 'Part-time': 'Part-time · 20+ hrs/week', Contract: 'Contract · per project' };
-const JOB_TIMELINES = { ASAP: 'ASAP', 'Within 1-2 weeks': 'In 1-2 weeks', 'Within the month': 'This month', 'Not urgently': 'Flexible' };
+const JOB_TIMELINES = { ASAP: 'ASAP', 'Within 2 weeks': 'Within 2 weeks', 'More than 2 weeks': '2+ weeks', 'Within 1-2 weeks': 'In 1-2 weeks', 'Within the month': 'This month', 'Not urgently': 'Flexible' };
 function postedLabel(value) {
   const days = Math.floor((Date.now() - new Date(value).getTime()) / 864e5);
   if (!value || Number.isNaN(days)) return '';

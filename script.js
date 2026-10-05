@@ -537,7 +537,7 @@ async function bindJobDetail() {
     return;
   }
   const typeHours = { 'Full-time': 'Full-time · 40 hrs/week', 'Part-time': 'Part-time · 20+ hrs/week', Contract: 'Contract · per project' };
-  const timelineLabels = { ASAP: 'ASAP', 'Within 1-2 weeks': 'In 1-2 weeks', 'Within the month': 'This month', 'Not urgently': 'Flexible' };
+  const timelineLabels = { ASAP: 'ASAP', 'Within 2 weeks': 'Within 2 weeks', 'More than 2 weeks': '2+ weeks', 'Within 1-2 weeks': 'In 1-2 weeks', 'Within the month': 'This month', 'Not urgently': 'Flexible' };
   document.title = `${job.title} | Hire From SA`;
   $('#detailInitial').textContent = job.initial || String(job.company || 'H').slice(0, 1).toUpperCase();
   $('#detailCompany').textContent = job.company;
@@ -1338,11 +1338,8 @@ function bindPublishedStep() {
   fill('pay', Number(role.minRate) > 0 ? rate(role) : '');
   fill('promotion', role.promote && budget > 0 ? `${plan} · $${budget} per day` : 'Not promoted');
   fill('questions', questionCount ? `${questionCount} question${questionCount === 1 ? '' : 's'}` : 'None');
-  if (role.serverJobId) $('#publishedViewApplicants').href = `./inbox.html?job=${encodeURIComponent(role.serverJobId)}`;
-  $('#postAnotherJob').addEventListener('click', () => {
-    localStorage.removeItem(storageKey);
-    window.location.href = './index.html';
-  });
+  // The job is live, so clear the draft before leaving for the jobs list.
+  $('#publishedViewJobs').addEventListener('click', () => localStorage.removeItem(storageKey));
 }
 
 hydrateRoleContent();
