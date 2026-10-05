@@ -5,7 +5,7 @@ const employerAccountNotice = document.querySelector('#employerAccountNotice');
 
 function employerDestination() {
   const next = new URLSearchParams(window.location.search).get('next') || '';
-  const allowed = ['./index.html', './compensation.html', './job-description.html', './applicant-questions.html', './review.html', './promote.html', './published.html', './talent.html', './applicants.html', './inbox.html', './employer-profile.html', './employees.html', './billing.html', './posted-jobs.html', './scheduler-settings.html', './admin-review.html', './admin-resumes.html', './candidate-public-profile.html'];
+  const allowed = ['./index.html', './compensation.html', './job-description.html', './applicant-questions.html', './review.html', './promote.html', './published.html', './talent.html', './applicants.html', './inbox.html', './employer-profile.html', './employees.html', './billing.html', './posted-jobs.html', './employer-job.html', './post-ai.html', './scheduler-settings.html', './admin-review.html', './admin-resumes.html', './candidate-public-profile.html'];
   return allowed.some((path) => next === path || next.startsWith(`${path}?`)) ? next : './talent.html';
 }
 

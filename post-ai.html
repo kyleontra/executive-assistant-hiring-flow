@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Write your job post with AI | Hire From SA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./style.css" />
+    <link rel="stylesheet" href="./employer-simple.css" />
+    <link rel="stylesheet" href="./brand.css" />
+    <link rel="stylesheet" href="./employer-nav.css" />
+    <link rel="stylesheet" href="./post-ai.css" />
+  </head>
+  <body class="simple-employer-page employer-only ai-page">
+    <header class="simple-header">
+      <a class="simple-brand site-logo-link" href="./index.html"><img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a>
+      <nav><a href="./talent.html">Talent</a><a href="./inbox.html">Messages</a><a href="./posted-jobs.html">Posted jobs</a></nav>
+    </header>
+
+    <div class="ai-layout">
+      <aside id="aiSide" class="ai-side" aria-label="Your chats and jobs">
+        <button id="aiNew" class="ai-new" type="button"><span aria-hidden="true">+</span> New job post</button>
+        <h2>Chats</h2>
+        <ul id="aiChats" class="ai-list"></ul>
+        <h2>Your jobs</h2>
+        <ul id="aiJobs" class="ai-list"><li class="ai-list-empty">Loading…</li></ul>
+      </aside>
+      <button id="aiSideClose" class="ai-side-scrim" type="button" aria-label="Close chats" hidden></button>
+
+      <main class="ai-shell">
+        <div class="ai-top">
+          <button id="aiSideOpen" class="ai-side-open" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg> Chats &amp; jobs</button>
+          <a class="ai-back" href="./index.html"><span aria-hidden="true">←</span> Back</a>
+        </div>
+
+        <section id="aiThread" class="ai-thread" aria-live="polite">
+          <div class="ai-hero">
+            <span class="ai-badge" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg></span>
+            <h1>Tell us about the job you're hiring for</h1>
+            <p>Type it out or tap the mic and just talk. Cover the four things below and we'll write the job post for you.</p>
+            <div class="ai-starters">
+              <button type="button" data-starter="I need a full-time executive assistant, 40 hours a week, to manage my inbox, calendar and travel. I can pay $6 to $9 an hour and want to hire ASAP.">Executive assistant</button>
+              <button type="button" data-starter="I'm hiring a part-time social media manager to post on Instagram and TikTok and reply to comments.">Social media manager</button>
+              <button type="button" data-starter="I need someone to follow up with leads and book appointments in our CRM.">Sales assistant</button>
+            </div>
+          </div>
+        </section>
+
+        <div class="ai-bottom">
+          <div class="ai-needs" aria-label="What the AI needs from you">
+            <span class="ai-needs-label">The AI needs:</span>
+            <span class="ai-need" data-need="role"><i aria-hidden="true"></i>The role &amp; what they'll do</span>
+            <span class="ai-need" data-need="hours"><i aria-hidden="true"></i>Hours a week</span>
+            <span class="ai-need" data-need="pay"><i aria-hidden="true"></i>Hourly pay</span>
+            <span class="ai-need" data-need="timeline"><i aria-hidden="true"></i>Hiring timeline</span>
+          </div>
+          <form id="aiComposer" class="ai-composer">
+            <textarea id="aiInput" rows="1" maxlength="4000" placeholder="e.g. A 40 hour a week executive assistant, $6 to $9 an hour, hiring ASAP" aria-label="Message the AI job writer"></textarea>
+            <div class="ai-composer-actions">
+              <span id="aiListening" class="ai-listening" hidden><i></i> Listening… tap the mic to stop</span>
+              <button id="aiMic" class="ai-mic" type="button" aria-label="Speak instead of typing" hidden>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+              </button>
+              <button id="aiSend" class="ai-send" type="submit" aria-label="Send" disabled>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+              </button>
+            </div>
+          </form>
+          <p class="ai-footnote">You'll review everything before your job goes live.</p>
+        </div>
+      </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./auth-client.js"></script>
+    <script src="./employer-auth.js"></script>
+    <script src="./platform-client.js"></script>
+    <script src="./script.js"></script>
+    <script src="./post-ai.js"></script>
+    <script src="./account-role.js"></script>
+    <script src="./employer-nav.js"></script>
+  </body>
+</html>
