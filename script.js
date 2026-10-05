@@ -284,7 +284,8 @@ function bindPostJob() {
   });
 }
 
-const PAY_LIMITS = { hour: { min: 4, label: 'Hourly pay: the minimum hourly we recommend is $4 per hour.' }, month: { min: 600, label: 'Monthly pay: the minimum monthly we recommend is $600 per month.' } };
+// Floors stay private: the form never shows these numbers, it only flags pay that is too low.
+const PAY_LIMITS = { hour: { min: 4, maxFloor: 6 }, month: { min: 600, maxFloor: 0 } };
 function bindCompensation() {
   const form = $('#compensationForm');
   if (!form) return;
@@ -292,21 +293,12 @@ function bindCompensation() {
   const minRate = $('#minRate');
   const maxRate = $('#maxRate');
   const payPeriod = $('#payPeriod');
-  const limitsNote = $('#payLimits');
-  const usd = (value) => `$${Number(value).toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
-  const applyLimits = () => {
-    const limits = PAY_LIMITS[payPeriod.value];
-    [minRate, maxRate].forEach((input) => { input.min = limits.min; });
-    limitsNote.textContent = limits.label;
-  };
   // Only prefill drafts saved with the current USD hour/month pay format.
   if (role.currency === 'USD' && PAY_LIMITS[role.payPeriod]) {
     payPeriod.value = role.payPeriod;
     minRate.value = role.minRate || '';
     maxRate.value = role.maxRate || '';
   }
-  applyLimits();
-  payPeriod.addEventListener('change', applyLimits);
   // Whole dollars only: block decimal points, signs and exponents as they're typed or pasted.
   [minRate, maxRate].forEach((input) => {
     input.addEventListener('keydown', (event) => {
@@ -329,7 +321,6 @@ function bindCompensation() {
   form.addEventListener('submit', (event) => {
     event.preventDefault();
     const limits = PAY_LIMITS[payPeriod.value];
-    const unit = payPeriod.value === 'hour' ? 'hour' : 'month';
     const minimum = Number(minRate.value);
     const maximum = Number(maxRate.value);
     if (!minRate.value || !(minimum > 0)) {
@@ -349,7 +340,12 @@ function bindCompensation() {
     }
     if (minimum < limits.min) {
       minRate.focus();
-      showPostError(`Pay can't start below ${usd(limits.min)} per ${unit}.`);
+      showPostError('The starting pay is too low for this role. Raise the first amount.');
+      return;
+    }
+    if (maximum < limits.maxFloor) {
+      maxRate.focus();
+      showPostError('The top of your pay range is too low for this role. Raise the second amount.');
       return;
     }
     if (maximum <= minimum) {

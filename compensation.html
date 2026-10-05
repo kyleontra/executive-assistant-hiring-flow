@@ -35,15 +35,14 @@
 
         <p class="post-field-label">Pay range <em>*</em></p>
         <div class="post-pay-row">
-          <span class="post-money"><b aria-hidden="true">$</b><input id="minRate" name="minRate" type="number" inputmode="numeric" min="4" step="1" pattern="[0-9]*" placeholder="From" aria-label="Pay from" required /></span>
+          <span class="post-money"><b aria-hidden="true">$</b><input id="minRate" name="minRate" type="number" inputmode="numeric" min="1" step="1" pattern="[0-9]*" placeholder="From" aria-label="Pay from" required /></span>
           <span class="post-pay-to" aria-hidden="true">to</span>
-          <span class="post-money"><b aria-hidden="true">$</b><input id="maxRate" name="maxRate" type="number" inputmode="numeric" min="4" step="1" pattern="[0-9]*" placeholder="To" aria-label="Pay to" required /></span>
+          <span class="post-money"><b aria-hidden="true">$</b><input id="maxRate" name="maxRate" type="number" inputmode="numeric" min="1" step="1" pattern="[0-9]*" placeholder="To" aria-label="Pay to" required /></span>
           <select id="payPeriod" name="payPeriod" aria-label="Pay rate" required>
             <option value="hour" selected>per hour</option>
             <option value="month">per month</option>
           </select>
         </div>
-        <p id="payLimits" class="post-pay-limits">Hourly pay: the minimum hourly we recommend is $4 per hour.</p>
 
         <div id="postFormResult" class="simple-form-result" aria-live="polite"></div>
         <footer class="post-step-footer">
