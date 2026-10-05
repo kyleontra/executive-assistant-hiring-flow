@@ -12,8 +12,6 @@ const ALLOWED_ORIGINS = new Set([
   'null',
 ]);
 const COMPANY_SIZES = new Set(['0', '1-5', '6-25', '26-100', '100+']);
-const FREE_DOMAINS = new Set(['gmail.com', 'googlemail.com', 'ymail.com', 'rocketmail.com', 'msn.com', 'icloud.com', 'me.com', 'mac.com', 'aol.com', 'protonmail.com', 'proton.me', 'pm.me', 'mail.com', 'gmx.com', 'gmx.net', 'zoho.com', 'hey.com', 'fastmail.com', 'tutanota.com', 'inbox.com', 'comcast.net', 'verizon.net', 'att.net', 'sbcglobal.net', 'cox.net', 'charter.net', 'qq.com', '163.com']);
-const FREE_PREFIXES = ['yahoo.', 'hotmail.', 'outlook.', 'live.', 'gmx.', 'yandex.', 'web.de', 'mail.ru'];
 
 function headers(request: Request) {
   const origin = request.headers.get('origin') || '';
@@ -30,10 +28,6 @@ function reply(request: Request, body: Record<string, string | boolean>, status:
 }
 function clean(value: unknown, max: number) {
   return typeof value === 'string' ? value.trim().replace(/\s+/g, ' ').slice(0, max) : '';
-}
-function isWorkEmail(email: string) {
-  const domain = email.split('@')[1] || '';
-  return !FREE_DOMAINS.has(domain) && !FREE_PREFIXES.some((prefix) => domain.startsWith(prefix));
 }
 function cleanWebsite(value: string) {
   try {
@@ -60,9 +54,10 @@ Deno.serve(async (request) => {
     const phone = clean(input.phone, 24);
     const website = cleanWebsite(clean(input.website, 200));
     const companySize = clean(input.companySize, 10);
+    const companyName = clean(input.companyName, 120);
     if (!firstName || !lastName) return reply(request, { error: 'Enter your first and last name.' }, 400);
+    if (!companyName) return reply(request, { error: 'Enter your company name.' }, 400);
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return reply(request, { error: 'Enter a valid email address.' }, 400);
-    if (!isWorkEmail(email)) return reply(request, { error: "Please use your work email. Personal emails like Gmail, Yahoo or Outlook aren't accepted." }, 400);
     if (!/^\+\d{1,4} [\d\s().-]{6,20}$/.test(phone) || phone.replace(/\D/g, '').length > 18) return reply(request, { error: 'Enter a valid phone number with your country code.' }, 400);
     if (!website) return reply(request, { error: 'Enter your business website, like yourcompany.com.' }, 400);
     if (!COMPANY_SIZES.has(companySize)) return reply(request, { error: 'Choose your company size.' }, 400);
@@ -72,7 +67,7 @@ Deno.serve(async (request) => {
       email,
       password: randomPassword(),
       email_confirm: false,
-      user_metadata: { first_name: firstName, last_name: lastName, phone, company_website: website, company_size: companySize },
+      user_metadata: { first_name: firstName, last_name: lastName, phone, company_name: companyName, company_website: website, company_size: companySize },
       app_metadata: { account_role: 'employer', signup_source: 'self_serve' },
     });
     if (error) {

@@ -98,6 +98,16 @@ function showPostError(message) {
 function bindPostJob() {
   const form = $('#postJobForm');
   if (!form) return;
+  // Hirers sent here from a VA's profile: explain why a job comes first.
+  let contactReturn = null;
+  try { contactReturn = JSON.parse(sessionStorage.getItem('sava-contact-return') || 'null'); } catch { contactReturn = null; }
+  const contactPreview = ['localhost', '127.0.0.1'].includes(window.location.hostname) && new URLSearchParams(window.location.search).get('contactPreview');
+  if (contactPreview) contactReturn = { name: contactPreview };
+  if (contactReturn?.name && $('#contactJobBanner')) {
+    $('#contactJobTitle').textContent = `Post a job to message ${contactReturn.name}`;
+    $('#contactJobText').textContent = `To reach out to a VA on Hire From SA, they need to know what role you're hiring for. Post a job below, and you'll be able to message ${contactReturn.name} right away.`;
+    $('#contactJobBanner').hidden = false;
+  }
   const role = read();
   const step = form.dataset.step;
   let roleDescription = null;
@@ -1339,7 +1349,18 @@ function bindPublishedStep() {
   fill('promotion', role.promote && budget > 0 ? `${plan} · $${budget} per day` : 'Not promoted');
   fill('questions', questionCount ? `${questionCount} question${questionCount === 1 ? '' : 's'}` : 'None');
   // The job is live, so clear the draft before leaving for the jobs list.
-  $('#publishedViewJobs').addEventListener('click', () => localStorage.removeItem(storageKey));
+  const viewJobs = $('#publishedViewJobs');
+  let contactReturn = null;
+  try { contactReturn = JSON.parse(sessionStorage.getItem('sava-contact-return') || 'null'); } catch { contactReturn = null; }
+  // Hirers who posted this job to message a VA go straight back to that VA.
+  if (contactReturn?.url?.startsWith('./candidate-public-profile.html?')) {
+    viewJobs.href = contactReturn.url;
+    viewJobs.innerHTML = `Message ${escapeHtml(contactReturn.name || 'the VA')} now <span aria-hidden="true">→</span>`;
+  }
+  viewJobs.addEventListener('click', () => {
+    localStorage.removeItem(storageKey);
+    try { sessionStorage.removeItem('sava-contact-return'); } catch { /* storage unavailable */ }
+  });
 }
 
 hydrateRoleContent();

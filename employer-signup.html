@@ -32,17 +32,18 @@
       </aside>
 
       <section class="es-main">
-        <div class="es-top"><a href="./home.html" class="es-logo es-logo-mobile" aria-label="Hire From SA home"><img src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a><p>Already have an account? <a href="./employer-login.html">Employer Login</a></p></div>
+        <div class="es-top"><a href="./home.html" class="es-logo es-logo-mobile" aria-label="Hire From SA home"><img src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a><p>Already have an account? <a id="employerLoginLink" href="./employer-login.html">Employer Login</a></p></div>
 
         <!-- Step 1: account details -->
         <form id="employerSignupForm" class="es-card" novalidate>
           <p class="es-kicker">FREE TO START</p>
-          <h1>Start hiring</h1>
-          <p class="es-lead">Create your account in under a minute.</p>
+          <h1 id="signupTitle">Start hiring</h1>
+          <p id="signupLead" class="es-lead">Create your account in under a minute.</p>
           <div class="es-grid">
             <label>First name<input name="firstName" type="text" autocomplete="given-name" maxlength="60" required /></label>
             <label>Last name<input name="lastName" type="text" autocomplete="family-name" maxlength="60" required /></label>
-            <label class="wide">Work email<input name="email" type="email" autocomplete="email" maxlength="254" placeholder="you@yourcompany.com" required /><small data-hint="email">Use your company email. Personal emails like Gmail or Yahoo aren't accepted.</small></label>
+            <label class="wide">Company name<input name="companyName" type="text" autocomplete="organization" maxlength="120" placeholder="Your company" required /></label>
+            <label class="wide">Email<input name="email" type="email" autocomplete="email" maxlength="254" placeholder="you@example.com" required /></label>
             <label class="wide">Phone number
               <span class="es-phone"><select name="countryCode" aria-label="Country code">
                 <option value="+1" selected>🇺🇸 +1</option><option value="+1 CA">🇨🇦 +1</option><option value="+44">🇬🇧 +44</option><option value="+61">🇦🇺 +61</option><option value="+64">🇳🇿 +64</option><option value="+27">🇿🇦 +27</option><option value="+353">🇮🇪 +353</option><option value="+49">🇩🇪 +49</option><option value="+31">🇳🇱 +31</option><option value="+33">🇫🇷 +33</option><option value="+34">🇪🇸 +34</option><option value="+39">🇮🇹 +39</option><option value="+41">🇨🇭 +41</option><option value="+46">🇸🇪 +46</option><option value="+971">🇦🇪 +971</option><option value="+972">🇮🇱 +972</option><option value="+65">🇸🇬 +65</option><option value="+852">🇭🇰 +852</option><option value="+91">🇮🇳 +91</option><option value="+52">🇲🇽 +52</option><option value="+55">🇧🇷 +55</option>

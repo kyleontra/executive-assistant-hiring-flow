@@ -83,7 +83,7 @@ test('public registration creates candidate accounts only and fails closed witho
   assert.doesNotMatch(candidateRegistration, /input\.(?:role|accountRole|account_role)/);
 });
 
-test('hirer self-registration requires a work email and creates an unconfirmed employer account', () => {
+test('hirer self-registration accepts any email, asks for the company name and creates an unconfirmed employer account', () => {
   const login = read('employer-login.html');
   const page = read('employer-signup.html');
   const client = read('employer-signup.js');
@@ -91,9 +91,11 @@ test('hirer self-registration requires a work email and creates an unconfirmed e
   assert.match(login, /href="\.\/employer-signup\.html"/);
   assert.match(page, /id="employerSignupForm"/);
   assert.match(page, /name="companySize"/);
-  assert.match(client, /isWorkEmail/);
+  assert.match(page, /name="companyName"/);
+  assert.doesNotMatch(client, /isWorkEmail/);
   assert.match(client, /verifyOtp/);
-  assert.match(server, /FREE_DOMAINS/);
+  assert.doesNotMatch(server, /FREE_DOMAINS/);
+  assert.match(server, /company_name: companyName/);
   assert.match(server, /email_confirm: false/);
   assert.match(server, /account_role: 'employer'/);
   assert.doesNotMatch(server, /auth\.signUp/);

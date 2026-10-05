@@ -116,7 +116,8 @@ Deno.serve(async (request) => {
       if (!SHARE_SLUG_PATTERN.test(profileSlug)) return reply(request, { error: 'Candidate profile not found.' }, 404);
       const bearer = (request.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
       let companyName = 'A hirer';
-      if (MASTER_TOKEN_PATTERN.test(bearer)) {
+      const masterSender = MASTER_TOKEN_PATTERN.test(bearer);
+      if (masterSender) {
         const account = await masterAccount(admin, bearer);
         if (!account || account.employer_id !== employerId) return reply(request, { error: 'Sign in with a hirer account to contact this candidate.' }, 401);
         companyName = 'Hire From SA';
@@ -145,6 +146,21 @@ Deno.serve(async (request) => {
         if (createWorkspaceError) throw createWorkspaceError;
       }
       notificationCompanyName = workspace?.company_name || companyName;
+      // Hirers message a VA about one of their active jobs, so the VA knows what the role is.
+      const { data: activeJobs, error: jobsError } = await admin.from('hiring_jobs')
+        .select('id,title,company_name').eq('employer_id', employerId).eq('status', 'active').order('created_at', { ascending: false });
+      if (jobsError) throw jobsError;
+      const requestedJobId = clean(body.jobId, 36);
+      const contextJob = (activeJobs || []).find((job) => job.id === requestedJobId) || (activeJobs || [])[0];
+      if (action === 'send' && !contextJob && !masterSender) {
+        return reply(request, { error: 'Post a job before messaging VAs, so they can see what you are hiring for.' }, 403);
+      }
+      if (contextJob) {
+        roleName = clean(contextJob.title, 180) || roleName;
+        notificationRoleName = roleName;
+        const jobCompany = clean(contextJob.company_name, 120);
+        if (jobCompany && jobCompany !== 'Your company') notificationCompanyName = jobCompany;
+      }
     }
     let { data: thread, error: threadError } = await admin
       .from('candidate_message_threads')

@@ -147,7 +147,7 @@ function renderPublicProfile(profile) {
       <footer class="public-profile-footer">Contact details are kept private. Hirers connect with candidates through Hire From SA.</footer>
     </article>
     <div class="public-profile-mobile-cta"><button type="button" data-contact-public>${profileIcon('message')} Contact Now</button></div>
-    <div id="publicContactDialog" class="public-contact-dialog" hidden><button class="public-contact-backdrop" type="button" data-close-contact aria-label="Close message panel"></button><section class="public-contact-panel" role="dialog" aria-modal="true" aria-labelledby="publicContactTitle"><header><div><p class="public-profile-eyebrow">HIRING CONVERSATION</p><h2 id="publicContactTitle">Contact ${publicEscape(firstName)}</h2></div><button type="button" data-close-contact aria-label="Close message panel">×</button></header><div id="publicContactMessages" class="public-contact-messages" role="log" aria-label="Conversation messages"></div><form id="publicContactForm"><label for="publicContactBody">Your message</label><textarea id="publicContactBody" maxlength="2000" rows="5" required placeholder="Introduce yourself and the opportunity…"></textarea><div><span id="publicContactStatus" role="status" aria-live="polite"></span><button type="submit">Send message <span aria-hidden="true">→</span></button></div></form></section></div>
+    <div id="publicContactDialog" class="public-contact-dialog" hidden><button class="public-contact-backdrop" type="button" data-close-contact aria-label="Close message panel"></button><section class="public-contact-panel" role="dialog" aria-modal="true" aria-labelledby="publicContactTitle"><header><div><p class="public-profile-eyebrow">HIRING CONVERSATION</p><h2 id="publicContactTitle">Contact ${publicEscape(firstName)}</h2></div><button type="button" data-close-contact aria-label="Close message panel">×</button></header><div id="publicContactGate" class="public-contact-gate" hidden><p class="public-contact-gate-icon" aria-hidden="true">${profileIcon('message')}</p><h3>Create an account to message ${publicEscape(firstName)}</h3><p>It's free and takes under a minute.</p><button type="button" data-contact-signup>Create my account <span aria-hidden="true">→</span></button><a href="${publicEscape(profileLoginUrl())}" data-contact-login>Already have an account? Log in</a></div><div id="publicContactMessages" class="public-contact-messages" role="log" aria-label="Conversation messages"></div><form id="publicContactForm"><label id="publicContactJobRow" class="public-contact-job" hidden>Which job is this about?<select id="publicContactJob"></select></label><label for="publicContactBody">Your message</label><textarea id="publicContactBody" maxlength="2000" rows="5" required placeholder="Introduce yourself and the opportunity…"></textarea><div><span id="publicContactStatus" role="status" aria-live="polite"></span><button type="submit">Send message <span aria-hidden="true">→</span></button></div></form></section></div>
     <span id="sharePublicStatus" class="public-profile-toast" role="status" aria-live="polite"></span>`;
   const video = publicProfileRoot.querySelector?.('.public-profile-video');
   if (video) {
@@ -196,10 +196,26 @@ function togglePublicProfileSaved() {
     document.querySelector('#sharePublicStatus').textContent = isSaved ? 'Saved on this device' : 'Removed from saved profiles';
   } catch { document.querySelector('#sharePublicStatus').textContent = 'Saving is unavailable in this browser'; }
 }
-function profileLoginUrl() {
+function profileContactUrl() {
   const slug = new URLSearchParams(location.search).get('profile') || '';
-  const destination = `./candidate-public-profile.html?profile=${encodeURIComponent(slug)}&contact=message`;
-  return `/employer-login.html?next=${encodeURIComponent(destination)}`;
+  return `./candidate-public-profile.html?profile=${encodeURIComponent(slug)}&contact=message`;
+}
+function profileLoginUrl() {
+  return `/employer-login.html?next=${encodeURIComponent(profileContactUrl())}`;
+}
+// Remember which VA the hirer wanted, so sign-up, Post a job and the job-live screen can bring them back.
+function rememberContact() {
+  try { sessionStorage.setItem('sava-contact-return', JSON.stringify({ url: profileContactUrl(), name: publicName(activePublicProfile.name) })); } catch { /* storage unavailable */ }
+}
+function startSignupForContact() {
+  rememberContact();
+  location.assign(`/employer-signup.html?next=${encodeURIComponent(profileContactUrl())}`);
+}
+// Hirers must post a job before messaging. The job page explains why and links back after publishing.
+function startJobForContact() {
+  rememberContact();
+  try { localStorage.removeItem('ea-hiring-role'); } catch { /* The job can still be posted. */ }
+  location.assign('./index.html');
 }
 async function publicMessageRequest(action, body = '') {
   const token = await window.getAccessToken?.();
@@ -210,7 +226,7 @@ async function publicMessageRequest(action, body = '') {
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
     body: JSON.stringify({ action, employerId: identity.employerId, editToken: identity.editToken,
       candidateKey: `profile:${new URLSearchParams(location.search).get('profile')}`,
-      candidateName: activePublicProfile.name, roleName: activePublicProfile.primaryRole, ...(body ? { body } : {}) }),
+      candidateName: activePublicProfile.name, roleName: activePublicProfile.primaryRole, jobId: document.querySelector('#publicContactJob')?.value || '', ...(body ? { body } : {}) }),
   });
   const result = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(result.error || 'Messages could not connect.');
@@ -222,25 +238,44 @@ function renderPublicMessages(messages) {
   root.scrollTop = root.scrollHeight;
 }
 async function openPublicContact() {
-  try {
-    const employer = await window.getVerifiedEmployer?.();
-    if (!employer) { location.assign(profileLoginUrl()); return; }
-  } catch (error) {
+  let employer = null;
+  try { employer = await window.getVerifiedEmployer?.(); }
+  catch (error) {
     document.querySelector('#sharePublicStatus').textContent = error.message || 'Sign-in check unavailable. Try again.';
     return;
   }
   const dialog = document.querySelector('#publicContactDialog');
   const status = document.querySelector('#publicContactStatus');
   const body = document.querySelector('#publicContactBody');
+  const gate = document.querySelector('#publicContactGate');
+  const form = document.querySelector('#publicContactForm');
+  const messagesRoot = document.querySelector('#publicContactMessages');
   const firstName = publicName(activePublicProfile.name);
-  dialog.hidden = false;
-  document.body.classList.add('public-dialog-open');
   document.querySelector('#publicContactTitle').textContent = `Contact ${firstName}`;
+  gate.hidden = true; form.hidden = true; messagesRoot.hidden = false;
   body.value = '';
   status.textContent = '';
-  document.querySelector('#publicContactMessages').innerHTML = '<p class="public-contact-empty">Loading conversation…</p>';
+  dialog.hidden = false;
+  document.body.classList.add('public-dialog-open');
+  if (!employer) { messagesRoot.hidden = true; gate.hidden = false; gate.querySelector('button').focus(); return; }
+  messagesRoot.innerHTML = '<p class="public-contact-empty">Loading…</p>';
+  let activeJobs = [];
+  try {
+    // Localhost-only preview: ?accountPreview=employer&previewJobs=0 (no jobs) or =2 (two jobs).
+    const previewJobs = ['localhost', '127.0.0.1'].includes(location.hostname) ? new URLSearchParams(location.search).get('previewJobs') : null;
+    const dashboard = previewJobs !== null
+      ? { jobs: Array.from({ length: Number(previewJobs) || 0 }, (_, index) => ({ id: `preview-${index}`, title: ['Executive Assistant', 'Bookkeeper'][index % 2], status: 'active' })) }
+      : await window.savaPlatform.employerRequest('employerDashboard');
+    activeJobs = (dashboard.jobs || []).filter(job => job.status === 'active');
+  } catch (error) { messagesRoot.innerHTML = `<p class="public-contact-empty error">${publicEscape(error.message || 'Your jobs could not be loaded. Try again.')}</p>`; return; }
+  if (!activeJobs.length) { startJobForContact(); return; }
+  const jobSelect = document.querySelector('#publicContactJob');
+  jobSelect.innerHTML = activeJobs.map(job => `<option value="${publicEscape(job.id)}">${publicEscape(job.title)}</option>`).join('');
+  document.querySelector('#publicContactJobRow').hidden = activeJobs.length < 2;
+  form.hidden = false;
+  messagesRoot.innerHTML = '<p class="public-contact-empty">Loading conversation…</p>';
   try { const result = await publicMessageRequest('list'); renderPublicMessages(result.messages || []); }
-  catch (error) { document.querySelector('#publicContactMessages').innerHTML = `<p class="public-contact-empty error">${publicEscape(error.message)}</p>`; }
+  catch (error) { messagesRoot.innerHTML = `<p class="public-contact-empty error">${publicEscape(error.message)}</p>`; }
   body.focus();
 }
 function closePublicContact() {
@@ -288,6 +323,8 @@ publicProfileRoot.addEventListener('click', event => {
   if (event.target.closest('[data-save-public]')) togglePublicProfileSaved();
   if (event.target.closest('[data-contact-public]')) openPublicContact();
   if (event.target.closest('[data-close-contact]')) closePublicContact();
+  if (event.target.closest('[data-contact-signup]')) startSignupForContact();
+  if (event.target.closest('[data-contact-login]')) rememberContact();
   if (event.target.closest('.public-profile-play')) publicProfileRoot.querySelector('.public-profile-video')?.play();
   const expand = event.target.closest('[data-expand-experience]');
   if (expand) {

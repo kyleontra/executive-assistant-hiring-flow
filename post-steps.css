@@ -133,3 +133,7 @@
 button.post-back{padding:0;border:0;background:none;font-family:"DM Sans",sans-serif;cursor:pointer}
 a.post-continue{text-decoration:none}
 @media(max-width:640px){.post-published .post-review-list>div{grid-template-columns:1fr}}
+/* Shown on Post a job when a hirer came from a VA's profile (Contact Now). */
+.post-contact-banner{margin:0 0 18px;padding:22px 26px;border:1px solid #bcd3f6;border-radius:16px;background:#eef4fe}
+.post-contact-banner h2{margin:0 0 6px;color:#1f5fcf;font:800 22px/1.25 Manrope,sans-serif;letter-spacing:-.4px}
+.post-contact-banner p{margin:0;color:#33445e;font-size:15px;line-height:1.55}

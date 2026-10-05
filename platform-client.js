@@ -42,6 +42,14 @@ window.savaPlatform = {
     // Forward any active Supabase session so the server can keep candidate
     // accounts out of hirer-only actions.
     const token = await window.getAccessToken?.();
+    // Jobs and workspaces use the company name from sign-up unless the hirer typed another one.
+    if (!payload.companyName || payload.companyName === 'Your company') {
+      try {
+        const { data } = await window.savaAuth.auth.getSession();
+        const saved = String(data?.session?.user?.user_metadata?.company_name || '').trim();
+        if (saved) payload = { ...payload, companyName: saved };
+      } catch { /* Fall back to whatever the page sent. */ }
+    }
     return platformRequest(action, { ...platformEmployerIdentity(), ...payload }, token || '');
   },
   candidateRequest: async (action, payload = {}) => {

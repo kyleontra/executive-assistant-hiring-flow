@@ -5,14 +5,19 @@
   const demo = ['localhost', '127.0.0.1'].includes(location.hostname) && new URLSearchParams(location.search).has('demo');
   const signupForm = document.querySelector('#employerSignupForm');
   const verifyForm = document.querySelector('#employerVerifyForm');
-  const FREE_DOMAINS = ['gmail.com', 'googlemail.com', 'ymail.com', 'rocketmail.com', 'msn.com', 'icloud.com', 'me.com', 'mac.com', 'aol.com', 'protonmail.com', 'proton.me', 'pm.me', 'mail.com', 'gmx.com', 'gmx.net', 'zoho.com', 'hey.com', 'fastmail.com', 'tutanota.com', 'inbox.com', 'comcast.net', 'verizon.net', 'att.net', 'sbcglobal.net', 'cox.net', 'charter.net', 'qq.com', '163.com'];
-  const FREE_PREFIXES = ['yahoo.', 'hotmail.', 'outlook.', 'live.', 'gmx.', 'yandex.', 'web.de', 'mail.ru'];
   let email = '';
-
-  function isWorkEmail(value) {
-    const domain = value.split('@')[1] || '';
-    return !FREE_DOMAINS.includes(domain) && !FREE_PREFIXES.some(prefix => domain.startsWith(prefix));
+  // Where to go after sign-up. Same allowlist idea as employer login; contacting a VA returns to their profile.
+  const requestedNext = new URLSearchParams(location.search).get('next') || '';
+  const next = ['./talent.html', './index.html', './posted-jobs.html', './inbox.html', './candidate-public-profile.html'].some((path) => requestedNext === path || requestedNext.startsWith(`${path}?`)) ? requestedNext : './talent.html';
+  if (next !== './talent.html') document.querySelector('#employerLoginLink').href = `./employer-login.html?next=${encodeURIComponent(next)}`;
+  let contactName = '';
+  try { contactName = JSON.parse(sessionStorage.getItem('sava-contact-return') || 'null')?.name || ''; } catch { contactName = ''; }
+  const fromContact = next.startsWith('./candidate-public-profile.html') && contactName;
+  if (fromContact) {
+    document.querySelector('#signupTitle').textContent = `Create an account to message ${contactName}`;
+    document.querySelector('#signupLead').textContent = 'It takes under a minute.';
   }
+
   function normalizeWebsite(value) {
     try {
       const url = new URL(/^https?:\/\//i.test(value) ? value : 'https://' + value);
@@ -31,9 +36,9 @@
     const f = signupForm.elements;
     if (!f.firstName.value.trim()) return invalid(f.firstName, 'Enter your first name.');
     if (!f.lastName.value.trim()) return invalid(f.lastName, 'Enter your last name.');
+    if (!f.companyName.value.trim()) return invalid(f.companyName, 'Enter your company name.');
     const value = f.email.value.trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return invalid(f.email, 'Enter a valid email address.');
-    if (!isWorkEmail(value)) return invalid(f.email, 'Please use your work email. Personal emails like Gmail, Yahoo or Outlook aren\'t accepted.');
     const digits = f.phone.value.replace(/\D/g, '');
     if (digits.length < 6 || digits.length > 14) return invalid(f.phone, 'Enter a valid phone number.');
     if (!normalizeWebsite(f.website.value.trim())) return invalid(f.website, 'Enter your business website, like yourcompany.com.');
@@ -41,13 +46,7 @@
     return true;
   }
 
-  signupForm.addEventListener('input', event => {
-    event.target.removeAttribute?.('aria-invalid');
-    if (event.target.name === 'email') {
-      const value = event.target.value.trim().toLowerCase();
-      signupForm.querySelector('[data-hint="email"]').classList.toggle('warn', value.includes('@') && value.split('@')[1]?.includes('.') && !isWorkEmail(value));
-    }
-  });
+  signupForm.addEventListener('input', event => { event.target.removeAttribute?.('aria-invalid'); });
 
   signupForm.addEventListener('submit', async event => {
     event.preventDefault();
@@ -56,7 +55,7 @@
     const f = signupForm.elements;
     email = f.email.value.trim().toLowerCase();
     const payload = {
-      firstName: f.firstName.value.trim(), lastName: f.lastName.value.trim(), email,
+      firstName: f.firstName.value.trim(), lastName: f.lastName.value.trim(), companyName: f.companyName.value.trim(), email,
       phone: f.countryCode.value.split(' ')[0] + ' ' + f.phone.value.trim(),
       website: normalizeWebsite(f.website.value.trim()), companySize: f.companySize.value,
     };
@@ -96,7 +95,7 @@
       if (error) throw new Error('That code is wrong or expired. Check your email or send a new code.');
       const { error: passwordError } = await window.savaAuth.auth.updateUser({ password });
       if (passwordError) throw passwordError;
-      window.location.assign('./talent.html');
+      window.location.assign(fromContact ? './index.html' : next);
     } catch (error) {
       showError(errorNode, error.message || 'Something went wrong. Please try again.');
       button.disabled = false; button.innerHTML = 'Start hiring <span aria-hidden="true">→</span>';
