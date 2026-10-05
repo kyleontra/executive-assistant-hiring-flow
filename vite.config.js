@@ -41,6 +41,7 @@ const pages = {
   candidateQuestions: 'candidate-questions.html',
   welcome: 'welcome.html',
   apply: 'apply.html',
+  employerJob: 'employer-job.html',
   applicationQuestions: 'application-questions.html',
   applied: 'applied.html',
   candidateLogin: 'candidate-login.html',
@@ -63,7 +64,7 @@ if (isVercelBuild) {
 const plugins = [{
   name: 'copy-classic-browser-scripts',
   writeBundle() {
-    ['account-menu.css', 'script.js', 'auth-client.js', 'platform-client.js', 'account-role.js', 'account-menu.js', 'account.js', 'home-auth.js', 'home-search.js', 'employer-signup.js', 'employer-auth.js', 'employer-login.js', 'reset-password.js', 'talent.js', 'verification.js', 'id-verification.js', 'candidate-signup.js', 'email-confirmed.js', 'referral.js', 'candidate-resume.js', 'candidate-next-steps.js', 'candidate-profile.js', 'headshot-image.mjs', 'camera-request.mjs', 'video-thumbnail.mjs', 'candidate-public-profile.js', 'application-questions.js', 'candidate-login.js', 'scheduler-settings.js', 'schedule-interview.js', 'admin-review.js', 'posted-jobs.js', 'inbox.js', 'employer-nav.js', 'applied.js', 'employer-profile.js', 'employees.js', 'billing.js'].forEach(file => {
+    ['account-menu.css', 'script.js', 'auth-client.js', 'platform-client.js', 'account-role.js', 'account-menu.js', 'account.js', 'home-auth.js', 'home-search.js', 'employer-signup.js', 'employer-auth.js', 'employer-login.js', 'reset-password.js', 'talent.js', 'verification.js', 'id-verification.js', 'candidate-signup.js', 'email-confirmed.js', 'referral.js', 'candidate-resume.js', 'candidate-next-steps.js', 'candidate-profile.js', 'headshot-image.mjs', 'camera-request.mjs', 'video-thumbnail.mjs', 'candidate-public-profile.js', 'application-questions.js', 'candidate-login.js', 'scheduler-settings.js', 'schedule-interview.js', 'admin-review.js', 'posted-jobs.js', 'employer-job.js', 'inbox.js', 'employer-nav.js', 'applied.js', 'employer-profile.js', 'employees.js', 'billing.js'].forEach(file => {
       copyFileSync(resolve(__dirname, file), resolve(__dirname, 'dist', file));
     });
   },

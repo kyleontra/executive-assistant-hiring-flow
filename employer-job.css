@@ -1,0 +1,18 @@
+/* Employer view of their own job listing (employer-job.html). Builds on job-listing.css. */
+.ej-page{background:#f4f6f9}
+.ej-status{margin:8px 0;color:#5e6c82;font-size:15px}
+.ej-status.error{color:#a84e57}
+.ej-top{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.ej-pill{padding:5px 12px;border-radius:999px;background:#eef1f6;color:#5e6c82;font:800 12px "DM Sans",sans-serif;letter-spacing:.3px;text-transform:uppercase}
+.ej-pill.active{background:#e5f6ee;color:#0b7a50}
+.ej-posted{color:#6b7890;font-size:14px}
+.ej-side-label{margin:0 0 6px;color:#6b7890;font:800 12px "DM Sans",sans-serif;letter-spacing:.8px}
+.ej-count{display:flex;align-items:baseline;gap:8px;margin-bottom:16px}
+.ej-count strong{color:#142238;font:800 40px/1 Manrope,sans-serif;letter-spacing:-1px}
+.ej-count span{color:#5e6c82;font-size:15px;font-weight:600}
+.ej-button{display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}
+.ej-details{display:grid;gap:12px;margin:20px 0 0;padding:18px 0 0;border-top:1px solid #e9eef4}
+.ej-details div{display:flex;justify-content:space-between;gap:12px}
+.ej-details dt{color:#6b7890;font-size:14px}
+.ej-details dd{margin:0;color:#142238;font-size:14px;font-weight:700;text-align:right}
+.ej-help{margin:18px 0 0;color:#6b7890;font-size:13px;line-height:1.5}

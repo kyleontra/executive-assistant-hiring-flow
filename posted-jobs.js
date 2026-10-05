@@ -74,7 +74,7 @@ function pjRender() {
       </div>
       <div class="pj-side">
         <div class="pj-actions">
-          <a class="pj-listing" href="./job-detail.html?job=${encodeURIComponent(job.id)}">View listing</a>
+          <a class="pj-listing" href="./employer-job.html?job=${encodeURIComponent(job.id)}${pjDemo ? '&preview=1' : ''}">View listing</a>
           <a class="primary" href="./inbox.html?job=${encodeURIComponent(job.id)}${pjDemo ? '&demo' : ''}">View applicants →</a>
         </div>
         <div class="pj-count"><strong>${counts.total}</strong><span>applicant${counts.total === 1 ? '' : 's'}</span>${counts.fresh ? `<span class="pj-new">${counts.fresh} new</span>` : ''}</div>

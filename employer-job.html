@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Your job listing | Hire From SA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./employer-simple.css" />
+    <link rel="stylesheet" href="./brand.css" />
+    <link rel="stylesheet" href="./job-listing.css" />
+    <link rel="stylesheet" href="./employer-nav.css" />
+    <link rel="stylesheet" href="./employer-job.css" />
+  </head>
+  <body class="simple-employer-page ej-page">
+    <header class="simple-header">
+      <a class="simple-brand site-logo-link" href="./index.html"><img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a>
+      <nav><a href="./talent.html">Talent</a><a href="./inbox.html">Messages</a><a class="active" href="./posted-jobs.html">Posted jobs</a><a href="./index.html">Post a job</a></nav>
+    </header>
+
+    <main class="jl-shell">
+      <a class="jl-back" href="./posted-jobs.html"><span aria-hidden="true">←</span> Posted jobs</a>
+      <p id="ejStatusLine" class="ej-status" role="status">Loading your job…</p>
+      <div id="ejContent" class="jl-grid" hidden>
+        <article class="jl-card">
+          <div class="ej-top"><span id="ejStatus" class="ej-pill"></span><span id="ejPosted" class="ej-posted"></span></div>
+          <h1 id="ejTitle"></h1>
+
+          <dl class="jl-facts">
+            <div class="green"><dt>Pay you posted</dt><dd id="ejPay">-</dd></div>
+            <div class="violet"><dt>Job type</dt><dd id="ejType">-</dd></div>
+            <div class="blue"><dt>Where</dt><dd id="ejLocation">Remote</dd></div>
+            <div class="rose"><dt>Hiring</dt><dd id="ejTimeline">-</dd></div>
+          </dl>
+
+          <section class="jl-section">
+            <h2>About the job</h2>
+            <div id="ejDescription" class="jl-description"></div>
+          </section>
+          <section id="ejResponsibilitiesSection" class="jl-section" hidden>
+            <h2>What they'll do</h2>
+            <ul id="ejResponsibilities"></ul>
+          </section>
+          <section id="ejSkillsSection" class="jl-section" hidden>
+            <h2>Skills</h2>
+            <div id="ejSkills" class="jl-chips"></div>
+          </section>
+          <section id="ejQuestionsSection" class="jl-section" hidden>
+            <h2>Your screening questions</h2>
+            <p class="jl-note">Every applicant answers these when they apply.</p>
+            <ol id="ejQuestions" class="jl-questions"></ol>
+          </section>
+        </article>
+
+        <aside class="jl-apply ej-side">
+          <p class="ej-side-label">APPLICANTS</p>
+          <div class="ej-count"><strong id="ejApplicants">0</strong><span id="ejNew"></span></div>
+          <a id="ejViewApplicants" class="jl-apply-button ej-button" href="./inbox.html">View applicants <span aria-hidden="true">→</span></a>
+          <dl class="ej-details">
+            <div><dt>Status</dt><dd id="ejStatusText">-</dd></div>
+            <div><dt>Promotion</dt><dd id="ejPromotion">Not promoted</dd></div>
+            <div><dt>Screening questions</dt><dd id="ejQuestionCount">None</dd></div>
+          </dl>
+          <p class="ej-help">Only you can see this page. VAs see the job on their own job board.</p>
+        </aside>
+      </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./auth-client.js"></script>
+    <script src="./employer-auth.js"></script>
+    <script src="./platform-client.js"></script>
+    <script src="./employer-job.js"></script>
+    <script src="./employer-nav.js"></script>
+  </body>
+</html>
