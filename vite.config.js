@@ -40,6 +40,7 @@ const pages = {
   candidateProfile: 'candidate-profile.html',
   candidateQuestions: 'candidate-questions.html',
   welcome: 'welcome.html',
+  apply: 'apply.html',
   applicationQuestions: 'application-questions.html',
   applied: 'applied.html',
   candidateLogin: 'candidate-login.html',

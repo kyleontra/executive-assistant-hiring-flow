@@ -22,5 +22,11 @@
       "destination": "/home.html",
       "permanent": false
     }
+  ],
+  "rewrites": [
+    {
+      "source": "/apply",
+      "destination": "/apply.html"
+    }
   ]
 }

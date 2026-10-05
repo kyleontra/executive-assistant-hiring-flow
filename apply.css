@@ -1,0 +1,44 @@
+/* VA landing page (/apply). Builds on home-landing.css. */
+.ap-hero{padding-bottom:120px}
+.ap-cta{display:inline-flex;height:60px;align-items:center;gap:10px;padding:0 34px;border-radius:999px;background:#fff;color:#1b4fb8;font:800 19px Manrope,sans-serif;text-decoration:none;box-shadow:0 18px 44px rgba(8,24,70,.28);transition:transform .15s ease,box-shadow .15s ease}
+.ap-cta:hover{transform:translateY(-2px);box-shadow:0 22px 50px rgba(8,24,70,.34)}
+.ap-cta-note{margin:14px 0 0;color:rgba(255,255,255,.82);font-size:15px}
+.ap-cta-note a{color:#fff;font-weight:700}
+
+.ap-stats{position:relative;z-index:2;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));max-width:1100px;margin:-72px auto 0;padding:0 20px;gap:0}
+.ap-stats div{display:grid;gap:6px;padding:26px 24px;border:1px solid #dce2ea;border-left-width:0;background:#fff;box-shadow:0 24px 60px rgba(20,34,56,.1);text-align:center}
+.ap-stats div:first-child{border-left-width:1px;border-radius:22px 0 0 22px}
+.ap-stats div:last-child{border-radius:0 22px 22px 0}
+.ap-stats b{color:#1f5fcf;font:800 clamp(30px,3.4vw,42px)/1 Manrope,sans-serif;letter-spacing:-1.2px}
+.ap-stats span{color:#5e6c82;font-size:14px;line-height:1.45}
+
+.ap-why .ap-icon{display:grid;width:48px;height:48px;place-items:center;border-radius:14px;background:#eaf1fd;color:#1f5fcf;font:800 16px Manrope,sans-serif}
+.ap-steps article{padding-top:26px}
+.ap-steps .hl-step-num{position:static;display:inline-grid;width:38px;height:38px;margin-bottom:14px;place-items:center;border-radius:12px;background:#1f5fcf;color:#fff;font:800 16px Manrope,sans-serif}
+
+.ap-roles{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;max-width:920px;margin:0 auto;padding:0;list-style:none}
+.ap-roles li{padding:11px 18px;border:1px solid #dce2ea;border-radius:999px;background:#fff;color:#142238;font:700 15px "DM Sans",sans-serif}
+
+.ap-faq{display:grid;gap:12px;max-width:760px;margin:0 auto}
+.ap-faq details{border:1px solid #dce2ea;border-radius:16px;background:#fff}
+.ap-faq summary{display:flex;justify-content:space-between;gap:16px;padding:18px 22px;color:#142238;font:700 17px Manrope,sans-serif;cursor:pointer;list-style:none}
+.ap-faq summary::-webkit-details-marker{display:none}
+.ap-faq summary::after{content:"+";color:#1f5fcf;font-size:22px;line-height:1}
+.ap-faq details[open] summary::after{content:"–"}
+.ap-faq p{margin:0;padding:0 22px 20px;color:#5e6c82;font-size:15px;line-height:1.6}
+
+.ap-footer{grid-template-columns:2fr 1fr 1fr}
+
+@media(max-width:900px){
+  .ap-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .ap-stats div{border-left-width:1px;border-radius:0}
+  .ap-stats div:nth-child(1){border-radius:22px 0 0 0}
+  .ap-stats div:nth-child(2){border-radius:0 22px 0 0}
+  .ap-stats div:nth-child(3){border-radius:0 0 0 22px}
+  .ap-stats div:nth-child(4){border-radius:0 0 22px 0}
+}
+@media(max-width:760px){
+  .ap-cta{height:56px;padding:0 26px;font-size:17px}
+  .ap-stats div{padding:20px 14px}
+  .ap-footer{grid-template-columns:1fr}
+}
