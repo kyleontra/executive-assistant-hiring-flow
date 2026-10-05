@@ -137,3 +137,18 @@ a.post-continue{text-decoration:none}
 .post-contact-banner{margin:0 0 18px;padding:22px 26px;border:1px solid #bcd3f6;border-radius:16px;background:#eef4fe}
 .post-contact-banner h2{margin:0 0 6px;color:#1f5fcf;font:800 22px/1.25 Manrope,sans-serif;letter-spacing:-.4px}
 .post-contact-banner p{margin:0;color:#33445e;font-size:15px;line-height:1.55}
+.post-mode h1{margin-bottom:24px}
+.post-mode-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.post-mode-option{display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:26px 24px;border:1px solid #c6d1df;border-radius:14px;background:#fff;color:#142238;text-align:left;font-family:"DM Sans",sans-serif;cursor:pointer;transition:border-color .18s,box-shadow .18s,transform .18s}
+.post-mode-option:hover{border-color:#246fe5;box-shadow:0 10px 26px rgba(36,111,229,.12);transform:translateY(-2px)}
+.post-mode-option:focus-visible{outline:0;box-shadow:0 0 0 3px #246fe540}
+.post-mode-option b{font:800 20px/1.2 Manrope,sans-serif;letter-spacing:-.3px}
+.post-mode-option small{color:#5e6c82;font-size:14px;line-height:1.5}
+.post-mode-icon{display:grid;width:44px;height:44px;margin-bottom:6px;place-items:center;border-radius:12px;background:#eef1f6;color:#33445e}
+.post-mode-option.ai .post-mode-icon{background:#edf4ff;color:#246fe5}
+.post-mode-icon svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linejoin:round;stroke-linecap:round}
+@media(max-width:640px){.post-mode-options{grid-template-columns:1fr}}
+.post-step-shell [hidden]{display:none!important}
+.post-mode-option{position:relative}
+.post-mode-option:disabled{cursor:default;opacity:.6;transform:none;box-shadow:none;border-color:#dce2ea}
+.post-mode-soon{position:absolute;top:16px;right:16px;padding:4px 10px;border-radius:999px;background:#eef1f6;color:#5e6c82;font-size:11px;font-weight:800;letter-spacing:.3px;text-transform:uppercase}

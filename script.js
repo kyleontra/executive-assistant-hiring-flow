@@ -113,6 +113,22 @@ function bindPostJob() {
   let roleDescription = null;
 
   if (step === 'title') {
+    // First screen: write the post with AI or type it in. Coming back from Pay skips straight to the form.
+    const choice = $('#postModeChoice');
+    const showForm = () => {
+      if (choice) choice.hidden = true;
+      form.hidden = false;
+      $('.post-step-progress').hidden = false;
+    };
+    if (!choice || new URLSearchParams(window.location.search).get('manual') === '1') showForm();
+    else {
+      choice.hidden = false;
+      choice.querySelectorAll('[data-mode]').forEach((button) => button.addEventListener('click', () => {
+        write({ writeMode: button.dataset.mode });
+        if (button.dataset.mode === 'manual') showForm();
+        else window.location.href = './post-ai.html';
+      }));
+    }
     const title = $('#title');
     const timeline = $('#hiringTimeline');
     const savedTitle = text(role.title);

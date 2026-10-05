@@ -21,7 +21,7 @@
     </header>
 
     <main class="post-step-shell">
-      <nav class="post-step-progress" aria-label="Job posting progress">
+      <nav class="post-step-progress" aria-label="Job posting progress" hidden>
         <span class="active"><b>1</b> Job basics</span><i></i>
         <span><b>2</b> Pay</span><i></i>
         <span><b>3</b> Description</span><i></i>
@@ -34,7 +34,24 @@
         <p id="contactJobText"></p>
       </section>
 
-      <form id="postJobForm" class="post-step-card" data-step="title" novalidate>
+      <section id="postModeChoice" class="post-step-card post-mode" hidden>
+        <h1>How would you like to write your job post?</h1>
+        <div class="post-mode-options">
+          <button type="button" class="post-mode-option ai" data-mode="ai" disabled>
+            <span class="post-mode-soon">Coming soon</span>
+            <span class="post-mode-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg></span>
+            <b>Write it with AI</b>
+            <small>Answer a few quick questions and we'll write the post for you.</small>
+          </button>
+          <button type="button" class="post-mode-option" data-mode="manual">
+            <span class="post-mode-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg></span>
+            <b>Type it in myself</b>
+            <small>Fill in each part of the post on your own.</small>
+          </button>
+        </div>
+      </section>
+
+      <form id="postJobForm" class="post-step-card" data-step="title" novalidate hidden>
         <h1>Add job basics</h1>
 
         <label class="post-field"><span>Job title <em>*</em></span><input id="title" name="title" maxlength="100" placeholder="e.g. Executive Assistant" autocomplete="off" required /></label>
