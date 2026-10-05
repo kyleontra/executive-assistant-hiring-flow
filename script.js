@@ -535,6 +535,8 @@ async function bindJobDetail() {
   const params = new URLSearchParams(window.location.search);
   const demo = ['localhost', '127.0.0.1'].includes(window.location.hostname) && params.has('demo');
   const id = params.get('job');
+  // Preview keeps the sample job board, so All jobs works without a VA sign-in.
+  if (demo) document.querySelectorAll('a[href="./candidate-dashboard.html?tab=jobs"]').forEach((link) => { link.href = './candidate-dashboard.html?tab=jobs&demo=1'; });
   let job;
   if (demo) job = listingDemoJob();
   else {
