@@ -351,7 +351,7 @@ Deno.serve(async (request) => {
     const action = clean(body.action, 40);
 
     if (action === 'listJobs') {
-      const { data, error } = await admin.from('hiring_jobs').select('*').eq('status', 'active').order('created_at', { ascending: false }).limit(100);
+      const { data, error } = await admin.from('hiring_jobs').select('*').eq('status', 'active').eq('board_hidden', false).order('created_at', { ascending: false }).limit(100);
       if (error) throw error;
       // Who is asking decides which pay they see: signed out = no pay, candidates = net of the platform fee,
       // the hirer who posted a job (or master) = the rate they posted.
@@ -731,7 +731,7 @@ Deno.serve(async (request) => {
       if (action === 'saveProfile') return reply(request, { profile: { ...profile, userId: profile.user_id } });
 
       const jobId = clean(body.jobId, 80);
-      const { data: job, error: jobError } = await admin.from('hiring_jobs').select('*').eq('id', jobId).eq('status', 'active').maybeSingle();
+      const { data: job, error: jobError } = await admin.from('hiring_jobs').select('*').eq('id', jobId).eq('status', 'active').eq('board_hidden', false).maybeSingle();
       if (jobError) throw jobError;
       if (!job) return reply(request, { error: 'This job is no longer accepting applications.' }, 404);
       if (!resumePath) return reply(request, { error: 'Upload a resume before applying.' }, 400);
