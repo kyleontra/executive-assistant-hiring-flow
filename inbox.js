@@ -57,6 +57,7 @@ function ibxDemoData() {
       unread: status === 'new' && index < 6,
       profileUrl,
       bid: { rate: [14, 13, 12, 11, 12, 10, 10, 11, 9, 9][index], min: [12, 11, 10, 10, 10, 9, 8, 9, 8, 8][index], max: 15, period: 'hour' },
+      threadLoaded: false,
       messages: [
         { from: 'candidate', label: 'Introduction', text: `Hi, my name is ${name.split(' ')[0]}, and I think I would be a good fit for your role because ${summary.charAt(0).toLowerCase()}${summary.slice(1)}`, time },
         { from: 'candidate', label: 'How many weddings have you edited?', text: answer, time },
@@ -142,6 +143,37 @@ function ibxRenderThread() {
   document.querySelector('#ibxMessages').innerHTML = applicant.messages.map((message) => `<div class="ibx-msg ${message.from === 'you' ? 'you' : ''}">${message.label ? `<span class="ibx-msg-label">${ibxEscape(message.label)}</span>` : ''}${ibxEscape(message.text)}${message.time ? `<small>${ibxEscape(message.time)}</small>` : ''}</div>`).join('');
   const messages = document.querySelector('#ibxMessages');
   messages.scrollTop = messages.scrollHeight;
+  ibxLoadThread(applicant);
+}
+
+// Conversation with an applicant: the same messaging service as Contact Now. Each send emails the VA.
+const IBX_MESSAGES_ENDPOINT = 'https://jyxamdvvnoylaxolhlht.supabase.co/functions/v1/candidate-messages';
+async function ibxMessageRequest(action, applicant, body = '') {
+  const token = await window.getAccessToken?.();
+  if (!token) throw new Error('Sign in with a hirer account to send a message.');
+  const identity = window.savaPlatform.employerIdentity();
+  const response = await fetch(IBX_MESSAGES_ENDPOINT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ action, employerId: identity.employerId, editToken: identity.editToken, candidateKey: `application:${applicant.id}`, candidateName: applicant.name, roleName: applicant.jobTitle, ...(body ? { body } : {}) }),
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(result.error || 'Messages could not connect. Try again.');
+  return result.messages || [];
+}
+function ibxApplyThread(applicant, messages) {
+  const time = (value) => { const date = new Date(value); return Number.isNaN(date.getTime()) ? '' : new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(date); };
+  applicant.messages = applicant.messages.filter((message) => !message.thread).concat(messages.map((message) => ({ from: message.sender === 'employer' ? 'you' : 'candidate', text: message.body, time: time(message.createdAt), thread: true })));
+  applicant.threadLoaded = true;
+}
+async function ibxLoadThread(applicant) {
+  if (ibxDemo || !applicant || applicant.threadLoaded || applicant.threadLoading) return;
+  applicant.threadLoading = true;
+  try {
+    ibxApplyThread(applicant, await ibxMessageRequest('list', applicant));
+    if (ibxState.activeId === applicant.id) ibxRenderThread();
+  } catch { /* The application answers still show; sending retries the connection. */ }
+  finally { applicant.threadLoading = false; }
 }
 
 function ibxSelect(id) {
@@ -166,12 +198,6 @@ async function ibxInit() {
   ibxState.jobs = data.jobs || [];
   const counts = (jobId) => data.applicants.filter((applicant) => jobId === 'all' || applicant.jobId === jobId).length;
   document.querySelector('#ibxJob').innerHTML = `<option value="all">All active jobs (${counts('all')})</option>${ibxState.jobs.map((job) => `<option value="${ibxEscape(job.id)}">${ibxEscape(job.title)} (${counts(job.id)})</option>`).join('')}`;
-  if (!ibxDemo) {
-    const draft = document.querySelector('#ibxDraft');
-    draft.disabled = true;
-    draft.placeholder = 'Messaging from the inbox is coming soon.';
-    document.querySelector('#ibxCompose button').disabled = true;
-  }
   // Arriving from a published job (?job=<id>) opens Messages filtered to that job.
   const requestedJob = new URLSearchParams(window.location.search).get('job');
   if (requestedJob && ibxState.jobs.some((job) => job.id === requestedJob)) {
@@ -200,11 +226,31 @@ document.querySelector('#ibxCompose')?.addEventListener('submit', (event) => {
   event.preventDefault();
   const draft = document.querySelector('#ibxDraft');
   const applicant = ibxState.applicants.find((item) => item.id === ibxState.activeId);
-  if (!applicant || !draft.value.trim() || !ibxDemo) return;
-  applicant.messages.push({ from: 'you', text: draft.value.trim(), time: 'Just now' });
-  draft.value = '';
-  ibxRenderList();
-  ibxRenderThread();
+  const text = draft.value.trim();
+  const button = document.querySelector('#ibxCompose button');
+  const status = document.querySelector('#ibxComposeStatus');
+  if (!applicant || !text || button.disabled) return;
+  if (ibxDemo) {
+    applicant.messages.push({ from: 'you', text, time: 'Just now' });
+    draft.value = '';
+    ibxRenderList();
+    ibxRenderThread();
+    return;
+  }
+  button.disabled = true;
+  button.textContent = 'Sending…';
+  status.textContent = '';
+  ibxMessageRequest('send', applicant, text).then((messages) => {
+    ibxApplyThread(applicant, messages);
+    draft.value = '';
+    ibxRenderList();
+    ibxRenderThread();
+  }).catch((error) => {
+    status.textContent = error.message || 'Your message was not sent. Try again.';
+  }).finally(() => {
+    button.disabled = false;
+    button.textContent = 'Send';
+  });
 });
 document.querySelector('#ibxDraft')?.addEventListener('keydown', (event) => {
   if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); document.querySelector('#ibxCompose').requestSubmit(); }

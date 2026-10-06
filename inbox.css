@@ -57,7 +57,7 @@
 .ibx-msg.you{align-self:flex-end;background:#e8f0ff}
 .ibx-msg small{display:block;margin-top:5px;color:#7b889c;font-size:11px}
 .ibx-msg .ibx-msg-label{display:block;margin-bottom:4px;color:#5e6c82;font-size:12px;font-weight:700}
-.ibx-compose{display:flex;gap:10px;align-items:flex-end;padding:12px 18px;border-top:1px solid #e3e8ef}
+.ibx-compose{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;padding:12px 18px;border-top:1px solid #e3e8ef}
 .ibx-compose textarea{flex:1;height:44px;min-height:44px;max-height:140px;padding:11px 13px;border:1px solid #c6d1df;border-radius:10px;outline:0;resize:vertical;color:#142238;font:400 14px/1.5 "DM Sans",sans-serif}
 .ibx-compose textarea:focus{border-color:#246fe5;box-shadow:0 0 0 3px #246fe51f}
 .ibx-compose button{height:44px;padding:0 18px;border:0;border-radius:10px;background:#246fe5;color:#fff;font:700 14px "DM Sans",sans-serif;cursor:pointer}
@@ -102,3 +102,5 @@
 .ibx-tip-box{position:absolute;top:calc(100% + 8px);left:0;z-index:20;display:none;width:280px;padding:12px 14px;border-radius:12px;background:#142238;color:#e9eef6;font:500 13px/1.5 "DM Sans",sans-serif;box-shadow:0 14px 34px rgba(10,24,48,.28)}
 .ibx-tip-box b{display:block;margin-bottom:4px;color:#fff;font-weight:800}
 .ibx-tip:hover .ibx-tip-box,.ibx-tip:focus .ibx-tip-box{display:block}
+.ibx-compose-status{flex-basis:100%;margin:0;color:#b42318;font-size:13px;font-weight:600}
+.ibx-compose-status:empty{display:none}
