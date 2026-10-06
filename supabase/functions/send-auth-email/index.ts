@@ -32,6 +32,14 @@ type MessageNotification = {
   roleName: string;
   messageBody: string;
 };
+type EmployerMessageNotification = {
+  type: 'employer_message_notification';
+  recipient: string;
+  candidateName: string;
+  roleName: string;
+  messageBody: string;
+  jobId?: string;
+};
 type ApprovalNotification = { type: 'verification_approved'; recipient: string; candidateName: string; };
 
 function escapeHtml(value: string) {
@@ -134,6 +142,33 @@ function renderMessageNotification(candidateName: string, companyName: string, r
 </html>`;
 }
 
+function renderEmployerMessageNotification(candidateName: string, roleName: string, messageBody: string, jobId: string) {
+  const safeName = escapeHtml(candidateName || 'A VA');
+  const safeRole = escapeHtml(roleName || 'your job');
+  const safeMessage = escapeHtml(messageBody).replace(/\r?\n/g, '<br />');
+  const inbox = /^[0-9a-f-]{36}$/i.test(jobId) ? `./inbox.html?job=${jobId}` : './inbox.html';
+  const link = `https://www.hirefromsa.com/employer-login.html?next=${encodeURIComponent(inbox)}`;
+  return `<!doctype html>
+<html lang="en">
+  <body style="margin:0;background:#f4f7fb;font-family:Arial,sans-serif;color:#12213a">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f4f7fb;padding:36px 16px">
+      <tr><td align="center">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:580px;background:#ffffff;border:1px solid #dbe4f0;border-radius:18px;overflow:hidden">
+          <tr><td style="background:#246fe5;padding:24px 30px;color:#ffffff;font-size:15px;font-weight:700;letter-spacing:.08em">HIRE FROM SA</td></tr>
+          <tr><td style="padding:34px 30px">
+            <h1 style="margin:0 0 12px;font-size:28px;line-height:1.2">You have a new message</h1>
+            <p style="margin:0 0 22px;color:#5c6b82;font-size:16px;line-height:1.6">${safeName} sent you a message about the ${safeRole} role.</p>
+            <div style="padding:18px 20px;border-left:4px solid #246fe5;border-radius:8px;background:#f5f8fd;color:#24344f;font-size:15px;line-height:1.65">${safeMessage}</div>
+            <p style="margin:26px 0 0"><a href="${link}" style="display:inline-block;padding:14px 20px;border-radius:10px;background:#12213a;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none">Reply to ${safeName.split(' ')[0]}</a></p>
+            <p style="margin:24px 0 0;color:#7b8799;font-size:13px;line-height:1.6">Reply through Hire From SA so the whole conversation stays in one place.</p>
+          </td></tr>
+        </table>
+      </td></tr>
+    </table>
+  </body>
+</html>`;
+}
+
 async function getGraphToken() {
   if (cachedToken && Date.now() < cachedTokenExpiresAt) return cachedToken;
   const response = await fetch(`https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`, {
@@ -204,6 +239,21 @@ async function sendCandidateMessageEmail(notification: MessageNotification) {
   );
 }
 
+async function sendEmployerMessageEmail(notification: EmployerMessageNotification) {
+  const recipient = clean(notification.recipient, 254).toLowerCase();
+  const candidateName = clean(notification.candidateName, 120);
+  const roleName = clean(notification.roleName, 180);
+  const messageBody = clean(notification.messageBody, 2000);
+  if (!recipient || !recipient.includes('@') || !messageBody) throw new Error('The message notification is missing required fields.');
+  const subjectName = (candidateName || 'A VA').replace(/[\r\n]+/g, ' ');
+  const subjectRole = (roleName || 'your job').replace(/[\r\n]+/g, ' ');
+  await sendGraphEmail(
+    recipient,
+    `New message from ${subjectName} about ${subjectRole}`,
+    renderEmployerMessageNotification(candidateName, roleName, messageBody, clean(notification.jobId, 36)),
+  );
+}
+
 async function sendApprovalEmail(notification: ApprovalNotification) {
   const recipient = clean(notification.recipient, 254).toLowerCase();
   if (!recipient || !recipient.includes('@')) throw new Error('The approval notification is missing a recipient.');
@@ -222,13 +272,14 @@ Deno.serve(async (request) => {
     const suppliedInternalKey = request.headers.get('x-internal-email-key') || '';
     if (suppliedInternalKey) {
       if (!sameSecret(suppliedInternalKey, internalServiceKey)) return Response.json({ error: 'Unauthorized.' }, { status: 401 });
-      const notification = await request.json() as MessageNotification | ApprovalNotification | { type: 'health_check' };
+      const notification = await request.json() as MessageNotification | EmployerMessageNotification | ApprovalNotification | { type: 'health_check' };
       if (notification.type === 'health_check') {
         await getGraphToken();
         return Response.json({ configured: true });
       }
       if (notification.type === 'verification_approved') await sendApprovalEmail(notification);
       else if (notification.type === 'message_notification') await sendCandidateMessageEmail(notification);
+      else if (notification.type === 'employer_message_notification') await sendEmployerMessageEmail(notification);
       else return Response.json({ error: 'Unknown internal email type.' }, { status: 400 });
       return Response.json({ sent: true });
     }

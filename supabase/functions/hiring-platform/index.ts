@@ -47,6 +47,36 @@ async function saveCandidateReply(admin: ReturnType<typeof createClient>, thread
   return { id: message.id, sender: message.sender, body: message.body, createdAt: message.created_at };
 }
 
+// Email the hirer when a VA messages them. The message is already saved, so a failed email is only logged.
+async function notifyEmployerOfReply(admin: ReturnType<typeof createClient>, threadId: string, messageBody: string) {
+  try {
+    const { data: thread, error } = await admin.from('candidate_message_threads')
+      .select('employer_id, candidate_name, role_name, application_id').eq('id', threadId).single();
+    if (error) throw error;
+    const { data: workspace } = await admin.from('hirer_workspaces').select('notify_email').eq('id', thread.employer_id).maybeSingle();
+    let recipient = clean(workspace?.notify_email, 254);
+    if (!recipient) {
+      const { data: master } = await admin.from('master_accounts').select('notify_email')
+        .eq('employer_id', thread.employer_id).eq('disabled', false).not('notify_email', 'is', null).limit(1).maybeSingle();
+      recipient = clean(master?.notify_email, 254);
+    }
+    if (!recipient.includes('@')) return;
+    let jobId = '';
+    if (thread.application_id) {
+      const { data: application } = await admin.from('job_applications').select('job_id').eq('id', thread.application_id).maybeSingle();
+      jobId = String(application?.job_id || '');
+    }
+    const response = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-auth-email`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-internal-email-key': Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '' },
+      body: JSON.stringify({ type: 'employer_message_notification', recipient, candidateName: thread.candidate_name || 'A VA', roleName: thread.role_name || '', messageBody, jobId }),
+    });
+    if (!response.ok) console.error('Hirer message email failed:', response.status, (await response.text()).slice(0, 300));
+  } catch (notifyError) {
+    console.error('Hirer message email failed:', notifyError);
+  }
+}
+
 function clean(value: unknown, maxLength: number) {
   return typeof value === 'string' ? value.trim().slice(0, maxLength) : '';
 }
@@ -483,9 +513,16 @@ Deno.serve(async (request) => {
     }
 
     if (action === 'employerDashboard') {
-      if (!await employerUser(request, admin)) return reply(request, { error: 'Sign in with an employer account to open the hirer workspace.' }, 401);
+      const employer = await employerUser(request, admin);
+      if (!employer) return reply(request, { error: 'Sign in with an employer account to open the hirer workspace.' }, 401);
       const access = await ensureEmployer(admin, body);
       if (access.error) return reply(request, { error: access.error }, 403);
+      // Remember the hirer's email so VA replies can be emailed to them (master uses its own setting).
+      const employerEmail = clean((employer as { email?: string }).email, 254).toLowerCase();
+      if (employerEmail.includes('@') && !(employer as { app_metadata?: { master?: boolean } }).app_metadata?.master) {
+        const { error: emailError } = await admin.from('hirer_workspaces').update({ notify_email: employerEmail }).eq('id', access.employer.id);
+        if (emailError) console.error('Could not save hirer notification email:', emailError);
+      }
       const { data: jobs, error: jobsError } = await admin.from('hiring_jobs').select('*').eq('employer_id', access.employer.id).order('created_at', { ascending: false });
       if (jobsError) throw jobsError;
       const jobIds = (jobs || []).map((job) => job.id);
@@ -878,6 +915,7 @@ Deno.serve(async (request) => {
       if (error) throw error;
       if (!thread) return reply(request, { error: 'Conversation not found.' }, 404);
       const message = await saveCandidateReply(admin, thread.id, user.id, messageBody);
+      await notifyEmployerOfReply(admin, thread.id, messageBody);
       return reply(request, { status: 'sent', threadId: thread.id, message }, 201);
     }
 
@@ -912,6 +950,7 @@ Deno.serve(async (request) => {
         thread = created;
       }
       const message = await saveCandidateReply(admin, thread.id, user.id, messageBody);
+      await notifyEmployerOfReply(admin, thread.id, messageBody);
       return reply(request, { status: 'sent', threadId: thread.id, message }, 201);
     }
 
