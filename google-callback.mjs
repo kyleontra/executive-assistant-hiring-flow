@@ -27,7 +27,12 @@ async function finish(company) {
   const submit = employerForm.querySelector('button'); submit.disabled = true;
   errorNode.hidden = true;
   try {
-    if (providerError) throw new Error('Google sign-in was cancelled or declined. Return to sign in and try again.');
+    if (providerError) {
+      const code = params.get('error') || fragment.get('error');
+      throw new Error(code === 'access_denied'
+        ? 'Google sign-in was cancelled or declined. Return to sign in and try again.'
+        : 'Google sign-in could not be completed because of a sign-in configuration error. Please contact Hire From SA support.');
+    }
     if (!validGoogleContext(context)) throw new Error('This sign-in request expired. Return to sign in and choose Google again.');
     back.href = context.role === 'employer' ? './employer-login.html' : './candidate-login.html';
     // getSession waits for the auth client to finish consuming the OAuth callback.
