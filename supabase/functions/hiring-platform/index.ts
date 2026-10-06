@@ -47,6 +47,36 @@ async function saveCandidateReply(admin: ReturnType<typeof createClient>, thread
   return { id: message.id, sender: message.sender, body: message.body, createdAt: message.created_at };
 }
 
+// Email the hirer when a VA messages them. The message is already saved, so a failed email is only logged.
+async function notifyEmployerOfReply(admin: ReturnType<typeof createClient>, threadId: string, messageBody: string) {
+  try {
+    const { data: thread, error } = await admin.from('candidate_message_threads')
+      .select('employer_id, candidate_name, role_name, application_id').eq('id', threadId).single();
+    if (error) throw error;
+    const { data: workspace } = await admin.from('hirer_workspaces').select('notify_email').eq('id', thread.employer_id).maybeSingle();
+    let recipient = clean(workspace?.notify_email, 254);
+    if (!recipient) {
+      const { data: master } = await admin.from('master_accounts').select('notify_email')
+        .eq('employer_id', thread.employer_id).eq('disabled', false).not('notify_email', 'is', null).limit(1).maybeSingle();
+      recipient = clean(master?.notify_email, 254);
+    }
+    if (!recipient.includes('@')) return;
+    let jobId = '';
+    if (thread.application_id) {
+      const { data: application } = await admin.from('job_applications').select('job_id').eq('id', thread.application_id).maybeSingle();
+      jobId = String(application?.job_id || '');
+    }
+    const response = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-auth-email`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-internal-email-key': Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '' },
+      body: JSON.stringify({ type: 'employer_message_notification', recipient, candidateName: thread.candidate_name || 'A VA', roleName: thread.role_name || '', messageBody, jobId }),
+    });
+    if (!response.ok) console.error('Hirer message email failed:', response.status, (await response.text()).slice(0, 300));
+  } catch (notifyError) {
+    console.error('Hirer message email failed:', notifyError);
+  }
+}
+
 function clean(value: unknown, maxLength: number) {
   return typeof value === 'string' ? value.trim().slice(0, maxLength) : '';
 }
@@ -144,72 +174,9 @@ function publicCandidateSummary(profile: Record<string, unknown>, role: string, 
   return [years ? `${years}+ years of relevant experience.` : '', skills.length ? `Key skills include ${skills.join(', ')}.` : ''].filter(Boolean).join(' ') || `Experience in ${role}.`;
 }
 
-// Platform fee shown to candidates: hirers see the rate they posted; candidates see it net of the fee.
-// Hourly: $2/hour less. Monthly: $2 x the role's monthly hours less. Contract: 20% less.
-const PLATFORM_FEE_PER_HOUR = 2;
-const CONTRACT_FEE_RATE = 0.2;
-const MONTHLY_HOURS: Record<string, number> = { 'Full-time': 40 * 52 / 12, 'Part-time': 20 * 52 / 12 };
-
-// Candidate pay always rounds UP to the next whole dollar (candidates think in rand, so no cents).
-function roundPay(value: number) {
-  return Math.max(0, Math.ceil(Math.round(value * 100) / 100));
-}
-
-function candidatePay(row: Record<string, unknown>, amount: number) {
-  const period = row.pay_period === 'month' ? 'month' : 'hour';
-  if (row.employment_type === 'Contract') return roundPay(amount * (1 - CONTRACT_FEE_RATE));
-  if (period === 'hour') return roundPay(amount - PLATFORM_FEE_PER_HOUR);
-  const hours = MONTHLY_HOURS[String(row.employment_type)] ?? MONTHLY_HOURS['Full-time'];
-  return roundPay(amount - PLATFORM_FEE_PER_HOUR * hours);
-}
-
-// Reverse of candidatePay: what the hirer pays for an amount the candidate is paid.
-function hirerPay(row: Record<string, unknown>, amount: number) {
-  const period = row.pay_period === 'month' ? 'month' : 'hour';
-  if (row.employment_type === 'Contract') return roundPay(amount / (1 - CONTRACT_FEE_RATE));
-  if (period === 'hour') return roundPay(amount + PLATFORM_FEE_PER_HOUR);
-  const hours = MONTHLY_HOURS[String(row.employment_type)] ?? MONTHLY_HOURS['Full-time'];
-  return Math.round(amount + PLATFORM_FEE_PER_HOUR * hours);
-}
-
-function bidResponse(application: Record<string, unknown>, job: Record<string, unknown>, view: 'owner' | 'candidate') {
-  const values = [application.bid_rate, application.bid_min, application.bid_max].map(Number);
-  if (!values.every((value) => Number.isFinite(value) && value > 0)) return null;
-  const [rate, min, max] = view === 'owner' ? values.map((value) => hirerPay(job, value)) : values;
-  return { rate, min, max, period: job.pay_period === 'month' ? 'month' : 'hour' };
-}
-
-async function ensureApplicationThread(admin: ReturnType<typeof createClient>, applicationId: string, job: Record<string, unknown>, candidateName: string, candidateId: string) {
-  const { data: existing, error: threadError } = await admin.from('candidate_message_threads').select('id').eq('application_id', applicationId).maybeSingle();
-  if (threadError) throw threadError;
-  if (existing) return { id: String(existing.id), created: false };
-  const { data: employer, error: employerError } = await admin.from('hirer_workspaces').select('edit_token_hash').eq('id', job.employer_id).single();
-  if (employerError) throw employerError;
-  const { data: created, error: createError } = await admin.from('candidate_message_threads').insert({
-    employer_id: job.employer_id,
-    edit_token_hash: employer.edit_token_hash,
-    candidate_key: `application:${applicationId}`,
-    candidate_name: candidateName,
-    role_name: job.title,
-    candidate_id: candidateId,
-    application_id: applicationId,
-  }).select('id').single();
-  if (createError) throw createError;
-  return { id: String(created.id), created: true };
-}
-
-function payLabel(min: number, max: number, period: string) {
-  const money = (value: number) => (Number.isInteger(value) ? value.toLocaleString('en-US') : value.toFixed(2));
-  return `$${money(min)}–$${money(max)} / ${period}`;
-}
-
-// view: 'owner' = the hirer who posted it (or master), 'candidate' = signed-in candidates and other hirers, 'public' = signed out.
-function jobResponse(row: Record<string, unknown>, view: 'owner' | 'candidate' | 'public' = 'owner') {
-  const period = row.pay_period === 'month' ? 'month' : 'hour';
-  const postedMin = Number(row.pay_min || 0);
-  const postedMax = Number(row.pay_max || 0);
-  const payMin = view === 'candidate' ? candidatePay(row, postedMin) : postedMin;
-  const payMax = view === 'candidate' ? candidatePay(row, postedMax) : postedMax;
+function jobResponse(row: Record<string, unknown>) {
+  const payMin = Number(row.pay_min || 0);
+  const payMax = Number(row.pay_max || 0);
   return {
     id: row.id,
     company: row.company_name,
@@ -218,13 +185,11 @@ function jobResponse(row: Record<string, unknown>, view: 'owner' | 'candidate' |
     arrangement: row.arrangement,
     type: row.employment_type,
     location: row.location,
-    payMin: view === 'public' ? null : payMin,
-    payMax: view === 'public' ? null : payMax,
-    payPeriod: period,
-    payHidden: view === 'public',
-    pay: view === 'public' ? '' : payLabel(payMin, payMax, period),
+    payMin,
+    payMax,
+    payPeriod: row.pay_period === 'month' ? 'month' : 'hour',
     hiringTimeline: row.hiring_timeline || '',
-    ...(view === 'owner' ? { promoted: Boolean(row.promoted), promotionBudget: row.promoted ? Number(row.promotion_budget || 0) : 0 } : {}),
+    pay: `$${Number.isInteger(payMin) ? payMin : payMin.toFixed(2)}–$${Number.isInteger(payMax) ? payMax : payMax.toFixed(2)} / ${row.pay_period === 'month' ? 'month' : 'hour'}`,
     description: row.description,
     responsibilities: row.responsibilities || [],
     skills: row.skills || [],
@@ -353,18 +318,7 @@ Deno.serve(async (request) => {
     if (action === 'listJobs') {
       const { data, error } = await admin.from('hiring_jobs').select('*').eq('status', 'active').eq('board_hidden', false).order('created_at', { ascending: false }).limit(100);
       if (error) throw error;
-      // Who is asking decides which pay they see: signed out = no pay, candidates = net of the platform fee,
-      // the hirer who posted a job (or master) = the rate they posted.
-      const employer = tokenFrom(request) ? await employerUser(request, admin) : null;
-      const isMaster = Boolean(employer?.app_metadata?.master);
-      let ownEmployerId = '';
-      if (employer && !isMaster && clean(body.employerId, 36)) {
-        const access = await ensureEmployer(admin, body);
-        if (!access.error) ownEmployerId = String(access.employer.id);
-      }
-      const signedIn = Boolean(employer) || Boolean(tokenFrom(request) && await authenticatedUser(request, admin));
-      const view = (row: Record<string, unknown>) => (isMaster || (ownEmployerId && String(row.employer_id) === ownEmployerId) ? 'owner' : signedIn ? 'candidate' : 'public');
-      return reply(request, { jobs: (data || []).map((row) => jobResponse(row, view(row))) });
+      return reply(request, { jobs: (data || []).map(jobResponse) });
     }
 
     if (action === 'publicCandidateProfile') {
@@ -483,9 +437,16 @@ Deno.serve(async (request) => {
     }
 
     if (action === 'employerDashboard') {
-      if (!await employerUser(request, admin)) return reply(request, { error: 'Sign in with an employer account to open the hirer workspace.' }, 401);
+      const employer = await employerUser(request, admin);
+      if (!employer) return reply(request, { error: 'Sign in with an employer account to open the hirer workspace.' }, 401);
       const access = await ensureEmployer(admin, body);
       if (access.error) return reply(request, { error: access.error }, 403);
+      // Remember the hirer's email so VA replies can be emailed to them (master uses its own setting).
+      const employerEmail = clean((employer as { email?: string }).email, 254).toLowerCase();
+      if (employerEmail.includes('@') && !(employer as { app_metadata?: { master?: boolean } }).app_metadata?.master) {
+        const { error: emailError } = await admin.from('hirer_workspaces').update({ notify_email: employerEmail }).eq('id', access.employer.id);
+        if (emailError) console.error('Could not save hirer notification email:', emailError);
+      }
       const { data: jobs, error: jobsError } = await admin.from('hiring_jobs').select('*').eq('employer_id', access.employer.id).order('created_at', { ascending: false });
       if (jobsError) throw jobsError;
       const jobIds = (jobs || []).map((job) => job.id);
@@ -513,8 +474,6 @@ Deno.serve(async (request) => {
           status: application.status,
           match: application.match_score,
           answers: application.answers || [],
-          bid: bidResponse(application, job, 'owner'),
-          introMessage: application.intro_message || '',
           submittedAt: application.submitted_at,
           candidate: {
             id: application.candidate_id,
@@ -534,7 +493,7 @@ Deno.serve(async (request) => {
           job: jobResponse(job),
         };
       }));
-      return reply(request, { jobs: (jobs || []).map((row) => jobResponse(row, "owner")), applications: applicationResults });
+      return reply(request, { jobs: (jobs || []).map(jobResponse), applications: applicationResults });
     }
 
     if (action === 'searchCandidates') {
@@ -738,21 +697,10 @@ Deno.serve(async (request) => {
       const questions = normalizeQuestions(job.questions);
       const answers = normalizeAnswers(body.answers, questions);
       if (!answers) return reply(request, { error: 'Answer every applicant question before submitting.' }, 400);
-      const bidRate = Number(body.bidRate);
-      const bidMin = Number(body.bidMin);
-      const bidMax = Number(body.bidMax);
-      const introMessage = clean(body.introMessage, 300);
-      if (![bidRate, bidMin, bidMax].every((value) => Number.isFinite(value) && value > 0) || bidMin > bidMax || bidRate < bidMin || bidRate > bidMax) {
-        return reply(request, { error: "Add your preferred rate and the range you'd accept." }, 400);
-      }
-      if (introMessage.length < 20) return reply(request, { error: 'Add a one-sentence introduction for the hirer.' }, 400);
       const matchScore = Math.min(100, Math.round(60 + Math.min(40, profile.relevant_years * 4)));
-      const applicationValues = { job_id: jobId, candidate_id: user.id, answers, match_score: matchScore, bid_rate: roundPay(bidRate), bid_min: roundPay(bidMin), bid_max: roundPay(bidMax), intro_message: introMessage, updated_at: new Date().toISOString() };
+      const applicationValues = { job_id: jobId, candidate_id: user.id, answers, match_score: matchScore, updated_at: new Date().toISOString() };
       const { data: application, error: applicationError } = await admin.from('job_applications').upsert(applicationValues, { onConflict: 'job_id,candidate_id' }).select('id, status, match_score, submitted_at').single();
       if (applicationError) throw applicationError;
-      // The intro sentence opens the conversation with the hirer (once per application).
-      const thread = await ensureApplicationThread(admin, String(application.id), job, String(profile.full_name || fullName), user.id);
-      if (thread.created) await saveCandidateReply(admin, thread.id, user.id, introMessage);
       return reply(request, { application, status: 'submitted' }, 201);
     }
 
@@ -852,8 +800,7 @@ Deno.serve(async (request) => {
           status: application.status,
           match: application.match_score,
           submittedAt: application.submitted_at,
-          bid: bidResponse(application, jobMap.get(application.job_id) || {}, 'candidate'),
-          job: jobResponse(jobMap.get(application.job_id) || {}, 'candidate'),
+          job: jobResponse(jobMap.get(application.job_id) || {}),
           messages: thread ? messages.filter((message) => message.thread_id === thread.id).map((message) => ({ id: message.id, sender: message.sender, body: message.body, createdAt: message.created_at })) : [],
         };
       }), conversations: (threads || []).map((thread) => {
@@ -878,6 +825,7 @@ Deno.serve(async (request) => {
       if (error) throw error;
       if (!thread) return reply(request, { error: 'Conversation not found.' }, 404);
       const message = await saveCandidateReply(admin, thread.id, user.id, messageBody);
+      await notifyEmployerOfReply(admin, thread.id, messageBody);
       return reply(request, { status: 'sent', threadId: thread.id, message }, 201);
     }
 
@@ -912,6 +860,7 @@ Deno.serve(async (request) => {
         thread = created;
       }
       const message = await saveCandidateReply(admin, thread.id, user.id, messageBody);
+      await notifyEmployerOfReply(admin, thread.id, messageBody);
       return reply(request, { status: 'sent', threadId: thread.id, message }, 201);
     }
 

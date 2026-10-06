@@ -4,10 +4,11 @@ export function identityApproved(profile) {
 export function onboardingStage(profile, progress = {}) {
   if (!profile?.resume_path) return 'resume';
   if (!identityApproved(profile)) {
+    if (!profile?.profile_photo_path) return 'profile';
+    if (!progress.identity_completed_at) return 'identity';
     const identitySubmitted = Boolean(progress.identity_video_uploaded_at)
       && (profile?.verification_status !== 'rejected' || !progress.contract_accepted_at);
     if (!identitySubmitted) return 'verification';
-    if (!progress.identity_completed_at) return 'identity';
     if (!progress.platform_completed_at) return 'platform';
     if (!progress.contract_accepted_at || profile?.verification_status !== 'pending') return 'contract';
     return 'waiting';
