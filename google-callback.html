@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="referrer" content="no-referrer" />
+  <title>Google sign-in — Hire From SA</title>
+  <link rel="stylesheet" href="./brand.css" />
+  <link rel="stylesheet" href="./employer-signup.css" />
+  <link rel="stylesheet" href="./google-sign-in.css" />
+</head>
+<body class="es-page" data-account-menu="off">
+  <main class="es-main">
+    <section class="es-card google-callback-card">
+      <a href="./home.html" class="es-logo"><img src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a>
+      <p class="es-kicker">GOOGLE SIGN-IN</p>
+      <h1 id="callbackTitle">Signing you in…</h1>
+      <p id="callbackStatus" class="es-lead" aria-live="polite">Connecting your Google account.</p>
+      <p id="callbackError" class="portal-result error" role="alert" hidden></p>
+      <form id="googleEmployerForm" hidden>
+        <p class="es-lead">Add your business details to finish your employer account.</p>
+        <div class="es-grid">
+          <label>First name<input name="firstName" autocomplete="given-name" maxlength="60" required /></label>
+          <label>Last name<input name="lastName" autocomplete="family-name" maxlength="60" required /></label>
+          <label class="wide">Company name<input name="companyName" autocomplete="organization" maxlength="120" required /></label>
+          <label class="wide">Phone number with country code<input name="phone" type="tel" autocomplete="tel" maxlength="30" placeholder="+1 555 123 4567" required /></label>
+          <label class="wide">Business website<input name="website" autocomplete="url" maxlength="200" placeholder="yourcompany.com" required /></label>
+          <label class="wide">Company size<select name="companySize" required><option value="">Choose company size</option><option value="0">Just me</option><option value="1-5">1–5</option><option value="6-25">6–25</option><option value="26-100">26–100</option><option value="100+">100+</option></select></label>
+        </div>
+        <button class="es-submit" type="submit">Start hiring <span aria-hidden="true">→</span></button>
+      </form>
+      <button id="retryGoogleCallback" class="es-secondary" type="button" hidden>Try again</button>
+      <a id="backToLogin" class="es-secondary" href="./candidate-login.html" hidden>Back to sign in</a>
+    </section>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./auth-client.js"></script>
+  <script src="./platform-client.js"></script>
+  <script type="module" src="./google-callback.mjs"></script>
+</body>
+</html>

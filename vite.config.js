@@ -46,6 +46,7 @@ const pages = {
   applicationQuestions: 'application-questions.html',
   applied: 'applied.html',
   candidateLogin: 'candidate-login.html',
+  googleCallback: 'google-callback.html',
   candidateDashboard: 'candidate-dashboard.html',
   candidatePublicProfile: 'candidate-public-profile.html',
   onboardingDemo: 'onboarding-demo.html',

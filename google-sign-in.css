@@ -1,0 +1,8 @@
+button.google-sign-in { display:flex; align-items:center; justify-content:center; gap:12px; width:100%; min-height:48px; margin:20px 0; padding:12px 18px; border:1px solid #d9dfe9; border-radius:10px; background:#fff; color:#18253b; font:600 15px 'DM Sans',sans-serif; cursor:pointer; }
+button.google-sign-in:hover { background:#f7f9fc; border-color:#a7b5c9; }
+button.google-sign-in:focus-visible { outline:3px solid #a8c7fa; outline-offset:3px; }
+button.google-sign-in:disabled { opacity:.6; cursor:wait; }
+button.google-sign-in svg { width:20px; height:20px; flex:none; }
+.google-separator { display:flex; align-items:center; gap:12px; color:#718096; font-size:13px; margin:0 0 20px; }
+.google-separator::before,.google-separator::after { content:''; flex:1; height:1px; background:#e2e7ee; }
+.google-callback-card { max-width:600px; margin:40px auto; }

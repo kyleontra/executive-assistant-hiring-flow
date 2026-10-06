@@ -7,6 +7,14 @@ window.savaAuth = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABL
   auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
 });
 
+window.googleSignInAvailable = async () => {
+  const response = await fetch(`${SUPABASE_URL}/auth/v1/settings`, {
+    headers: { apikey: SUPABASE_PUBLISHABLE_KEY }, signal: AbortSignal.timeout(10000),
+  });
+  if (!response.ok) throw new Error('Could not reach sign-in. Check your connection and try again.');
+  return Boolean((await response.json()).external?.google);
+};
+
 let verifiedUserRequest;
 const MASTER_SESSION_KEY = 'hirefromsa:master-session';
 // Master sign-ins are kept in localStorage so they survive new tabs and browser restarts.
