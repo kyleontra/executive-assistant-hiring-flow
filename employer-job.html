@@ -63,6 +63,14 @@
             <div><dt>Screening questions</dt><dd id="ejQuestionCount">None</dd></div>
           </dl>
           <p class="ej-help">Only you can see this page. VAs see the job on their own job board.</p>
+          <div class="ej-delete">
+            <button id="ejDelete" class="ej-delete-link" type="button">Delete job</button>
+            <div id="ejDeleteConfirm" class="ej-delete-confirm" role="alertdialog" aria-labelledby="ejDeleteTitle" hidden>
+              <p id="ejDeleteTitle"><b>Delete this job?</b> It comes off the job board and its applicants are removed. This can't be undone.</p>
+              <div><button id="ejDeleteYes" class="ej-delete-yes" type="button">Yes, delete job</button><button id="ejDeleteNo" class="ej-delete-no" type="button">Cancel</button></div>
+              <p id="ejDeleteStatus" class="ej-delete-status" role="status" aria-live="polite"></p>
+            </div>
+          </div>
         </aside>
       </div>
     </main>

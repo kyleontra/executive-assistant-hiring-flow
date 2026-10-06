@@ -99,5 +99,24 @@
     }
   }
 
+  // Delete sits at the bottom of the side card behind a confirm step, since it can't be undone.
+  const confirmBox = $('#ejDeleteConfirm');
+  $('#ejDelete').addEventListener('click', () => { confirmBox.hidden = false; $('#ejDelete').hidden = true; $('#ejDeleteNo').focus(); });
+  $('#ejDeleteNo').addEventListener('click', () => { confirmBox.hidden = true; $('#ejDelete').hidden = false; $('#ejDeleteStatus').textContent = ''; });
+  $('#ejDeleteYes').addEventListener('click', async () => {
+    const yes = $('#ejDeleteYes');
+    yes.disabled = true;
+    yes.textContent = 'Deleting…';
+    $('#ejDeleteStatus').textContent = '';
+    try {
+      if (!demo) await window.savaPlatform.employerRequest('deleteJob', { jobId });
+      window.location.assign(demo ? './posted-jobs.html?demo' : './posted-jobs.html');
+    } catch (error) {
+      yes.disabled = false;
+      yes.textContent = 'Yes, delete job';
+      $('#ejDeleteStatus').textContent = error.message || 'The job could not be deleted. Try again.';
+    }
+  });
+
   load();
 })();
