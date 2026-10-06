@@ -7,6 +7,15 @@ const ibxState = { applicants: [], jobs: [], activeId: '', job: 'all', sort: 'ma
 function ibxEscape(value) {
   return String(value ?? '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
 }
+// The applicant's profile picture, or their initials when there is none (or it fails to load).
+function ibxAvatar(applicant) {
+  const initials = ibxEscape(ibxInitials(applicant.name));
+  return applicant.photo ? `<img src="${ibxEscape(applicant.photo)}" alt="" data-initials="${initials}" />` : initials;
+}
+document.addEventListener('error', (event) => {
+  const image = event.target;
+  if (image instanceof HTMLImageElement && image.closest('.ibx-avatar')) image.replaceWith(image.dataset.initials || '');
+}, true);
 function ibxInitials(name) {
   return String(name || '').split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join('').toUpperCase() || 'SA';
 }
@@ -66,6 +75,7 @@ async function ibxLiveData() {
     return {
       id: String(application.id),
       name: candidate.name || 'Candidate',
+      photo: candidate.photoUrl || '',
       years: Math.floor(Number(candidate.relevantYears || 0)),
       match: Number(application.match || 0),
       jobId: String(application.jobId || ''),
@@ -100,7 +110,7 @@ function ibxRenderList() {
     const last = applicant.messages[applicant.messages.length - 1];
     const preview = last.from === 'you' ? `You: ${last.text}` : last.text;
     return `<button class="ibx-item${applicant.id === ibxState.activeId ? ' active' : ''}${applicant.unread ? ' unread' : ''}" type="button" role="listitem" data-id="${ibxEscape(applicant.id)}">
-      <span class="ibx-avatar" aria-hidden="true">${ibxEscape(ibxInitials(applicant.name))}</span>
+      <span class="ibx-avatar" aria-hidden="true">${ibxAvatar(applicant)}</span>
       <b>${ibxEscape(applicant.name)}</b><time>${ibxEscape(last.time || applicant.time)}</time>
       <p><strong class="ibx-pill ${ibxPillClass(applicant.match)}" title="What's the match %? We compare this VA&#39;s work experience to the job you posted. The higher the number, the more experience they have doing this kind of work.">${applicant.match}% match</strong>${applicant.unread ? '<i class="ibx-dot" aria-label="Unread"></i>' : ''}<span>${ibxEscape(preview)}</span></p>
     </button>`;
@@ -112,7 +122,7 @@ function ibxRenderThread() {
   const pane = document.querySelector('#ibxThread');
   pane.hidden = !applicant;
   if (!applicant) return;
-  document.querySelector('#ibxAvatar').textContent = ibxInitials(applicant.name);
+  document.querySelector('#ibxAvatar').innerHTML = ibxAvatar(applicant);
   const name = document.querySelector('#ibxName');
   name.textContent = applicant.name;
   if (applicant.profileUrl) name.href = applicant.profileUrl; else name.removeAttribute('href');

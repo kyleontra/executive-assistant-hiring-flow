@@ -22,6 +22,8 @@
 .ibx-item.unread p span{color:#142238;font-weight:600}
 .ibx-dot{width:8px;height:8px;flex:none;border-radius:50%;background:#246fe5}
 .ibx-avatar{display:grid;width:44px;height:44px;place-items:center;border-radius:50%;background:#e8eef8;color:#2b5bb8;font:800 15px Manrope,sans-serif}
+.ibx-avatar{overflow:hidden}
+.ibx-avatar img{width:100%;height:100%;object-fit:cover}
 .ibx-avatar-lg{width:52px;height:52px;font-size:17px}
 .ibx-pill{display:inline-flex;align-items:center;padding:3px 8px;border-radius:999px;background:#e6f6ee;color:#0b7a50;font:700 12px "DM Sans",sans-serif;white-space:nowrap}
 .ibx-pill.mid{background:#fff4dc;color:#9a6512}
