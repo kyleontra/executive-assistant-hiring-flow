@@ -11,11 +11,11 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="./brand.css" />
     <link rel="stylesheet" href="./candidate-public-profile.css" />
+    <link rel="stylesheet" href="./employer-nav.css" />
   </head>
   <body>
     <header class="public-profile-header">
       <a class="site-logo-link" href="./home.html"><img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a>
-      <a class="public-profile-hire" href="./employer-login.html?next=.%2Ftalent.html">Find your next hire →</a>
     </header>
     <main class="public-profile-shell">
       <p id="publicProfileStatus" class="public-profile-status" role="status" aria-live="polite">Loading candidate profile…</p>
@@ -31,5 +31,15 @@
     <script src="./auth-client.js"></script>
     <script src="./platform-client.js"></script>
     <script src="./candidate-public-profile.js"></script>
+    <script>
+      // Signed-in hirers get the same top menu as the rest of their account; visitors see only the logo.
+      window.getVerifiedEmployer?.().then((employer) => {
+        if (!employer) return;
+        document.querySelector('.public-profile-header')?.classList.add('simple-header');
+        const nav = document.createElement('script');
+        nav.src = './employer-nav.js';
+        document.body.append(nav);
+      }).catch(() => {});
+    </script>
   </body>
 </html>
