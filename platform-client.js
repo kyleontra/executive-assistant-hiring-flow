@@ -3,7 +3,7 @@ const EMPLOYER_IDENTITY_KEY = 'sava-employer-messaging-identity';
 
 function platformEmployerIdentity() {
   const masterToken = window.masterSessionToken?.();
-  const masterWorkspace = sessionStorage.getItem('hirefromsa:master-workspace');
+  const masterWorkspace = window.masterStore?.get('hirefromsa:master-workspace') || sessionStorage.getItem('hirefromsa:master-workspace');
   if (masterToken && masterWorkspace) return { employerId: masterWorkspace, editToken: masterToken };
   try {
     const saved = JSON.parse(localStorage.getItem(EMPLOYER_IDENTITY_KEY) || 'null');

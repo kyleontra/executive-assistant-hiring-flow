@@ -43,7 +43,7 @@ Deno.serve(async request => {
       const hash = await passwordHash(password, account?.password_salt || 'unknown-account-dummy-salt');
       if (!account || account.disabled || !equal(hash, account.password_hash)) return reply({ error: 'Incorrect username or password.' }, 401);
       const accessToken = `hfm_${randomHex()}`;
-      const expiresAt = new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString();
+      const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
       const { error: sessionError } = await admin.from('master_sessions').insert({ token_hash: await masterHash(accessToken), account_id: account.id, expires_at: expiresAt });
       if (sessionError) throw sessionError;
       return reply({ token: accessToken, expiresAt, user: masterUser(account), employerId: account.employer_id });

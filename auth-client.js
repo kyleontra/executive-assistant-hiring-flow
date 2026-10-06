@@ -9,7 +9,10 @@ window.savaAuth = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABL
 
 let verifiedUserRequest;
 const MASTER_SESSION_KEY = 'hirefromsa:master-session';
-window.masterSessionToken = () => sessionStorage.getItem(MASTER_SESSION_KEY) || '';
+// Master sign-ins are kept in localStorage so they survive new tabs and browser restarts.
+const masterStore = { get: (key) => { try { return localStorage.getItem(key) || sessionStorage.getItem(key) || ''; } catch { return ''; } }, set: (key, value) => { try { localStorage.setItem(key, value); } catch { sessionStorage.setItem(key, value); } }, remove: (key) => { try { localStorage.removeItem(key); } catch { /* ignore */ } sessionStorage.removeItem(key); } };
+window.masterStore = masterStore;
+window.masterSessionToken = () => masterStore.get(MASTER_SESSION_KEY);
 window.masterAuthRequest = async (action, payload = {}) => {
   const token = window.masterSessionToken();
   const response = await fetch(`${SUPABASE_URL}/functions/v1/master-auth`, {
@@ -18,7 +21,7 @@ window.masterAuthRequest = async (action, payload = {}) => {
   });
   const result = await response.json();
   if (!response.ok) {
-    if (response.status === 401 && action !== 'login') sessionStorage.removeItem(MASTER_SESSION_KEY);
+    if (response.status === 401 && action !== 'login') masterStore.remove(MASTER_SESSION_KEY);
     throw new Error(result.error || 'Unable to check your account. Please try again.');
   }
   return result;
@@ -26,16 +29,16 @@ window.masterAuthRequest = async (action, payload = {}) => {
 window.signInMaster = async (username, password) => {
   const result = await window.masterAuthRequest('login', { username, password });
   await window.savaAuth.auth.signOut();
-  sessionStorage.setItem(MASTER_SESSION_KEY, result.token);
-  sessionStorage.setItem('hirefromsa:master-workspace', result.employerId);
+  masterStore.set(MASTER_SESSION_KEY, result.token);
+  masterStore.set('hirefromsa:master-workspace', result.employerId);
   return result.user;
 };
 window.signOutAccount = async () => {
   if (window.masterSessionToken()) {
     try { await window.masterAuthRequest('logout'); }
     catch (error) { if (window.masterSessionToken()) throw error; }
-    sessionStorage.removeItem(MASTER_SESSION_KEY);
-    sessionStorage.removeItem('hirefromsa:master-workspace');
+    masterStore.remove(MASTER_SESSION_KEY);
+    masterStore.remove('hirefromsa:master-workspace');
   }
   await window.savaAuth.auth.signOut();
 };
@@ -45,7 +48,7 @@ async function resolveVerifiedUser() {
     if (window.masterSessionToken()) {
       try {
         const result = await window.masterAuthRequest('status');
-        sessionStorage.setItem('hirefromsa:master-workspace', result.employerId);
+        masterStore.set('hirefromsa:master-workspace', result.employerId);
         return result.user;
       } catch (error) {
         if (!window.masterSessionToken()) return null;
