@@ -91,6 +91,7 @@ function cleanup() {
   objectUrl = null;
 }
 function renderIdentityVideo() {
+  document.documentElement.dataset.onboardingStep = 'identity';
   renderFocusLayout(`<section class="es-focus"><h1>Watch this video to continue</h1><div id="identityGuidePlayer" class="es-player es-focus-player"></div>${button('identityContinue', 'Continue <span aria-hidden="true">→</span>')}<p id="journeyStatus" role="status" class="journey-status-line"></p></section>`);
   const next = root.querySelector('#identityContinue');
   next.classList.add('es-submit');
@@ -128,6 +129,7 @@ function bind(id, callback) {
   };
 }
 function renderPlatformGuide() {
+  document.documentElement.dataset.onboardingStep = 'platform';
   renderSignupLayout({ side: signupSide, part: 2, card: parts => `<section class="es-card es-login es-guide"><p class="es-kicker">STEP 5 OF 5</p><h1>How Hire From SA works</h1><p class="es-lead">This video covers how the platform works and what's in your contract. Watch it to the end, then you'll sign.</p>${parts}<div id="guidePlayer" class="es-player"></div>${button('guideContinue', 'Watch video to continue')}<p id="journeyStatus" role="status" class="journey-status-line"></p></section>` });
   const next = root.querySelector('#guideContinue');
   next.classList.add('es-submit');
@@ -148,6 +150,7 @@ function renderPlatformGuide() {
   });
 }
 function renderGuide(guide) {
+  document.documentElement.dataset.onboardingStep = guide;
   if (guide === 'platform') { renderPlatformGuide(); return; }
   restoreJourneyLayout();
   const copy = {
@@ -173,6 +176,7 @@ function renderGuide(guide) {
   });
 }
 function renderContract(state) {
+  document.documentElement.dataset.onboardingStep = 'contract';
   const savedName = escapeHtml(state.contractName);
   renderSignupLayout({ side: signupSide, part: 2, card: parts => `<form id="contractForm" class="es-card es-login es-contract"><p class="es-kicker">STEP 5 OF 5</p><h1>Sign your contract</h1><p class="es-lead">Two quick parts: sign the contract in Sendlink, then confirm here.</p>${parts}<div class="es-contract-step"><span class="es-contract-num">1</span><div><b>Open and sign the contract</b><p>It opens in a new tab. Fill in every required field and submit it, then come back to this page.</p><a id="openContract" class="es-secondary es-contract-open" href="${CONTRACT_URL}" target="_blank" rel="noopener noreferrer">Open the contract ↗</a></div></div><div class="es-contract-step"><span class="es-contract-num">2</span><div><b>Confirm you signed it</b><label class="es-code-label">Full legal name<input id="contractName" name="contractName" type="text" value="${savedName}" autocomplete="name" minlength="2" maxlength="160" required /></label><label class="es-check"><input id="contractAccepted" name="contractAccepted" type="checkbox" required /><span>I completed and submitted the Hire From SA contract in Sendlink.</span></label></div></div><button id="submitContract" class="es-submit" type="submit">Submit for review <span aria-hidden="true">→</span></button><p id="journeyStatus" role="status" class="journey-status-line"></p></form>` });
   const form = root.querySelector('#contractForm');
@@ -193,6 +197,7 @@ function renderContract(state) {
 }
 // After the contract: one video, then Check status opens their account (they can browse jobs while under review).
 function renderWaiting(user) {
+  document.documentElement.dataset.onboardingStep = 'review';
   const watched = hasWatched(user?.id || 'demo', 'waiting');
   renderFocusLayout(`<section class="es-focus"><h1>Watch this video for next steps</h1><div id="waitingGuidePlayer" class="es-player es-focus-player"></div>${button('checkStatus', 'View My Profile <span aria-hidden="true">→</span>')}<p id="journeyStatus" role="status" class="journey-status-line"></p></section>`);
   const next = root.querySelector('#checkStatus');
@@ -210,6 +215,7 @@ function renderWaiting(user) {
   next.onclick = () => { if (next.disabled) return; cleanup(); location.assign(demoMode ? './candidate-dashboard.html?demo=1&review=1&tab=profile' : './candidate-dashboard.html?tab=profile'); };
 }
 function renderPreferences(state, step = state.surveyStep === 2 ? 2 : 1) {
+  document.documentElement.dataset.onboardingStep = step === 1 ? 'career' : 'preferences';
   restoreJourneyLayout();
   const saved = state.preferences || {};
   const start = saved.startAvailability || '';
@@ -321,6 +327,7 @@ function profileIntroMarkup(state) {
   return `<header class="pp-top"><a href="./home.html" class="es-logo" aria-label="Hire From SA home"><img src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a><a class="pp-back" href="${back}">← Back to My Profile</a></header><div class="pp-main"><div class="pp-heading"><h1>Record your 1-minute intro video</h1><p class="es-lead">Hirers watch this before they message you. Watch the video, then record yours using the script.</p></div><div class="pp-grid"><section class="pp-panel pi-guide"><p class="pp-step"><b>1</b>Watch how to do it</p><div id="introGuidePlayer" class="pp-video"><video src="${guides.intro.src}" poster="${guides.intro.src.replace('.mp4', '.jpg')}" controls playsinline preload="metadata" aria-label="${guides.intro.title}"></video></div><div class="pi-script"><b>Your script</b><p>${introScript}</p><small>Use your own words. Keep your ID and contact details out of the video.</small></div></section><section class="pp-panel pi-recorder"><p class="pp-step"><b>2</b>Record your video</p><div class="intro-preview-frame"><video id="introScreen" class="intro-screen" playsinline controls preload="auto" aria-label="Your introduction recording"></video><p id="introPlaceholder" class="intro-placeholder">Your recording will show here.</p></div><select id="introBackground" hidden><option value="brand" selected>Hire From SA background</option></select><label id="introBackgroundFileLabel" hidden><input id="introBackgroundFile" type="file" accept="image/jpeg,image/png,image/webp" /></label><p class="pi-note">The Hire From SA background is added to camera recordings automatically.</p><div class="pi-buttons">${button('startIntro', 'Record with camera')}${button('stopIntro', 'Stop', true)}${button('playIntro', 'Play back', true)}</div><p id="recordTimer" class="intro-timer"></p><label class="pi-upload">Or upload a video (MP4 or WebM, up to 2 minutes)<input id="introFile" type="file" accept="video/mp4,video/webm" /></label><label class="es-check"><input id="introConsent" type="checkbox" /><span>I agree to show this video on my profile to hirers using Hire From SA.</span></label>${button('saveIntro', 'Save my video →')}${state.introSaved ? button('removeIntro', 'Remove saved video', true) : ''}<p id="journeyStatus" role="status" class="journey-status-line"></p></section></div></div>`;
 }
 function renderRecorder(state, profileMode = false) {
+  document.documentElement.dataset.onboardingStep = 'recording';
   restoreJourneyLayout();
   selectedVideo = null;
   if (profileMode) {

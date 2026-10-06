@@ -19,7 +19,9 @@ const player = mountRequiredVideo(document.querySelector('#welcomePlayer'), {
 });
 player.video.poster = VIDEO.src.replace('.mp4', '.jpg');
 // Move on by itself when the video ends; Continue stays for anyone who already watched it.
-function goNext() {
+async function goNext() {
+  next.disabled = true;
+  await Promise.race([window.trackOnboarding?.('welcomeComplete', 'welcome'), new Promise(resolve => setTimeout(resolve, 300))]);
   player.video.pause();
   window.location.assign(demoMode ? './candidate-resume.html?demo=1' : './candidate-resume.html');
 }

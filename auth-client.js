@@ -128,3 +128,7 @@ if (!document.querySelector('script[data-sava-account-script]')) {
   accountScript.dataset.savaAccountScript = 'true';
   document.head.append(accountScript);
 }
+
+if (!document.querySelector('script[data-onboarding-tracking]')) {
+  const tracker = document.createElement('script'); tracker.src = './onboarding-tracking.js'; tracker.dataset.onboardingTracking = 'true'; document.head.append(tracker);
+}

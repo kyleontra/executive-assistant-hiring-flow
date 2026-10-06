@@ -10,6 +10,7 @@
     { href: './posted-jobs.html', label: 'Posted jobs', pages: ['posted-jobs.html'] },
   ];
   const internal = [
+    { href: './admin-onboarding.html', label: 'Onboarding progress' },
     { href: './admin-resumes.html', label: 'Resume database' },
     { href: './admin-review.html', label: 'Candidate approvals' },
   ];

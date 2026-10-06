@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en"><head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><meta name="robots" content="noindex,nofollow" />
+  <title>Onboarding progress — Hire From SA</title>
+  <link rel="stylesheet" href="./brand.css" /><link rel="stylesheet" href="./admin-review.css" /><link rel="stylesheet" href="./employer-nav.css" /><link rel="stylesheet" href="./admin-onboarding.css" />
+</head><body>
+  <header class="admin-header"><a class="site-logo-link" href="./home.html"><img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a><nav><a href="./admin-review.html">Candidate approvals</a><a href="./admin-resumes.html">Resume database</a></nav></header>
+  <main class="admin-shell">
+    <header class="dashboard-heading"><div><p class="eyebrow">MASTER PANEL</p><h1>Onboarding progress</h1><p>See every candidate’s saved progress and where they last stopped.</p></div><button id="refreshTracking" class="secondary" type="button">Refresh</button></header>
+    <p id="trackingNotice" role="status">Loading onboarding progress…</p>
+    <a id="masterSignIn" href="./employer-login.html?next=./admin-onboarding.html" hidden>Sign in with your master account</a>
+    <section id="trackingContent" hidden>
+      <div id="trackingStats" class="tracking-stats"></div>
+      <div class="tracking-filters"><label>Find a candidate<input id="trackingSearch" type="search" placeholder="Name or email" /></label><label>Show<select id="trackingFilter"><option value="all">All candidates</option><option value="in_progress">Still onboarding</option><option value="waiting">Awaiting approval</option><option value="complete">Onboarding complete</option><option value="errors">Reported step errors</option></select></label></div>
+      <p class="tracking-help">Expand a candidate to see every step. “Started” means the page was opened. “Complete” means the step was saved. Earlier completions may have no recorded date. Intro videos can be skipped.</p>
+      <div id="trackingRows" aria-live="polite"></div>
+    </section>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="./auth-client.js"></script><script src="./employer-nav.js"></script><script type="module" src="./admin-onboarding.mjs"></script>
+</body></html>

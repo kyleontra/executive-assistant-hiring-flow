@@ -1,0 +1,13 @@
+.tracking-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin:24px 0; }
+.tracking-stat { background:#fff; border:1px solid #dce4ee; border-radius:12px; padding:18px; }
+.tracking-stat strong { display:block; font-size:28px; color:#172640; }.tracking-stat span { color:#65758b; font-size:13px; }
+.tracking-filters { display:flex; gap:20px; margin:24px 0 12px; }.tracking-filters label { display:grid; gap:7px; color:#53657d; font-size:13px; flex:1; }.tracking-filters input,.tracking-filters select { width:100%; padding:12px; border:1px solid #dce4ee; border-radius:9px; background:white; font:inherit; }
+.tracking-help { color:#64748b; font-size:13px; line-height:1.6; }
+.tracking-candidate { margin:12px 0; background:#fff; border:1px solid #dce4ee; border-radius:12px; overflow:hidden; }
+.tracking-candidate summary { cursor:pointer; padding:20px; display:grid; grid-template-columns:minmax(180px,2fr) 1.2fr 90px 1.3fr; gap:16px; align-items:center; }
+.tracking-candidate summary small { display:block; color:#64748b; font-size:12px; margin-top:5px; overflow-wrap:anywhere; }.tracking-candidate summary b { color:#172640; }
+.tracking-candidate summary:hover { background:#f6f9fd; }.tracking-stage { font-size:13px; color:#315f9d; }
+.tracking-table-wrap { overflow-x:auto; }.tracking-table { border-collapse:collapse; width:100%; font-size:13px; }.tracking-table th,.tracking-table td { padding:12px 20px; text-align:left; border-top:1px solid #edf0f5; white-space:nowrap; }.tracking-table th { background:#f8fafc; color:#61738c; }
+.step-status { display:inline-block; padding:5px 9px; border-radius:20px; background:#eef1f5; color:#627187; font-size:12px; }.step-status.complete { background:#e7f7f0; color:#0c7254; }.step-status.started { background:#e8f0fd; color:#255fbd; }.step-status.needs_update { background:#fff0ed; color:#b44130; }.step-status.skipped { background:#f1edff; color:#694ba0; }
+.tracking-error { color:#b44130; font-size:12px; }.tracking-progress { height:5px; background:#e9eef5; border-radius:6px; margin-top:7px; overflow:hidden; }.tracking-progress span { height:100%; display:block; background:#2774f0; }
+@media(max-width:700px) { .tracking-stats { grid-template-columns:repeat(2,1fr); }.tracking-filters { flex-direction:column; gap:12px; }.tracking-candidate summary { grid-template-columns:1fr 1fr; gap:12px; padding:16px; }.tracking-candidate summary small { max-width:100%; }.tracking-table td,.tracking-table th { padding:10px 14px; } }

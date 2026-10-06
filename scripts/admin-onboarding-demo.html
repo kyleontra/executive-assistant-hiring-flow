@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en"><head>
+<base href="/" />
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><meta name="robots" content="noindex,nofollow" />
+  <title>Onboarding progress — Hire From SA</title>
+  <link rel="stylesheet" href="./brand.css" /><link rel="stylesheet" href="./admin-review.css" /><link rel="stylesheet" href="./employer-nav.css" /><link rel="stylesheet" href="./admin-onboarding.css" />
+</head><body>
+  <header class="admin-header"><a class="site-logo-link" href="./home.html"><img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a><nav><a href="./admin-review.html">Candidate approvals</a><a href="./admin-resumes.html">Resume database</a></nav></header>
+  <main class="admin-shell">
+    <header class="dashboard-heading"><div><p class="eyebrow">MASTER PANEL</p><h1>Onboarding progress</h1><p>See every candidate’s saved progress and where they last stopped.</p></div><button id="refreshTracking" class="secondary" type="button">Refresh</button></header>
+    <p style="padding:12px;background:#fff3cd">Local demonstration — sample candidates, no live account data</p><p id="trackingNotice" role="status">Loading onboarding progress…</p>
+    <a id="masterSignIn" href="./employer-login.html?next=./admin-onboarding.html" hidden>Sign in with your master account</a>
+    <section id="trackingContent" hidden>
+      <div id="trackingStats" class="tracking-stats"></div>
+      <div class="tracking-filters"><label>Find a candidate<input id="trackingSearch" type="search" placeholder="Name or email" /></label><label>Show<select id="trackingFilter"><option value="all">All candidates</option><option value="in_progress">Still onboarding</option><option value="waiting">Awaiting approval</option><option value="complete">Onboarding complete</option><option value="errors">Reported step errors</option></select></label></div>
+      <p class="tracking-help">Expand a candidate to see every step. “Started” means the page was opened. “Complete” means the step was saved. Earlier completions may have no recorded date. Intro videos can be skipped.</p>
+      <div id="trackingRows" aria-live="polite"></div>
+    </section>
+  </main>
+  <script type="module">
+import {trackingSummary} from '/supabase/functions/_shared/onboarding-tracking.mjs';
+window.masterSessionToken=()=> 'local-demo';
+window.getVerifiedEmployer=async()=>({app_metadata:{master:true,can_review:true}});
+const user={id:'sample-1',email:'candidate@example.com',created_at:'2026-10-05T09:00:00Z',email_confirmed_at:'2026-10-05T09:05:00Z'};
+const row=trackingSummary(user,{full_name:'Example candidate',resume_path:'resume.pdf',profile_photo_path:'photo.jpg',verification_status:'pending',updated_at:'2026-10-06T14:10:00Z'},{identity_photos_uploaded_at:'2026-10-05T10:00:00Z',identity_video_uploaded_at:'2026-10-05T10:10:00Z',identity_completed_at:'2026-10-05T10:15:00Z',platform_completed_at:'2026-10-05T10:20:00Z',contract_accepted_at:'2026-10-05T10:30:00Z'},[{step:'welcome',first_seen_at:'2026-10-05T09:06:00Z',completed_at:'2026-10-05T09:08:00Z'},{step:'career',first_seen_at:'2026-10-06T14:00:00Z',last_seen_at:'2026-10-06T14:10:00Z',error_count:1}]);
+row.currentStage='waiting';
+window.fetch=async()=>({ok:true,json:async()=>({rows:[row],nextPage:null})});
+</script><script type="module" src="./admin-onboarding.mjs"></script>
+</body></html>
