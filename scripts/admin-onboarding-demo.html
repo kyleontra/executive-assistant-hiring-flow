@@ -1,6 +1,5 @@
 <!doctype html>
-<html lang="en"><head>
-<base href="/" />
+<html lang="en"><head><base href="/">
   <meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><meta name="robots" content="noindex,nofollow" />
   <title>Onboarding progress — Hire From SA</title>
   <link rel="stylesheet" href="./brand.css" /><link rel="stylesheet" href="./admin-review.css" /><link rel="stylesheet" href="./employer-nav.css" /><link rel="stylesheet" href="./admin-onboarding.css" />
@@ -8,11 +7,16 @@
   <header class="admin-header"><a class="site-logo-link" href="./home.html"><img class="site-logo" src="./assets/hire-from-sa-logo.jpeg" alt="Hire From SA" /></a><nav><a href="./admin-review.html">Candidate approvals</a><a href="./admin-resumes.html">Resume database</a></nav></header>
   <main class="admin-shell">
     <header class="dashboard-heading"><div><p class="eyebrow">MASTER PANEL</p><h1>Onboarding progress</h1><p>See every candidate’s saved progress and where they last stopped.</p></div><button id="refreshTracking" class="secondary" type="button">Refresh</button></header>
-    <p style="padding:12px;background:#fff3cd">Local demonstration — sample candidates, no live account data</p><p id="trackingNotice" role="status">Loading onboarding progress…</p>
+    <p class="tracking-help">Local demonstration — sample candidates, no live account data</p><p id="trackingNotice" role="status">Loading onboarding progress…</p>
     <a id="masterSignIn" href="./employer-login.html?next=./admin-onboarding.html" hidden>Sign in with your master account</a>
     <section id="trackingContent" hidden>
       <div id="trackingStats" class="tracking-stats"></div>
-      <div class="tracking-filters"><label>Find a candidate<input id="trackingSearch" type="search" placeholder="Name or email" /></label><label>Show<select id="trackingFilter"><option value="all">All candidates</option><option value="in_progress">Still onboarding</option><option value="waiting">Awaiting approval</option><option value="complete">Onboarding complete</option><option value="errors">Reported step errors</option></select></label></div>
+      <section class="funnel-panel" aria-labelledby="funnelTitle">
+        <div class="funnel-heading"><div><p class="eyebrow">ONBOARDING FUNNEL</p><h2 id="funnelTitle">Where candidates stop</h2></div><div class="funnel-controls"><label>Signup cohort<select id="funnelCohort"><option value="all">All signups</option><option value="30">Last 30 days</option><option value="7">Last 7 days</option></select></label><label>Inactive for<select id="funnelIdle"><option value="24">24 hours</option><option value="48" selected>48 hours</option><option value="168">7 days</option></select></label></div></div>
+        <p class="tracking-help">Estimated churn = candidates who reached a screen, have not completed it, and have had no onboarding activity for the selected period. Awaiting approval is counted separately. Reached includes saved completions; historical page visits are unavailable. Optional and parallel screens may have different reach counts.</p>
+        <p id="funnelSummary" class="tracking-help"></p><div class="tracking-table-wrap"><table class="tracking-table funnel-table"><thead><tr><th>Screen</th><th>Reached</th><th>Completed</th><th>Completion</th><th>Active / incomplete</th><th>Awaiting approval</th><th>Inactive / incomplete</th><th>Est. churn</th></tr></thead><tbody id="funnelRows"></tbody></table></div>
+      </section>
+      <h2 class="candidate-heading">Candidate progress</h2><div class="tracking-filters"><label>Find a candidate<input id="trackingSearch" type="search" placeholder="Name or email" /></label><label>Show<select id="trackingFilter"><option value="all">All candidates</option><option value="in_progress">Still onboarding</option><option value="waiting">Awaiting approval</option><option value="complete">Onboarding complete</option><option value="errors">Reported step errors</option></select></label></div>
       <p class="tracking-help">Expand a candidate to see every step. “Started” means the page was opened. “Complete” means the step was saved. Earlier completions may have no recorded date. Intro videos can be skipped.</p>
       <div id="trackingRows" aria-live="polite"></div>
     </section>
