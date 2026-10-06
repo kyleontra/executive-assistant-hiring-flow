@@ -147,6 +147,7 @@ function stRender() {
   const understood = stState.understood;
   if (searching && understood && (understood.terms.length || understood.minYears)) {
     understoodLine.innerHTML = `<b>Searching for</b>${understood.terms.map((term) => `<span>${stEscape(understood.labels?.[term] || term)}</span>`).join('')}${understood.minYears ? `<span>${understood.minYears}+ years</span>` : ''}`;
+    if (understood.description) understoodLine.innerHTML += `<span>${stEscape(understood.description)}</span>`;
     understoodLine.hidden = false;
   } else understoodLine.hidden = true;
 
@@ -165,7 +166,7 @@ function stRender() {
     return `<article class="st-card">
       <span class="st-avatar" aria-hidden="true">${avatar}</span>
       <div>
-        <div class="st-name-row">${name}${searching ? `<span class="st-pill ${stPillClass(match)}">${match}% match</span>` : ''}</div>
+        <div class="st-name-row">${name}${searching ? `<span class="st-pill ${stPillClass(match)}">${stDemo ? `${match}% match` : 'Relevant experience'}</span>` : ''}</div>
         <p class="st-role">${stEscape(candidate.primaryRole)} · ${candidate.relevantYears} ${candidate.relevantYears === 1 ? 'year' : 'years'} relevant${candidate.hours ? ` · ${stEscape(candidate.hours)}` : ''}</p>
         <p class="st-summary">${stEscape(candidate.summary)}</p>
         <div class="st-tags">${tags.map((tag) => `<span class="${hitSet.has(tag.toLowerCase()) ? 'hit' : ''}">${stEscape(tag)}</span>`).join('')}</div>
@@ -206,7 +207,7 @@ function stFromLive(candidate) {
 }
 
 let stSearchRun = 0;
-const ST_STEPS = ['Reading every candidate profile', 'Comparing skills, tools and experience', 'Ranking your best matches'];
+const ST_STEPS = ['Understanding your request with AI', 'Searching verified candidate resumes', 'Preparing relevant profiles'];
 const stWait = (ms) => new Promise((resolve) => { window.setTimeout(resolve, ms); });
 
 function stShowSearching(query) {
@@ -228,33 +229,20 @@ async function stSearch(raw) {
   if (query) url.searchParams.set('q', query); else url.searchParams.delete('q');
   window.history.replaceState({}, '', url);
   stState.query = query;
-  stState.understood = stUnderstand(query);
+  stState.understood = stDemo || !query ? stUnderstand(query) : null;
   stStatus.hidden = true;
   try {
-    let pause = Promise.resolve();
-    if (query) {
-      stShowSearching(query);
-      const steps = [...stResults.querySelectorAll('.st-steps li')];
-      // Walk through the steps so the search reads as deliberate, not instant.
-      pause = (async () => {
-        for (let index = 0; index < steps.length; index += 1) {
-          if (run !== stSearchRun) return;
-          steps.forEach((step, stepIndex) => { step.className = stepIndex < index ? 'done' : stepIndex === index ? 'active' : ''; });
-          await stWait(index === steps.length - 1 ? 1100 : 1000);
-        }
-      })();
-    }
+    if (query) stShowSearching(query);
     if (!stDemo) {
       if (!query) { stStatus.textContent = 'Loading candidates…'; stStatus.className = 'st-status'; stStatus.hidden = false; }
-      // The live index is keyword based, so send the understood terms as alternatives and rank them here.
-      const liveQuery = [...stState.understood.terms, ...stState.understood.terms.flatMap((term) => ST_RELATED[term] || [])].join(' or ');
-      const result = await window.savaPlatform.employerRequest('searchCandidates', { query: liveQuery, limit: 50 });
+      const result = await window.savaPlatform.employerRequest(query ? 'aiSearchCandidates' : 'searchCandidates', { query, limit: 50 });
+      if (run !== stSearchRun) return;
       stState.candidates = (result.candidates || []).map(stFromLive);
+      if (query) stState.understood = result.interpretation;
       stStatus.hidden = true;
     }
-    await pause;
     if (run !== stSearchRun) return;
-    stState.results = stRank(stState.understood);
+    stState.results = !stDemo && query ? stState.candidates.map(candidate => ({candidate,match:stScore(candidate,stState.understood).score,hits:stScore(candidate,stState.understood).hits})) : stRank(stState.understood);
     stRender();
   } catch (error) {
     if (run !== stSearchRun) return;

@@ -1,3 +1,4 @@
+import { interpretTalentQuery } from '../_shared/ai-talent-search.mjs';
 import { parsePortfolioLinks, publicPortfolioLinks } from '../_shared/portfolio-links.mjs';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { MASTER_TOKEN_PATTERN, masterAccount, masterUser, masterWorkspaceHash } from '../_shared/master-access.mjs';
@@ -574,11 +575,20 @@ Deno.serve(async (request) => {
       return reply(request, { jobs: (jobs || []).map((row) => jobResponse(row, "owner")), applications: applicationResults });
     }
 
-    if (action === 'searchCandidates') {
+    if (action === 'searchCandidates' || action === 'aiSearchCandidates') {
       if (!await employerUser(request, admin)) return reply(request, { error: 'Sign in with an employer account to search candidates.' }, 401);
       const access = await ensureEmployer(admin, body);
       if (access.error) return reply(request, { error: access.error }, 403);
-      const query = clean(body.query, 100).toLowerCase();
+      let interpretation = null;
+      if (action === 'aiSearchCandidates') {
+        const rawQuery = clean(body.query, 1500);
+        if (!rawQuery) return reply(request, { error:'Describe the candidate you need.' },400);
+        const { data: storedKey, error: keyError } = await admin.rpc('candidate_export_key');
+        if (keyError) throw new Error('AI search configuration is unavailable. Please retry.');
+        try { interpretation = await interpretTalentQuery(rawQuery, storedKey || Deno.env.get('OPENAI_API_KEY') || '', Deno.env.get('TALENT_SEARCH_MODEL') || 'gpt-6-luna'); }
+        catch (error) { return reply(request, { error: error.message || 'AI search is unavailable. Please retry.' },503); }
+      }
+      const query = interpretation?.query || clean(body.query, 100).toLowerCase();
       const requestedLimit = Number(body.limit);
       const limit = Number.isFinite(requestedLimit) ? Math.max(1, Math.min(50, Math.floor(requestedLimit))) : 30;
       const indexed = await backfillResumeIndexes(admin);
@@ -627,7 +637,7 @@ Deno.serve(async (request) => {
             introUrl: await candidateIntroUrl(admin, String(profile.user_id || '')),
         };
       }));
-      return reply(request, { candidates, query, count: candidates.length, resumesIndexed: indexed });
+      return reply(request, { candidates: interpretation ? candidates.filter(candidate => candidate.relevantYears >= interpretation.minYears) : candidates, interpretation, query, count: candidates.length, resumesIndexed: indexed });
     }
 
     if (action === 'updateApplication') {
