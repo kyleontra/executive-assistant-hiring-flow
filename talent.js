@@ -143,19 +143,12 @@ function stRender() {
   document.querySelector('#stSummary').textContent = `${sorted.length} ${sorted.length === 1 ? 'candidate' : 'candidates'}${searching ? ' matched' : ' available'}`;
   document.querySelector('#stClear').hidden = !searching;
 
-  const understoodLine = document.querySelector('#stUnderstood');
-  const understood = stState.understood;
-  if (searching && understood && (understood.terms.length || understood.minYears)) {
-    understoodLine.innerHTML = `<b>Searching for</b>${understood.terms.map((term) => `<span>${stEscape(understood.labels?.[term] || term)}</span>`).join('')}${understood.minYears ? `<span>${understood.minYears}+ years</span>` : ''}`;
-    if (understood.description) understoodLine.innerHTML += `<span>${stEscape(understood.description)}</span>`;
-    understoodLine.hidden = false;
-  } else understoodLine.hidden = true;
 
   if (!sorted.length) {
     stResults.innerHTML = `<div class="st-empty"><h3>No exact matches yet</h3><p>Try fewer words, a broader role, or a tool like "Excel" or "QuickBooks".</p></div>`;
     return;
   }
-  stResults.innerHTML = sorted.map(({ candidate, match, hits }) => {
+  stResults.innerHTML = sorted.map(({ candidate, match, hits }, index) => {
     const tags = [...new Set([...(candidate.skills || []), ...(candidate.software || [])])].slice(0, 8);
     const hitSet = new Set(hits.map((hit) => hit.toLowerCase()));
     const avatar = candidate.photoUrl ? `<img src="${stEscape(candidate.photoUrl)}" alt="" />` : stEscape(stInitials(candidate.name));
@@ -163,7 +156,7 @@ function stRender() {
       ? `<a class="st-name" href="${stEscape(candidate.profileUrl)}" target="_blank" rel="noopener">${stEscape(candidate.name)}</a>`
       : `<span class="st-name">${stEscape(candidate.name)}</span>`;
     const why = searching && hits.length ? `<p class="st-why">Matched on <b>${[...hits].sort((a, b) => a.length - b.length).slice(0, 3).map(stEscape).join(', ')}</b></p>` : '';
-    return `<article class="st-card">
+    return `<article class="st-card" style="--i:${Math.min(index, 8)}">
       <span class="st-avatar" aria-hidden="true">${avatar}</span>
       <div>
         <div class="st-name-row">${name}${searching ? `<span class="st-pill ${stPillClass(match)}">${stDemo ? `${match}% match` : 'Relevant experience'}</span>` : ''}</div>
@@ -207,18 +200,93 @@ function stFromLive(candidate) {
 }
 
 let stSearchRun = 0;
-const ST_STEPS = ['Understanding your request with AI', 'Searching verified candidate resumes', 'Preparing relevant profiles'];
+// Live results are already chosen by the AI search; the demo ranks its sample people here.
+function stResultsFor(understood) {
+  if (stDemo || !stState.query) return stRank(understood);
+  const terms = understood || { terms: [], minYears: 0 };
+  return stState.candidates.map((candidate) => { const scored = stScore(candidate, terms); return { candidate, match: scored.score, hits: scored.hits }; });
+}
 const stWait = (ms) => new Promise((resolve) => { window.setTimeout(resolve, ms); });
+const stCalm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const stThink = document.querySelector('#stThink');
+const stThinkLines = document.querySelector('#stThinkLines');
+const stThinkHead = document.querySelector('#stThinkHead');
+const ST_SAY = { ceo: 'CEO', crm: 'CRM', sdr: 'SDR', seo: 'SEO', sop: 'SOPs', sops: 'SOPs', 'us hours': 'U.S. hours', excel: 'Excel', quickbook: 'QuickBooks', quickbooks: 'QuickBooks', shopify: 'Shopify', canva: 'Canva', hubspot: 'HubSpot', xero: 'Xero' };
+const stCaps = (text) => String(text).replace(/\b(ceo|crm|sdr|seo|sops?)\b/g, (word) => word.toUpperCase()).replace(/\bSOPS\b/, 'SOPs');
+const stSay = (understood, term) => ST_SAY[term] || stCaps(understood.labels?.[term] || term);
+const stList = (items) => (items.length < 3 ? items.join(' and ') : `${items.slice(0, -1).join(', ')} and ${items.at(-1)}`);
 
-function stShowSearching(query) {
-  document.querySelector('#stTitle').textContent = `Results for "${query}"`;
-  document.querySelector('#stSummary').textContent = 'Searching…';
-  document.querySelector('#stUnderstood').hidden = true;
-  stResults.innerHTML = `<div class="st-searching" role="status">
-      <div class="st-searching-head"><span class="st-orb" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/></svg></span>
-        <div><b>Generating your best matches…</b><ol class="st-steps">${ST_STEPS.map((step) => `<li>${step}</li>`).join('')}</ol></div></div>
-      <div class="st-progress"><i></i></div>
-    </div>${'<div class="st-skeleton"><span></span><div><i></i><i></i><i></i></div></div>'.repeat(3)}`;
+stThinkHead.addEventListener('click', () => {
+  if (stThink.classList.contains('working')) return;
+  const open = stThinkHead.getAttribute('aria-expanded') !== 'true';
+  stThinkHead.setAttribute('aria-expanded', String(open));
+});
+
+// Writes one thought out like it is being typed, then marks it done when the next one starts.
+async function stThought(run, text) {
+  if (run !== stSearchRun) return;
+  stThinkLines.querySelector('li.active')?.classList.replace('active', 'done');
+  const line = document.createElement('li');
+  line.className = 'active';
+  line.innerHTML = '<span class="st-tick" aria-hidden="true"></span><span class="st-text"></span>';
+  stThinkLines.append(line);
+  const out = line.querySelector('.st-text');
+  if (stCalm) out.textContent = text;
+  else for (let index = 1; index <= text.length; index += 3) {
+    if (run !== stSearchRun) return;
+    out.textContent = text.slice(0, index);
+    await stWait(14);
+  }
+  out.textContent = text;
+  await stWait(stCalm ? 200 : 380);
+}
+
+// Narrates the real steps of the search, using real counts from the profiles it is ranking.
+async function stThinkThrough(run, loading) {
+  const started = performance.now();
+  stThinkLines.innerHTML = '';
+  stThink.hidden = false;
+  stThink.classList.add('working');
+  stThinkHead.setAttribute('aria-expanded', 'true');
+  document.querySelector('#stThinkTitle').textContent = 'Thinking';
+
+  await stThought(run, 'Reading what you are looking for');
+  if (!stDemo) await stThought(run, 'Understanding your request with AI');
+  await loading;
+  if (run !== stSearchRun) return;
+  const understood = stState.understood || { terms: [], minYears: 0 };
+  const core = understood.terms.filter((term) => !ST_PREFERENCES.has(term));
+  const wantsHours = understood.terms.some((term) => ST_PREFERENCES.has(term));
+  const named = core.slice(0, 3).map((term) => stSay(understood, term));
+  if (understood.description) await stThought(run, `Looking for: ${understood.description.length > 150 ? `${understood.description.slice(0, 147).trim()}…` : understood.description}`);
+  if (understood.minYears && named.length) await stThought(run, `Gathering resumes with ${understood.minYears}+ years of ${named[0]} experience`);
+  else if (named.length) await stThought(run, `Gathering resumes that mention ${stList(named)}`);
+  else await stThought(run, 'Gathering resumes');
+  const pool = stState.candidates;
+  await stThought(run, `Reviewing ${pool.length} candidate ${pool.length === 1 ? 'profile' : 'profiles'}`);
+  for (const term of core.slice(0, 3)) {
+    const found = pool.filter((candidate) => stScore(candidate, { terms: [term] }).score > 0).length;
+    await stThought(run, found
+      ? `${found} ${found === 1 ? 'has' : 'have'} ${stSay(understood, term)} in their job titles, skills or tools`
+      : `No one lists ${stSay(understood, term)} directly, so checking related experience`);
+  }
+  const related = core.flatMap((term) => ST_RELATED[term] || []).filter((word, index, all) => all.indexOf(word) === index && !core.some((term) => word.includes(term)) && word !== 'chief executive').slice(0, 2);
+  if (related.length) await stThought(run, `Also counting related experience like ${stList(related.map((word) => ST_SAY[word] || stCaps(word)))}`);
+  if (understood.minYears) {
+    const seasoned = pool.filter((candidate) => candidate.relevantYears >= understood.minYears).length;
+    await stThought(run, `${seasoned} ${seasoned === 1 ? 'has' : 'have'} ${understood.minYears}+ years of relevant experience`);
+  }
+  if (wantsHours) await stThought(run, 'Favoring people who can work U.S. hours');
+  await stThought(run, 'Comparing past roles and industries with what you need');
+  stState.results = stResultsFor(understood);
+  const count = stState.results.length;
+  await stThought(run, count ? `Ranking your ${count === 1 ? 'best match' : `${count} best matches`}` : 'No strong matches found, a broader search may help');
+
+  if (run !== stSearchRun) return;
+  stThinkLines.querySelector('li.active')?.classList.replace('active', 'done');
+  stThink.classList.remove('working');
+  document.querySelector('#stThinkTitle').textContent = `Thought for ${Math.max(1, Math.round((performance.now() - started) / 1000))}s`;
+  stThinkHead.setAttribute('aria-expanded', 'false');
 }
 
 async function stSearch(raw) {
@@ -231,21 +299,29 @@ async function stSearch(raw) {
   stState.query = query;
   stState.understood = stDemo || !query ? stUnderstand(query) : null;
   stStatus.hidden = true;
+  stThink.hidden = !query;
   try {
-    if (query) stShowSearching(query);
-    if (!stDemo) {
+    const loading = (async () => {
+      if (stDemo) return;
       if (!query) { stStatus.textContent = 'Loading candidates…'; stStatus.className = 'st-status'; stStatus.hidden = false; }
       const result = await window.savaPlatform.employerRequest(query ? 'aiSearchCandidates' : 'searchCandidates', { query, limit: 50 });
       if (run !== stSearchRun) return;
       stState.candidates = (result.candidates || []).map(stFromLive);
       if (query) stState.understood = result.interpretation;
       stStatus.hidden = true;
-    }
+    })();
+    if (query) {
+      document.querySelector('#stTitle').textContent = `Results for "${query}"`;
+      document.querySelector('#stSummary').textContent = 'Searching…';
+      stResults.innerHTML = '';
+      await stThinkThrough(run, loading);
+    } else await loading;
     if (run !== stSearchRun) return;
-    stState.results = !stDemo && query ? stState.candidates.map(candidate => ({candidate,match:stScore(candidate,stState.understood).score,hits:stScore(candidate,stState.understood).hits})) : stRank(stState.understood);
+    stState.results = stResultsFor(stState.understood);
     stRender();
   } catch (error) {
     if (run !== stSearchRun) return;
+    stThink.hidden = true;
     stResults.innerHTML = '';
     stStatus.textContent = error.message || 'Candidate search is unavailable. Please try again.';
     stStatus.className = 'st-status error';

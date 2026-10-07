@@ -43,8 +43,6 @@
         <button type="button" data-example="Executive assistant who has worked directly with a CEO">Worked directly with a CEO</button>
       </div>
 
-      <p id="stUnderstood" class="st-understood" hidden></p>
-
       <div class="st-results-head">
         <div><h2 id="stTitle">All candidates</h2><p id="stSummary">Loading candidates…</p></div>
         <div class="st-head-actions">
@@ -55,6 +53,10 @@
         </div>
       </div>
 
+      <div id="stThink" class="st-think" hidden>
+        <button id="stThinkHead" class="st-think-head" type="button" aria-expanded="true"><span class="st-spark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/></svg></span><span id="stThinkTitle">Thinking</span><svg class="st-chev" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></button>
+        <ol id="stThinkLines" class="st-think-lines" aria-live="polite"></ol>
+      </div>
       <p id="stStatus" class="st-status" role="status" hidden></p>
       <section id="stResults" class="st-results" aria-live="polite"></section>
     </main>

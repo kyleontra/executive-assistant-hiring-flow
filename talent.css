@@ -1,6 +1,6 @@
 /* Search talent v2: one search bar (keywords or a sentence), ranked results with why each person matched. */
 [data-master-resume][hidden]{display:none!important}
-.talent-page{background:#f4f6f9}
+.talent-page{background:#f7f8fa}
 .st-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .st-shell{width:min(1040px,calc(100% - 32px));margin:0 auto;padding:34px 0 64px}
 .st-shell h1{margin:0 0 20px;color:#142238;font:800 clamp(28px,4vw,40px)/1.1 Manrope,sans-serif;letter-spacing:-1.4px;white-space:nowrap}
@@ -26,8 +26,8 @@
 .st-clear{height:42px;white-space:nowrap;padding:0 12px;border:0;background:none;color:#1f5fcf;font:700 14px "DM Sans",sans-serif;cursor:pointer}
 .st-status{padding:16px;border:1px dashed #cfd9e6;border-radius:12px;color:#5e6c82;text-align:center}
 .st-status.error{border-color:#efc9cd;background:#fff7f7;color:#a84e57}
-.st-results{display:grid;gap:12px}
-.st-card{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:16px;align-items:start;padding:20px 22px;border:1px solid #dce2ea;border-radius:14px;background:#fff;box-shadow:0 8px 24px rgba(20,34,56,.04)}
+.st-results{display:grid;gap:10px}
+.st-card{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:16px;align-items:start;padding:20px 22px;border:1px solid #e4e8ee;border-radius:14px;background:#fff;box-shadow:0 1px 2px rgba(20,34,56,.04);animation:st-rise .45s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--i,0) * 70ms)}
 .st-avatar{display:grid;width:52px;height:52px;place-items:center;overflow:hidden;border-radius:50%;background:#e8eef8;color:#2b5bb8;font:800 17px Manrope,sans-serif}
 .st-avatar img{width:100%;height:100%;object-fit:cover}
 .st-name-row{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
@@ -60,27 +60,27 @@ a.st-name:hover{color:#1f5fcf;text-decoration:underline;text-underline-offset:3p
   .st-avatar{width:44px;height:44px;font-size:15px}
   .st-card>.st-view{grid-column:1/-1;justify-content:center}
 }
-.st-searching{padding:22px 24px;border:1px solid #d9e2f5;border-radius:14px;background:linear-gradient(135deg,#f7f9ff,#faf7ff)}
-.st-searching-head{display:flex;gap:16px;align-items:flex-start}
-.st-searching-head b{display:block;color:#142238;font:800 18px Manrope,sans-serif;letter-spacing:-.3px}
-.st-orb{display:grid;width:42px;height:42px;flex:none;place-items:center;border-radius:12px;background:linear-gradient(135deg,#246fe5,#7b5cf0);color:#fff;animation:st-pulse 1.2s ease-in-out infinite}
-.st-orb svg{width:22px;height:22px;fill:currentColor;animation:st-spin 2.4s linear infinite}
-.st-steps{display:grid;gap:6px;margin:10px 0 0;padding:0;list-style:none}
-.st-steps li{display:flex;align-items:center;gap:8px;color:#9aa5b5;font-size:14px;font-weight:600;transition:color .3s}
-.st-steps li::before{content:"";width:8px;height:8px;border-radius:50%;background:#d3dbe7;transition:background .3s}
-.st-steps li.active{color:#142238}
-.st-steps li.active::before{background:#246fe5;box-shadow:0 0 0 4px #246fe526;animation:st-pulse 1s ease-in-out infinite}
-.st-steps li.done{color:#0b7a50}
-.st-steps li.done::before{background:#16a36a}
-.st-progress{height:4px;margin-top:18px;overflow:hidden;border-radius:999px;background:#e3e9f5}
-.st-progress i{display:block;height:100%;width:100%;border-radius:999px;background:linear-gradient(90deg,#246fe5,#7b5cf0);transform-origin:left;animation:st-fill 3.1s cubic-bezier(.4,0,.2,1) forwards}
-.st-skeleton{display:grid;grid-template-columns:52px minmax(0,1fr);gap:16px;margin-top:12px;padding:20px 22px;border:1px solid #e3e8ef;border-radius:14px;background:#fff}
-.st-skeleton>span{width:52px;height:52px;border-radius:50%}
-.st-skeleton i{display:block;height:12px;margin-bottom:10px;border-radius:6px}
-.st-skeleton i:nth-child(1){width:38%;height:16px}.st-skeleton i:nth-child(2){width:86%}.st-skeleton i:nth-child(3){width:64%;margin-bottom:0}
-.st-skeleton>span,.st-skeleton i{background:linear-gradient(90deg,#eef2f7 25%,#f7f9fc 50%,#eef2f7 75%);background-size:200% 100%;animation:st-shimmer 1.4s linear infinite}
+/* Thinking: the search narrates each real step, then folds into one line you can reopen. */
+.st-think{margin:0 0 18px;padding:2px 0}
+.st-think-head{display:inline-flex;align-items:center;gap:9px;padding:4px 0;border:0;background:none;color:#5e6c82;font:600 14px "DM Sans",sans-serif;cursor:pointer}
+.st-think.working .st-think-head{cursor:default;color:#142238}
+.st-spark{display:grid;width:22px;height:22px;place-items:center;border-radius:7px;background:linear-gradient(135deg,#246fe5,#7b5cf0);color:#fff}
+.st-spark svg{width:13px;height:13px;fill:currentColor}
+.st-think.working .st-spark svg{animation:st-spin 2.4s linear infinite}
+.st-think.working #stThinkTitle{background:linear-gradient(90deg,#142238 30%,#9fb0c8 50%,#142238 70%);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:st-shimmer 1.8s linear infinite}
+.st-chev{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s}
+.st-think.working .st-chev{display:none}
+.st-think-head[aria-expanded="false"] .st-chev{transform:rotate(-90deg)}
+.st-think-head[aria-expanded="false"]+.st-think-lines{display:none}
+.st-think-lines{display:grid;gap:7px;margin:8px 0 0 10px;padding:2px 0 2px 21px;border-left:1px solid #e1e6ee;list-style:none}
+.st-think-lines li{position:relative;color:#8a96a8;font-size:14px;line-height:1.45;animation:st-rise .3s ease both}
+.st-tick{position:absolute;left:-26px;top:5px;width:9px;height:9px;border-radius:50%;background:#f7f8fa;box-shadow:inset 0 0 0 1.5px #c3ccd9}
+.st-think-lines li.done .st-tick{background:#c3ccd9;box-shadow:none}
+.st-think-lines li.active{color:#142238}
+.st-think-lines li.active .st-tick{background:#246fe5;box-shadow:0 0 0 4px #246fe522;animation:st-pulse 1s ease-in-out infinite}
+.st-think-lines li.active .st-text{background:linear-gradient(90deg,#142238 35%,#8da2c4 50%,#142238 65%);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:st-shimmer 1.8s linear infinite}
 @keyframes st-shimmer{from{background-position:200% 0}to{background-position:-200% 0}}
-@keyframes st-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+@keyframes st-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
 @keyframes st-spin{to{transform:rotate(360deg)}}
-@keyframes st-fill{from{transform:scaleX(0)}to{transform:scaleX(1)}}
-@media(prefers-reduced-motion:reduce){.st-orb,.st-orb svg,.st-steps li.active::before,.st-skeleton>span,.st-skeleton i{animation:none}}
+@keyframes st-rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.st-card,.st-think-lines li,.st-think-lines li.active .st-tick,.st-think.working .st-spark svg{animation:none}.st-think-lines li.active .st-text,.st-think.working #stThinkTitle{animation:none;background:none;color:#142238}}
