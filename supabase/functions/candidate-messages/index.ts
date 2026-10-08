@@ -1,6 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { MASTER_TOKEN_PATTERN, masterAccount, masterWorkspaceHash } from '../_shared/master-access.mjs';
 import { candidateAccess } from '../_shared/candidate-access.mjs';
+import { pairThread } from '../_shared/conversation-thread.mjs';
 
 const PRIMARY_ORIGIN = 'https://www.hirefromsa.com';
 const ALLOWED_ORIGINS = new Set([
@@ -162,14 +163,6 @@ Deno.serve(async (request) => {
         if (jobCompany && jobCompany !== 'Your company') notificationCompanyName = jobCompany;
       }
     }
-    let { data: thread, error: threadError } = await admin
-      .from('candidate_message_threads')
-      .select('id, edit_token_hash')
-      .eq('employer_id', employerId)
-      .eq('candidate_key', candidateKey)
-      .maybeSingle();
-    if (threadError) throw threadError;
-
     if (applicationId) {
       if (!UUID_PATTERN.test(applicationId)) return reply(request, { error: 'Invalid application conversation.' }, 400);
       const { data: application, error: applicationError } = await admin.from('job_applications').select('candidate_id, job_id').eq('id', applicationId).maybeSingle();
@@ -181,6 +174,19 @@ Deno.serve(async (request) => {
       linkedCandidateId = application.candidate_id;
       notificationCompanyName = clean(job.company_name, 120) || notificationCompanyName;
       notificationRoleName = clean(job.title, 180) || notificationRoleName;
+    }
+
+    // Reuse this hirer's existing conversation with the VA, wherever it started.
+    let thread = await pairThread(admin, employerId, linkedCandidateId);
+    if (!thread) {
+      const { data: keyed, error: threadError } = await admin
+        .from('candidate_message_threads')
+        .select('id, edit_token_hash')
+        .eq('employer_id', employerId)
+        .eq('candidate_key', candidateKey)
+        .maybeSingle();
+      if (threadError) throw threadError;
+      thread = keyed;
     }
 
     if (!thread) {

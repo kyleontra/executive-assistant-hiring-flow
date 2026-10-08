@@ -86,13 +86,39 @@ async function ibxLiveData() {
       unread: (application.status || 'new') === 'new',
       profileUrl: /^[0-9a-f]{32}$/.test(candidate.shareSlug || '') ? `./candidate-public-profile.html?profile=${candidate.shareSlug}` : '',
       bid: application.bid || null,
+      lastChat: application.lastMessage || null,
       messages: [
         ...(application.introMessage ? [{ from: 'candidate', label: 'Introduction', text: application.introMessage, time: '' }] : []),
         ...answers.map((item) => ({ from: 'candidate', label: item.question || 'Application', text: item.answer, time: '' })),
       ].concat(application.introMessage || answers.length ? [] : [{ from: 'candidate', label: 'Application', text: 'Applied with their resume.', time: '' }]),
     };
   });
-  return { jobs: [...jobs.values()].map((job) => ({ id: String(job.id), title: job.title })), applicants };
+  // VAs messaged with Contact Now on their profile who never applied: same conversation, listed here too.
+  const contacts = (dashboard?.contacts || []).map((contact) => {
+    const candidate = contact.candidate || {};
+    const slug = /^[0-9a-f]{32}$/.test(candidate.shareSlug || '') ? candidate.shareSlug : '';
+    const last = contact.lastMessage;
+    const when = contact.updatedAt ? new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric' }).format(new Date(contact.updatedAt)) : '';
+    return {
+      id: `contact:${contact.threadId}`,
+      contact: true,
+      candidateKey: slug ? `profile:${slug}` : '',
+      name: candidate.name || 'Candidate',
+      photo: candidate.photoUrl || '',
+      years: Math.floor(Number(candidate.relevantYears || 0)),
+      match: 0,
+      jobId: '',
+      time: when,
+      summary: candidate.summary || '',
+      jobTitle: contact.roleName || '',
+      unread: last?.sender === 'candidate',
+      profileUrl: slug ? `./candidate-public-profile.html?profile=${slug}` : '',
+      bid: null,
+      lastChat: last || null,
+      messages: [],
+    };
+  });
+  return { jobs: [...jobs.values()].map((job) => ({ id: String(job.id), title: job.title })), applicants: applicants.concat(contacts) };
 }
 
 function ibxVisible() {
@@ -103,17 +129,29 @@ function ibxVisible() {
     .sort((a, b) => (ibxState.sort === 'az' ? a.name.localeCompare(b.name) : ibxState.sort === 'za' ? b.name.localeCompare(a.name) : b.match - a.match));
 }
 
+// The list shows the newest real chat message, word for word. Application answers are not chat messages.
+function ibxPreview(applicant) {
+  // Same text and date before and after the conversation is opened.
+  const day = (value) => { const date = new Date(value); return Number.isNaN(date.getTime()) ? '' : new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric' }).format(date); };
+  if (ibxDemo && applicant.messages.length) return applicant.messages[applicant.messages.length - 1];
+  const chat = applicant.messages.filter((message) => message.thread);
+  if (chat.length) { const last = chat[chat.length - 1]; return { from: last.from, text: last.text, time: day(last.createdAt) }; }
+  const saved = applicant.lastChat;
+  if (saved) return { from: saved.sender === 'employer' ? 'you' : 'candidate', text: saved.body, time: day(saved.createdAt) };
+  return { from: 'candidate', text: applicant.contact ? 'No messages yet.' : `Applied to ${applicant.jobTitle || 'your job'}`, time: '' };
+}
+
 function ibxRenderList() {
   const list = document.querySelector('#ibxList');
   const visible = ibxVisible();
   document.querySelector('#ibxEmpty').hidden = visible.length > 0;
   list.innerHTML = visible.map((applicant) => {
-    const last = applicant.messages[applicant.messages.length - 1];
+    const last = ibxPreview(applicant);
     const preview = last.from === 'you' ? `You: ${last.text}` : last.text;
     return `<button class="ibx-item${applicant.id === ibxState.activeId ? ' active' : ''}${applicant.unread ? ' unread' : ''}" type="button" role="listitem" data-id="${ibxEscape(applicant.id)}">
       <span class="ibx-avatar" aria-hidden="true">${ibxAvatar(applicant)}</span>
       <b>${ibxEscape(applicant.name)}</b><time>${ibxEscape(last.time || applicant.time)}</time>
-      <p><strong class="ibx-pill ${ibxPillClass(applicant.match)}" title="What's the match %? We compare this VA&#39;s work experience to the job you posted. The higher the number, the more experience they have doing this kind of work.">${applicant.match}% match</strong>${applicant.unread ? '<i class="ibx-dot" aria-label="Unread"></i>' : ''}<span>${ibxEscape(preview)}</span></p>
+      <p>${applicant.contact ? '<strong class="ibx-pill ibx-pill-contact">Messaged</strong>' : `<strong class="ibx-pill ${ibxPillClass(applicant.match)}" title="What's the match %? We compare this VA&#39;s work experience to the job you posted. The higher the number, the more experience they have doing this kind of work.">${applicant.match}% match</strong>`}${applicant.unread ? '<i class="ibx-dot" aria-label="Unread"></i>' : ''}<span>${ibxEscape(preview)}</span></p>
     </button>`;
   }).join('');
 }
@@ -130,10 +168,10 @@ function ibxRenderThread() {
   const viewProfile = document.querySelector('#ibxViewProfile');
   viewProfile.hidden = !applicant.profileUrl;
   if (applicant.profileUrl) viewProfile.href = applicant.profileUrl;
-  document.querySelector('#ibxHeadline').textContent = `Applied to ${applicant.jobTitle || 'your job'}`;
+  document.querySelector('#ibxHeadline').textContent = applicant.contact ? `You messaged them${applicant.jobTitle ? ` about ${applicant.jobTitle}` : ''}` : `Applied to ${applicant.jobTitle || 'your job'}`;
   const score = document.querySelector('#ibxMatchScore');
-  score.textContent = `${applicant.match}% match`;
-  score.className = `ibx-pill ${ibxPillClass(applicant.match)}`;
+  score.textContent = applicant.contact ? 'Messaged' : `${applicant.match}% match`;
+  score.className = applicant.contact ? 'ibx-pill ibx-pill-contact' : `ibx-pill ${ibxPillClass(applicant.match)}`;
   document.querySelector('#ibxYears').textContent = `${applicant.years} ${applicant.years === 1 ? 'year' : 'years'} relevant experience`;
   const bidLine = document.querySelector('#ibxBid');
   const money = (value) => `$${Number.isInteger(value) ? value.toLocaleString('en-US') : value.toFixed(2)}`;
@@ -155,7 +193,7 @@ async function ibxMessageRequest(action, applicant, body = '') {
   const response = await fetch(IBX_MESSAGES_ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ action, employerId: identity.employerId, editToken: identity.editToken, candidateKey: `application:${applicant.id}`, candidateName: applicant.name, roleName: applicant.jobTitle, ...(body ? { body } : {}) }),
+    body: JSON.stringify({ action, employerId: identity.employerId, editToken: identity.editToken, candidateKey: applicant.candidateKey || `application:${applicant.id}`, candidateName: applicant.name, roleName: applicant.jobTitle, ...(body ? { body } : {}) }),
   });
   const result = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(result.error || 'Messages could not connect. Try again.');
@@ -163,7 +201,7 @@ async function ibxMessageRequest(action, applicant, body = '') {
 }
 function ibxApplyThread(applicant, messages) {
   const time = (value) => { const date = new Date(value); return Number.isNaN(date.getTime()) ? '' : new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(date); };
-  applicant.messages = applicant.messages.filter((message) => !message.thread).concat(messages.map((message) => ({ from: message.sender === 'employer' ? 'you' : 'candidate', text: message.body, time: time(message.createdAt), thread: true })));
+  applicant.messages = applicant.messages.filter((message) => !message.thread).concat(messages.map((message) => ({ from: message.sender === 'employer' ? 'you' : 'candidate', text: message.body, time: time(message.createdAt), createdAt: message.createdAt, thread: true })));
   applicant.threadLoaded = true;
 }
 async function ibxLoadThread(applicant) {

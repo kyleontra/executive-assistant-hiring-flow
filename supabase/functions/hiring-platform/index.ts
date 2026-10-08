@@ -6,6 +6,7 @@ import { candidateAccess } from '../_shared/candidate-access.mjs';
 import { onboardingStage } from '../_shared/onboarding-state.mjs';
 import { indexResume, resumeIndexColumns, RESUME_INDEX_VERSION } from '../_shared/resume-index.mjs';
 import { longerExperience } from '../_shared/experience-tenure.mjs';
+import { pairThread } from '../_shared/conversation-thread.mjs';
 
 const PRIMARY_ORIGIN = 'https://www.hirefromsa.com';
 const ALLOWED_ORIGINS = new Set([
@@ -214,6 +215,14 @@ async function ensureApplicationThread(admin: ReturnType<typeof createClient>, a
   const { data: existing, error: threadError } = await admin.from('candidate_message_threads').select('id').eq('application_id', applicationId).maybeSingle();
   if (threadError) throw threadError;
   if (existing) return { id: String(existing.id), created: false };
+  const shared = await pairThread(admin, job.employer_id, candidateId);
+  if (shared) {
+    if (!shared.application_id) {
+      const { error: linkError } = await admin.from('candidate_message_threads').update({ application_id: applicationId }).eq('id', shared.id);
+      if (linkError) throw linkError;
+    }
+    return { id: String(shared.id), created: false };
+  }
   const { data: employer, error: employerError } = await admin.from('hirer_workspaces').select('edit_token_hash').eq('id', job.employer_id).single();
   if (employerError) throw employerError;
   const { data: created, error: createError } = await admin.from('candidate_message_threads').insert({
@@ -572,7 +581,58 @@ Deno.serve(async (request) => {
           job: jobResponse(job),
         };
       }));
-      return reply(request, { jobs: (jobs || []).map((row) => jobResponse(row, "owner")), applications: applicationResults });
+      // VAs this hirer messaged from their profile (Contact Now) without an application still belong in Messages.
+      const { data: threadRows, error: threadsError } = await admin.from('candidate_message_threads')
+        .select('id, candidate_id, candidate_name, role_name, updated_at').eq('employer_id', access.employer.id)
+        .not('candidate_id', 'is', null).order('updated_at', { ascending: false });
+      if (threadsError) throw threadsError;
+      const appliedIds = new Set(candidateIds);
+      const seenContacts = new Set();
+      const contactThreads = (threadRows || []).filter((thread) => {
+        const id = String(thread.candidate_id);
+        if (appliedIds.has(id) || seenContacts.has(id)) return false;
+        seenContacts.add(id);
+        return true;
+      });
+      // The newest real chat message per VA, for the Messages list preview.
+      const lastMessageByCandidate = new Map();
+      if ((threadRows || []).length) {
+        const threadCandidate = new Map((threadRows || []).map((thread) => [thread.id, String(thread.candidate_id)]));
+        const { data: recentMessages, error: recentError } = await admin.from('candidate_messages')
+          .select('thread_id, sender, body, created_at').in('thread_id', [...threadCandidate.keys()]).order('created_at', { ascending: false });
+        if (recentError) throw recentError;
+        (recentMessages || []).forEach((message) => {
+          const candidateId = threadCandidate.get(message.thread_id);
+          if (candidateId && !lastMessageByCandidate.has(candidateId)) lastMessageByCandidate.set(candidateId, { sender: message.sender, body: message.body, createdAt: message.created_at });
+        });
+      }
+      applicationResults.forEach((application) => { (application as Record<string, unknown>).lastMessage = lastMessageByCandidate.get(String(application.candidate.id)) || null; });
+      let contacts: Array<Record<string, unknown>> = [];
+      if (contactThreads.length) {
+        const { data: contactProfiles, error: contactProfileError } = await admin.from('candidate_profiles')
+          .select('user_id, full_name, share_slug, summary, relevant_years, profile_photo_path').in('user_id', contactThreads.map((thread) => thread.candidate_id));
+        if (contactProfileError) throw contactProfileError;
+        const contactProfileMap = new Map((contactProfiles || []).map((profile) => [profile.user_id, profile]));
+        contacts = await Promise.all(contactThreads.map(async (thread) => {
+          const profile = contactProfileMap.get(thread.candidate_id) || {};
+          const last = lastMessageByCandidate.get(String(thread.candidate_id));
+          return {
+            threadId: thread.id,
+            roleName: thread.role_name || '',
+            updatedAt: thread.updated_at,
+            lastMessage: last || null,
+            candidate: {
+              id: thread.candidate_id,
+              name: profile.full_name || thread.candidate_name || 'Candidate',
+              shareSlug: profile.share_slug || '',
+              summary: profile.summary || '',
+              relevantYears: Number(profile.relevant_years || 0),
+              photoUrl: await signedAsset(admin, BUCKET, String(profile.profile_photo_path || '')),
+            },
+          };
+        }));
+      }
+      return reply(request, { jobs: (jobs || []).map((row) => jobResponse(row, "owner")), applications: applicationResults, contacts });
     }
 
     if (action === 'searchCandidates' || action === 'aiSearchCandidates') {
@@ -881,6 +941,8 @@ Deno.serve(async (request) => {
       const applicationMap = new Map((applications || []).map((application) => [application.id, application]));
       const employerMap = new Map(employers.map((employer) => [employer.id, employer.company_name]));
       const threadMap = new Map((threads || []).map((thread) => [thread.application_id, thread]));
+      const employerThreadMap = new Map();
+      (threads || []).forEach((thread) => { if (!employerThreadMap.has(thread.employer_id)) employerThreadMap.set(thread.employer_id, thread); });
       return reply(request, { profile: {
         resumeFileName: profile?.resume_file_name || '',
         resumeUrl: await signedAsset(admin, RESUME_BUCKET, String(profile?.resume_path || '')),
@@ -893,7 +955,7 @@ Deno.serve(async (request) => {
         referralCompleted: Boolean(profile?.referral_source),
         verificationBypass: Boolean(profile?.verification_bypass),
       }, applications: (applications || []).map((application) => {
-        const thread = threadMap.get(application.id);
+        const thread = threadMap.get(application.id) || employerThreadMap.get((jobMap.get(application.job_id) || {}).employer_id);
         return {
           id: application.id,
           status: application.status,
@@ -944,6 +1006,7 @@ Deno.serve(async (request) => {
       if (profileError) throw profileError;
       let { data: thread, error: threadError } = await admin.from('candidate_message_threads').select('id').eq('application_id', applicationId).maybeSingle();
       if (threadError) throw threadError;
+      if (!thread) thread = await pairThread(admin, job.employer_id, user.id);
       if (!thread) {
         const { data: employer, error: employerError } = await admin.from('hirer_workspaces').select('edit_token_hash').eq('id', job.employer_id).single();
         if (employerError) throw employerError;
