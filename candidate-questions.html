@@ -22,7 +22,7 @@
         <section class="pp-panel pp-video-panel pp-sticky">
           <p class="pp-step"><b>1</b>Watch this first</p>
           <div id="questionsGuide" class="pp-video">
-            <div class="pp-video-empty"><span aria-hidden="true">▶</span><b>Video coming soon</b><small>How to answer these questions.</small></div>
+            <video src="/videos/questions-guide.mp4" poster="/videos/questions-guide.jpg" controls playsinline preload="metadata" aria-label="Help us match you with the right client"></video>
           </div>
         </section>
 
@@ -44,9 +44,17 @@
             <label><input type="radio" name="employmentPreference" value="contractor" /><span>Contractor</span></label>
             <label><input type="radio" name="employmentPreference" value="open_to_all" /><span>I'm open to all</span></label>
           </fieldset>
+          <fieldset class="pq-field pq-choices pq-wide pq-timezones"><legend class="pq-label">Select the time zones you would be willing to work in</legend>
+            <label><input type="checkbox" name="workTimeZones" value="EST" /><span>EST <small>US Eastern</small></span></label>
+            <label><input type="checkbox" name="workTimeZones" value="PST" /><span>PST <small>US Pacific</small></span></label>
+            <label><input type="checkbox" name="workTimeZones" value="SAST" /><span>South African Time</span></label>
+            <label><input type="checkbox" name="workTimeZones" value="ANY" /><span>I'm comfortable with any time zone</span></label>
+          </fieldset>
+          <label class="pq-field"><span class="pq-label">Nickname <span class="pq-optional">Optional</span></span><span class="pq-help">A shorter name that helps clients pronounce your name.</span>
+            <input name="nickname" maxlength="30" autocomplete="nickname" placeholder="For example, Nompi" /></label>
           <label class="pq-field"><span class="pq-label">Portfolio or work samples <span class="pq-optional">Optional</span></span><span class="pq-help">Links starting with https://, one per line.</span>
             <textarea name="portfolioLinks" maxlength="10244" rows="1" spellcheck="false" autocapitalize="none" placeholder="https://your-portfolio.com"></textarea></label>
-          <label class="pq-field"><span class="pq-label">Anything else we should know? <span class="pq-optional">Optional</span></span><span class="pq-help">Only our team sees this.</span>
+          <label class="pq-field pq-wide"><span class="pq-label">Anything else we should know? <span class="pq-optional">Optional</span></span><span class="pq-help">Only our team sees this.</span>
             <textarea name="preferredJobNote" maxlength="400" rows="1" placeholder="Anything else you'd like us to know"></textarea></label>
           </div>
           <p id="questionsResult" class="portal-result" aria-live="polite" hidden></p>

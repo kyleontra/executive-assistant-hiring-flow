@@ -21,7 +21,7 @@ Deno.serve(async (req: Request) => {
     const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
     const { data: { user }, error: authError } = await admin.auth.getUser(token);
     if (authError || !user?.email_confirmed_at || (user.app_metadata?.account_role && user.app_metadata.account_role !== 'candidate')) return reply(req, { error: 'Sign in with your verified candidate account.' }, 401);
-    const { data: profile, error: profileError } = await admin.from('candidate_profiles').select('full_name, resume_path, profile_photo_path, verification_status, verification_bypass, requested_rate_min_usd, requested_rate_max_usd, available_hours_per_week, location, ideal_job_titles, start_availability, preferred_job_note, onboarding_preferences_required, preferences_completed_at, job_industry_preferences, desired_positions, career_survey_completed_at, monthly_income_goal_zar, employment_preference, portfolio_links').eq('user_id', user.id).maybeSingle();
+    const { data: profile, error: profileError } = await admin.from('candidate_profiles').select('full_name, resume_path, profile_photo_path, verification_status, verification_bypass, requested_rate_min_usd, requested_rate_max_usd, available_hours_per_week, location, ideal_job_titles, start_availability, preferred_job_note, onboarding_preferences_required, preferences_completed_at, job_industry_preferences, desired_positions, career_survey_completed_at, monthly_income_goal_zar, employment_preference, portfolio_links, work_time_zones, nickname').eq('user_id', user.id).maybeSingle();
     if (profileError) throw profileError;
     const { data: saved, error: progressError } = await admin.from('candidate_onboarding').select('*').eq('user_id', user.id).maybeSingle();
     if (progressError) throw progressError;
@@ -44,7 +44,7 @@ Deno.serve(async (req: Request) => {
         if (error || !data?.signedUrl) introPlaybackError = 'Your saved introduction could not load. You can retry, replace it, or keep it and continue.';
         else introUrl = data.signedUrl;
       }
-      return reply(req, { stage: onboardingStage(profile, progress), approved: identityApproved(profile), verificationStatus: profile?.verification_status || 'draft', reviewReference: pendingPhotoReview(profile, progress), introUrl, introSaved: Boolean(progress.intro_path), introPlaybackError, contractName: progress.contract_name || profile?.full_name || '', contractCompleted: Boolean(progress.contract_accepted_at), surveyStep: profile?.career_survey_completed_at ? 2 : 1, preferences: { jobIndustryPreferences: profile?.job_industry_preferences || '', desiredPositions: profile?.desired_positions || '', monthlyIncomeGoalZar: profile?.monthly_income_goal_zar ?? null, employmentPreference: profile?.employment_preference || '', idealJobTitles: profile?.ideal_job_titles || [], requestedRateMinUsd: profile?.requested_rate_min_usd, requestedRateMaxUsd: profile?.requested_rate_max_usd, availableHoursPerWeek: profile?.available_hours_per_week, location: profile?.location || '', startAvailability: profile?.start_availability || '', preferredJobNote: profile?.preferred_job_note || '', portfolioLinks: publicPortfolioLinks(profile?.portfolio_links) }, guideCompleted: { identity: Boolean(progress.identity_completed_at), platform: Boolean(progress.platform_completed_at), intro: Boolean(progress.intro_completed_at) } });
+      return reply(req, { stage: onboardingStage(profile, progress), approved: identityApproved(profile), verificationStatus: profile?.verification_status || 'draft', reviewReference: pendingPhotoReview(profile, progress), introUrl, introSaved: Boolean(progress.intro_path), introPlaybackError, contractName: progress.contract_name || profile?.full_name || '', contractCompleted: Boolean(progress.contract_accepted_at), surveyStep: profile?.career_survey_completed_at ? 2 : 1, preferences: { jobIndustryPreferences: profile?.job_industry_preferences || '', desiredPositions: profile?.desired_positions || '', monthlyIncomeGoalZar: profile?.monthly_income_goal_zar ?? null, employmentPreference: profile?.employment_preference || '', idealJobTitles: profile?.ideal_job_titles || [], requestedRateMinUsd: profile?.requested_rate_min_usd, requestedRateMaxUsd: profile?.requested_rate_max_usd, availableHoursPerWeek: profile?.available_hours_per_week, location: profile?.location || '', startAvailability: profile?.start_availability || '', preferredJobNote: profile?.preferred_job_note || '', portfolioLinks: publicPortfolioLinks(profile?.portfolio_links), workTimeZones: profile?.work_time_zones || [], nickname: profile?.nickname || '' }, guideCompleted: { identity: Boolean(progress.identity_completed_at), platform: Boolean(progress.platform_completed_at), intro: Boolean(progress.intro_completed_at) } });
     }
     if (action === 'saveCareerSurvey' || action === 'savePreferences') {
       if (!profile?.resume_path) return reply(req, { error: 'Connect your resume before completing the surveys.' }, 403);
@@ -67,6 +67,12 @@ Deno.serve(async (req: Request) => {
         const employment = text(body.employmentPreference);
         const start = text(body.startAvailability);
         const note = text(body.preferredJobNote);
+        const nickname = text(body.nickname).replace(/\s+/g, ' ');
+        const zones = Array.isArray(body.workTimeZones) ? [...new Set(body.workTimeZones.filter((zone: unknown) => typeof zone === 'string'))] as string[] : [];
+        const workTimeZones = zones.includes('ANY') ? ['ANY'] : zones;
+        if (!workTimeZones.length || workTimeZones.some((zone) => !['EST', 'PST', 'SAST', 'ANY'].includes(zone)) || nickname.length > 30) {
+          return reply(req, { error: 'Select at least one time zone you would be willing to work in, and keep your nickname under 30 characters.' }, 400);
+        }
         if (!/^\d+(?:\.\d{1,2})?$/.test(incomeRaw) || !Number.isFinite(income) || income <= 0 || income > 10000000 ||
             !['full_time', 'part_time', 'contractor', 'open_to_all'].includes(employment) ||
             !['immediately', 'two_weeks', 'one_month', 'flexible'].includes(start) || note.length > 400) {
@@ -76,7 +82,7 @@ Deno.serve(async (req: Request) => {
         try { portfolioLinks = parsePortfolioLinks(body.portfolioLinks); }
         catch (error) { return reply(req, { error: error.message }, 400); }
         values = { ...(body.portfolioLinks !== undefined ? { portfolio_links: portfolioLinks } : {}), monthly_income_goal_zar: income, employment_preference: employment, start_availability: start,
-          preferred_job_note: note, preferences_completed_at: profile.preferences_completed_at || now };
+          preferred_job_note: note, work_time_zones: workTimeZones, nickname: nickname || null, preferences_completed_at: profile.preferences_completed_at || now };
       }
       const { data: updated, error } = await admin.from('candidate_profiles').update({ ...values, updated_at: now }).eq('user_id', user.id).select('user_id').maybeSingle();
       if (error) throw error;

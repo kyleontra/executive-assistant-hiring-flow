@@ -23,6 +23,9 @@ function fill(preferences = {}) {
   set('startAvailability', preferences.startAvailability);
   set('preferredJobNote', preferences.preferredJobNote);
   if (Array.isArray(preferences.portfolioLinks)) set('portfolioLinks', preferences.portfolioLinks.join('\n'));
+  set('nickname', preferences.nickname);
+  const zones = Array.isArray(preferences.workTimeZones) ? preferences.workTimeZones : [];
+  form.querySelectorAll('input[name="workTimeZones"]').forEach((input) => { input.checked = zones.includes(input.value); });
   const choice = form.querySelector(`input[name="employmentPreference"][value="${preferences.employmentPreference}"]`);
   if (choice) choice.checked = true;
 }
@@ -42,9 +45,22 @@ async function load() {
   }
 }
 
+// "Any time zone" is exclusive: choosing it clears the specific zones, and choosing a zone clears it.
+const zoneInputs = [...form.querySelectorAll('input[name="workTimeZones"]')];
+zoneInputs.forEach((input) => input.addEventListener('change', () => {
+  if (!input.checked) return;
+  zoneInputs.forEach((other) => { if (other !== input && (input.value === 'ANY' || other.value === 'ANY')) other.checked = false; });
+}));
+
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
   if (button.disabled || !form.reportValidity()) return;
+  const workTimeZones = zoneInputs.filter((input) => input.checked).map((input) => input.value);
+  if (!workTimeZones.length) {
+    showResult('Select at least one time zone you would be willing to work in.', 'error');
+    zoneInputs[0].focus();
+    return;
+  }
   const value = name => form.elements[name].value.trim();
   button.disabled = true;
   button.textContent = 'Saving…';
@@ -52,7 +68,7 @@ form.addEventListener('submit', async (event) => {
   try {
     if (!demoMode) {
       await onboardingRequest('saveCareerSurvey', { jobIndustryPreferences: value('jobIndustryPreferences'), desiredPositions: value('desiredPositions') });
-      await onboardingRequest('savePreferences', { monthlyIncomeGoalZar: value('monthlyIncomeGoalZar'), employmentPreference: value('employmentPreference'), startAvailability: value('startAvailability'), portfolioLinks: value('portfolioLinks'), preferredJobNote: value('preferredJobNote') });
+      await onboardingRequest('savePreferences', { monthlyIncomeGoalZar: value('monthlyIncomeGoalZar'), employmentPreference: value('employmentPreference'), startAvailability: value('startAvailability'), portfolioLinks: value('portfolioLinks'), preferredJobNote: value('preferredJobNote'), workTimeZones, nickname: value('nickname') });
     }
     showResult('Saved. Returning to My Profile…', 'success');
     setTimeout(() => location.assign(profileUrl), 600);
