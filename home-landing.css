@@ -258,3 +258,6 @@ body.hl-page{margin:0;background:#f6f8fc;color:#142238;font-family:"DM Sans",san
   .hl-footer{grid-template-columns:1fr 1fr}
   .hl-footer-brand{grid-column:1/-1}
 }
+
+/* Keep the primary login visible on both role-specific hero pages. */
+@media(max-width:760px){.hl-header .hl-login{display:inline-flex;height:38px;padding:0 10px;font-size:14px}}
