@@ -6,7 +6,7 @@ const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const fields = 'id,employer_user_id,candidate_id,candidate_name,description,period_start,period_end,hours,rate_minor,amount_minor,currency,status,livemode,created_at,paid_at,checkout_session_id,payment_intent_id';
 Deno.serve(async request => {
   const origin = request.headers.get('origin') || '';
-  const headers = {'Content-Type':'application/json','Access-Control-Allow-Origin':origins.has(origin)?origin:'https://www.hirefromsa.com','Access-Control-Allow-Headers':'authorization,content-type','Access-Control-Allow-Methods':'POST,OPTIONS',Vary:'Origin'};
+  const headers = {'Content-Type':'application/json','Access-Control-Allow-Origin':origins.has(origin) || origin === 'https://supabase.com'?origin:'https://www.hirefromsa.com','Access-Control-Allow-Headers':'authorization,apikey,content-type','Access-Control-Allow-Methods':'POST,OPTIONS',Vary:'Origin'};
   const reply = (data: unknown,status = 200) => new Response(JSON.stringify(data),{status,headers});
   if(request.method === 'OPTIONS') return reply({});
   if(request.method !== 'POST') return reply({error:'Method not allowed'},405);
@@ -17,6 +17,11 @@ Deno.serve(async request => {
   const stripe = async(path: string,params?: Record<string,string>,idempotency?: string) => {
     const response = await fetch(`https://api.stripe.com/v1/${path}`,{method:params?'POST':'GET',headers:{Authorization:`Bearer ${secret}`,...(params?{'Content-Type':'application/x-www-form-urlencoded'}:{}),...(idempotency?{'Idempotency-Key':idempotency}:{})},body:params?new URLSearchParams(params):undefined,signal:AbortSignal.timeout(20000)});
     const result = await response.json(); if(!response.ok) throw new Error('Stripe could not complete this request. Please try again or contact billing support.'); return result;
+  };
+  const checkConnection = async() => {
+    if(!ready) return reply({configured:false});
+    const account=await stripe('account');
+    return reply({configured:true,livemode:live,accountId:account.id,country:account.country,chargesEnabled:account.charges_enabled,payoutsEnabled:account.payouts_enabled});
   };
   const recordPaid = async(session: any) => {
     const id = session.metadata?.invoice_id; if(!uuid.test(id || '')) return;
@@ -38,6 +43,14 @@ Deno.serve(async request => {
       }
       return reply({received:true});
     }
+    // The Supabase dashboard can run this read-only diagnostic with an existing
+    // project secret key. It cannot issue invoices or start checkout this way.
+    const projectKey = request.headers.get('apikey') || '';
+    const projectSecretKeys = Object.values(JSON.parse(Deno.env.get('SUPABASE_SECRET_KEYS') || '{}'));
+    if(projectKey && projectSecretKeys.includes(projectKey)) {
+      const diagnostic = await request.json();
+      return diagnostic.action === 'check' ? await checkConnection() : reply({error:'Project-key access is limited to the connection check.'},403);
+    }
     if(origin && !origins.has(origin)) return reply({error:'Origin not allowed'},403);
     const token = (request.headers.get('authorization') || '').replace(/^Bearer\s+/i,'');
     const master = MASTER_TOKEN_PATTERN.test(token) ? await masterAccount(admin,token) : null;
@@ -47,9 +60,7 @@ Deno.serve(async request => {
     if(!reviewer && (!user?.email_confirmed_at || user.app_metadata?.account_role !== 'employer')) return reply({error:'Sign in with a verified employer account.'},401);
     const body = await request.json();
     if(body.action === 'check' && reviewer) {
-      if(!ready) return reply({configured:false});
-      const account=await stripe('account');
-      return reply({configured:true,livemode:live,accountId:account.id,country:account.country,chargesEnabled:account.charges_enabled,payoutsEnabled:account.payouts_enabled});
+      return await checkConnection();
     }
     if(body.action === 'list') {
       let query = admin.from('va_payment_invoices').select(fields).order('created_at',{ascending:false}).limit(500);
