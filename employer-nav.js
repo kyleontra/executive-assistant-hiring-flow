@@ -13,6 +13,7 @@
     { href: './admin-onboarding.html', label: 'Onboarding progress' },
     { href: './admin-resumes.html', label: 'Resume database' },
     { href: './admin-review.html', label: 'Candidate approvals' },
+    { href: './billing.html', label: 'VA payments' },
   ];
   const current = (pages) => (pages.includes(page) ? ' class="active" aria-current="page"' : '');
 

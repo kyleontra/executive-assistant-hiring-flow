@@ -22,98 +22,38 @@
 
     <main class="bl-shell">
       <h1>Billing</h1>
-
-      <section class="bl-saved" aria-live="polite"><span class="bl-saved-icon" aria-hidden="true">⏱</span><p>You saved <b id="blSavedHours">0 hours</b> this week.<small><span id="blSavedPeople">Your VAs</span> handled that work, so you didn't have to.</small></p></section>
-
-      <section id="blFailed" class="bl-failed" role="alert" hidden>
-        <div><b>Your Visa ending 4242 was declined.</b><p>Update your card so Thandi and Jaco get paid. We will try again tomorrow, and hour logging pauses after 3 days unpaid.</p></div>
-        <button class="post-continue" type="button" data-open="blCardDialog">Update card</button>
-      </section>
-
-      <section class="bl-card bl-next">
-        <div class="bl-next-main">
-          <small>Next charge</small>
-          <b id="blNextAmount">$453</b>
-          <span>Mon, Oct 5 · Visa ending 4242</span>
-          <ul id="blNextRows" class="bl-next-rows"></ul>
-          <a class="bl-link" href="./employees.html">Review hours on My Employees</a>
-        </div>
-        <div class="bl-autopay">
-          <label class="bl-switch"><input id="blAutopay" type="checkbox" checked /><span aria-hidden="true"></span><b>Auto-pay</b></label>
-          <p id="blAutopayText"></p>
-        </div>
-      </section>
-
-      <section class="bl-card">
-        <header><h2>Payment methods</h2><button class="bl-button" type="button" data-open="blCardDialog">Add card</button></header>
-        <ul id="blMethods" class="bl-methods"></ul>
-        <p class="bl-hint">If your default card fails, we charge your backup card so your employees are never paid late. Bank account (ACH) payments are coming soon.</p>
-      </section>
-
-      <section class="bl-card">
-        <header><h2>Spending</h2></header>
-        <div class="bl-stats">
-          <div><small>Last month (September)</small><b id="blMonth"></b></div>
-          <div><small>2026 total</small><b id="blYear"></b></div>
-          <div><small>Paid to employees</small><b id="blToVas"></b></div>
-        </div>
-        <div id="blSplit" class="bl-split" aria-hidden="true"></div>
-        <ul id="blLegend" class="bl-legend"></ul>
-      </section>
-
-      <section class="bl-card">
-        <header>
-          <h2>Billing history</h2>
-          <div class="bl-filters">
-            <select id="blType" aria-label="Type"><option value="all">All charges</option><option value="pay">Employee pay</option><option value="bonus">Bonuses</option><option value="promo">Job promotions</option></select>
-            <select id="blRange" aria-label="Date range"><option value="all">All time</option><option value="30">Last 30 days</option><option value="sep">September 2026</option><option value="aug">August 2026</option></select>
-            <button id="blCsv" class="bl-button" type="button">Download CSV</button>
+      <p>Pay for your VA’s work securely through Stripe.</p>
+      <p id="billingNotice" role="status" aria-live="polite">Loading your invoices…</p>
+      <section id="billingAdmin" class="bl-card" hidden>
+        <header><h2>Create a VA invoice</h2><button id="billingCheck" class="bl-button" type="button">Check Stripe connection</button></header>
+        <p>Confirm the agreed rate and approved hours before issuing an invoice.</p>
+        <form id="invoiceForm">
+          <div class="bl-grid">
+            <label class="post-field"><span>Employer</span><select name="employerId" required></select></label>
+            <label class="post-field"><span>VA</span><select name="candidateId" required></select></label>
+            <label class="post-field"><span>Period start</span><input name="periodStart" type="date" required></label>
+            <label class="post-field"><span>Period end</span><input name="periodEnd" type="date" required></label>
+            <label class="post-field"><span>Approved hours</span><input name="hours" type="number" min="0.01" max="744" step="0.01" required></label>
+            <label class="post-field"><span>Agreed hourly rate</span><input name="rate" type="number" min="0.01" max="1000" step="0.01" required></label>
+            <label class="post-field"><span>Currency</span><select name="currency"><option value="usd">USD — US dollars</option><option value="zar">ZAR — South African rand</option><option value="gbp">GBP — British pounds</option><option value="eur">EUR — Euros</option></select></label>
+            <label class="post-field"><span>Description</span><input name="description" maxlength="300" value="VA services" required></label>
           </div>
-        </header>
-        <div class="bl-table-wrap">
-          <table>
-            <thead><tr><th>Date</th><th>Description</th><th>Card</th><th>Status</th><th class="num">Amount</th><th></th></tr></thead>
-            <tbody id="blHistory"></tbody>
-          </table>
-        </div>
-        <p id="blNone" class="bl-none" hidden>No charges match these filters.</p>
+          <footer><span id="invoiceTotal"></span><button class="post-continue" type="submit">Create invoice</button></footer>
+        </form>
       </section>
-
-      <form id="blDetails" class="bl-card" novalidate>
-        <header><h2>Billing details</h2><span class="bl-tag">Shown on your invoices</span></header>
-        <div class="bl-grid">
-          <label class="post-field"><span>Company name</span><input name="company" maxlength="120" placeholder="e.g. Ontra Films" /></label>
-          <label class="post-field"><span>Receipts email <small>Add your bookkeeper</small></span><input name="email" type="email" maxlength="160" placeholder="billing@company.com" /></label>
-          <label class="post-field bl-wide"><span>Billing address</span><input name="address" maxlength="200" placeholder="Street, city, state, ZIP" /></label>
-          <label class="post-field"><span>Country</span><select name="country"><option>United States</option><option>Canada</option><option>United Kingdom</option><option>Australia</option><option>Other</option></select></label>
-          <label class="post-field"><span>Tax ID <small>Optional</small></span><input name="taxId" maxlength="40" placeholder="EIN or VAT number" /></label>
-        </div>
-        <footer><span class="bl-saved" role="status"></span><button class="post-continue" type="submit">Save</button></footer>
-      </form>
-
+      <section class="bl-card">
+        <header><h2 id="invoiceHeading">Your invoices</h2><button id="billingRefresh" class="bl-button" type="button">Refresh</button></header>
+        <div class="bl-table-wrap"><table>
+          <thead><tr><th>VA / work</th><th>Hours &amp; rate</th><th>Status</th><th>Amount</th><th></th></tr></thead>
+          <tbody id="billingInvoices"></tbody>
+        </table></div>
+        <p id="billingEmpty" hidden>No invoices yet. Your approved VA invoices will appear here.</p>
+      </section>
       <section class="bl-card bl-help">
-        <div>
-          <h2>How billing works</h2>
-          <p>Your employees log their hours each day. Every Monday you pay for the approved hours from the week before, and your employees receive their pay within 24 hours. Job promotions are charged once, when you publish the job.</p>
-        </div>
-        <div class="bl-help-links">
-          <button class="bl-button" type="button" data-toast="Example build: this opens a dispute form for the selected charge.">Dispute a charge</button>
-          <a class="bl-button" href="mailto:support@hirefromsa.com">Contact billing support</a>
-        </div>
+        <div><h2>How payments work</h2><p>Your invoice shows the VA, work period, approved hours and agreed rate. Choose Pay now to enter your payment details on Stripe’s secure checkout.</p><p>A collected payment means Hire From SA has received your payment. VA payout is tracked separately.</p></div>
+        <a class="bl-button" href="mailto:support@hirefromsa.com">Contact billing support</a>
       </section>
     </main>
-
-    <dialog id="blCardDialog" class="bl-dialog">
-      <header><div><h2>Add a card</h2><p>Your card details are handled securely by our payment processor. Hire From SA never stores your full card number.</p></div><button class="bl-close" type="button" data-close aria-label="Close">×</button></header>
-      <div class="bl-stripe">
-        <span>Card number</span><div class="bl-fake-input">1234 1234 1234 1234</div>
-        <div class="bl-grid"><div><span>Expiry</span><div class="bl-fake-input">MM / YY</div></div><div><span>CVC</span><div class="bl-fake-input">CVC</div></div></div>
-        <p class="bl-hint">Example only. In the real version, the secure card form from our payment processor goes here.</p>
-      </div>
-      <footer><button class="bl-button" type="button" data-close>Cancel</button><button id="blAddDemo" class="post-continue" type="button">Add demo card</button></footer>
-    </dialog>
-
-    <p id="blToast" class="bl-toast" role="status" hidden></p>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./auth-client.js"></script>
